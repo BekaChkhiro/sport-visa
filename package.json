@@ -16,6 +16,10 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "typecheck": "tsc --noEmit",
+    "type-check": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
     "prepare": "husky",
     "db:generate": "prisma generate",
     "db:migrate": "dotenv -e .env.local -- prisma migrate dev",
@@ -39,6 +43,7 @@
     "@types/node": "^22.10.5",
     "@types/react": "^19.2.15",
     "@types/react-dom": "^19.2.3",
+    "@vitest/coverage-v8": "^4.1.7",
     "dotenv-cli": "^11.0.0",
     "eslint": "^9.18.0",
     "eslint-config-next": "^15.5.18",
@@ -51,7 +56,8 @@
     "prisma": "^6.19.3",
     "tailwindcss": "^4.3.0",
     "typescript": "^5.7.3",
-    "typescript-eslint": "^8.20.0"
+    "typescript-eslint": "^8.20.0",
+    "vitest": "^4.1.7"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1050.0",
