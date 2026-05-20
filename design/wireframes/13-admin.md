@@ -103,6 +103,54 @@
 
 ---
 
+## Mobile wireframe — verification queue (< 640 px)
+
+```
+┌─────────────────────┐
+│ HEADER (admin)      │
+│ [▓ logo]    [≡ ]    │
+├─────────────────────┤
+│ [ვ.][სერვ.][მ.][R.D]│
+├─────────────────────┤
+│ # ვერიფ. რიგი       │
+│ [ფ. (14)] [კლ. (3)] │
+│                     │
+│ [🔍 სახ./ელ.ფ.]     │
+├─────────────────────┤
+│ ┌─────────────────┐ │
+│ │ ▓ სახ. გვ.      │ │
+│ │ CM · 26წ · GEO  │ │
+│ │ user@email.ge   │ │
+│ │ შ.: 2026-05-18  │ │
+│ │ ⏳ პ. მოლ.       │ │
+│ │ [პ.ნ.][✓][✕]   │ │
+│ └─────────────────┘ │
+│ ┌─────────────────┐ │
+│ │ ▓ სახ. გვ. 2    │ │
+│ │ ST · 22წ · GEO  │ │
+│ │ user2@email.ge  │ │
+│ │ ⏳ პ. მოლ.       │ │
+│ │ [პ.ნ.][✓][✕]   │ │
+│ └─────────────────┘ │
+│ [← 1 2 ··· →]      │
+└─────────────────────┘
+
+── Service requests tab ─
+┌─────────────────────┐
+│ # სერვ. მოთ.        │
+│ [ყვ.][⏳(8)][✓][✕]  │
+│                     │
+│ ┌─────────────────┐ │
+│ │ SR-0042 კვება   │ │
+│ │ ი. ბ. · 05-18   │ │
+│ │ ⏳ · user@e.ge   │ │
+│ │ [პ.ნ.][✓][✕][💬]│ │
+│ └─────────────────┘ │
+└─────────────────────┘
+```
+
+---
+
 ## Annotations
 
 | ⚑   | Note                                                                                                                                                             |
@@ -114,3 +162,4 @@
 | E   | Service request "ჩამ." marks it resolved; triggers email notification to the footballer.                                                                         |
 | F   | Block user action disables login and hides profile from directory. Reversible. Delete is permanent (GDPR).                                                       |
 | G   | Ref. data tab (not wireframed): admin manages position list, nationality list, league list used in dropdowns across the app. Simple CRUD table.                  |
+| H   | Admin panel is desktop-first; mobile view provides read/approve/reject access but not the full table view. Action buttons [✓][✕] are larger touch targets.       |

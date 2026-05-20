@@ -75,6 +75,65 @@
 
 ---
 
+## Mobile wireframe (< 640 px)
+
+```
+┌─────────────────────┐
+│ HEADER (nav)        │
+├─────────────────────┤
+│ ░░░░░░░░░░░░░░░░░░  │
+│ ░░  COVER PHOTO  ░  │
+│ ░░░░░░░░░░░░░░░░░░  │
+│                     │
+│ ▓▓ კლ. სახ.         │
+│ (logo) ● Verified   │
+│ ● ქ. · ● ლ. · 1998  │
+│ 👁 1200  ★ 34        │
+│ [♥ გამოწ.]          │
+├─────────────────────┤
+│ TABS (scroll)       │
+│[ბიო][შ.სია][სტ.][ახ]│
+├─────────────────────┤
+│ BIO TAB             │
+│ კლ. ისტ. ···        │
+│                     │
+│ 🌐 [ოფ. ვებ.]        │
+└─────────────────────┘
+
+── Roster tab ─────────
+┌─────────────────────┐
+│ # მიმ. შემ.          │
+│ # · სახ.  · პ.       │
+│ 1   ი.ბ.   CM [↗]   │
+│ 9   გ.მ.   ST [↗]   │
+│ 23  ნ.კ.   GK       │
+└─────────────────────┘
+
+── Stadium tab ────────
+┌─────────────────────┐
+│ # სტ. სახ.           │
+│ ტევ.: ● · მის.: ●   │
+│ ░░░░░░░░░░░░░░░░░░  │
+│ ░░  Google Map   ░  │
+│ ░░░░░░░░░░░░░░░░░░  │
+└─────────────────────┘
+
+── News tab ───────────
+┌─────────────────────┐
+│ ┌─────────────────┐ │
+│ │ ▓ კლ. 2026-05-18│ │
+│ │ # ახ. სეზ.!     │ │
+│ │ ···  [❤ 12][💬 3]│ │
+│ └─────────────────┘ │
+│ ┌─────────────────┐ │
+│ │ ▓ კლ. 2026-05-16│ │
+│ │ # ტრ. გამ. ···  │ │
+│ └─────────────────┘ │
+└─────────────────────┘
+```
+
+---
+
 ## Annotations
 
 | ⚑   | Note                                                                                                                                                                |
@@ -84,3 +143,4 @@
 | C   | Tab routing: `/clubs/[id]`, `/clubs/[id]?tab=roster`, `?tab=stadium`, `?tab=news`. Default is history/bio.                                                          |
 | D   | Club detail is publicly visible (no auth required for the page itself), but subscribe CTA redirects to `/auth/signin` if unauthenticated.                           |
 | E   | News tab items link to individual post pages `/clubs/[id]/posts/[postId]` (Phase 7).                                                                                |
+| F   | Mobile uses horizontally scrollable tab strip. Cover photo is full-width at top.                                                                                    |

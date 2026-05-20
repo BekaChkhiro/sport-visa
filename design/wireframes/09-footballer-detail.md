@@ -73,6 +73,56 @@
 
 ---
 
+## Mobile wireframe (< 640 px)
+
+```
+┌─────────────────────┐
+│ HEADER (club nav)   │
+│ [← Directory]       │
+├─────────────────────┤
+│ ░░░░░░░░░░░░░░░░░░  │
+│ ░░  cover photo  ░  │
+│ ░░░░░░░░░░░░░░░░░░  │
+│                     │
+│ ▓▓▓  სახ. გვ.       │
+│ CM · 26წ · GEO      │
+│ ● Verified · 👁 348  │
+│                     │
+│ ┌─────────────────┐ │
+│ │ პ.: CM (ც.ნ.)   │ │
+│ │ ფ.: მარჯვ.      │ │
+│ │ გ.: ნახ.        │ │
+│ │ ს.: 2026/27     │ │
+│ │ კ.: FC Dila     │ │
+│ │ სიმ.: 182 · 78კ │ │
+│ │ ასაკი: 26       │ │
+│ └─────────────────┘ │
+│                     │
+│ BIO                 │
+│ ბიო ···             │
+│                     │
+│ CAREER              │
+│ · FC Dinamo 22–24   │
+│ · FC Loco   20–22   │
+│                     │
+│ GALLERY             │
+│ ┌──┐┌──┐┌──┐        │
+│ │░░││░░││░░│  1/6   │
+│ └──┘└──┘└──┘        │
+│ [← ] [→]            │
+│                     │
+│ VIDEOS              │
+│ ░░░░░░░░░░░░░░░░░░  │
+│ ░░ YouTube ░░░░░░░  │
+│ ░░░░░░░░░░░░░░░░░░  │
+├─────────────────────┤
+│ STICKY FOOTER       │
+│ [★ შ. სია][💬 ჩატი] │
+└─────────────────────┘
+```
+
+---
+
 ## Annotations
 
 | ⚑   | Note                                                                                                                  |
@@ -84,3 +134,4 @@
 | E   | Gallery uses a lightbox on click; keyboard navigable.                                                                 |
 | F   | Videos render as responsive iframes. Only YouTube and Vimeo embeds are allowed (sanitized).                           |
 | G   | This page is SSR (server-rendered) for each request — profile data is not stale-cached since it can update.           |
+| H   | Mobile has a sticky footer bar with Shortlist and Chat CTAs always visible while scrolling.                           |

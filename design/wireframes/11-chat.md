@@ -85,6 +85,77 @@
 
 ---
 
+## Mobile wireframe — conversation list (< 640 px)
+
+```
+┌─────────────────────┐
+│ HEADER              │
+│ [▓ logo] # ჩატები   │
+├─────────────────────┤
+│ [🔍 ჩატ. ძ.]        │
+├─────────────────────┤
+│ ┌─────────────────┐ │
+│ │ ▓ ი.ბ. ● on     │ │
+│ │ "გამარჯობა···"  │ │
+│ │ 14:32       [2] │ │
+│ └─────────────────┘ │
+│ ┌─────────────────┐ │
+│ │ ▓ გ.მ. ○ off    │ │
+│ │ "კი, მზად ···"  │ │
+│ │ გუშ.            │ │
+│ └─────────────────┘ │
+│ ┌─────────────────┐ │
+│ │ ▓ ლ.ქ. ○ off    │ │
+│ │ "···"           │ │
+│ │ 3 დ. წ.         │ │
+│ └─────────────────┘ │
+└─────────────────────┘
+```
+
+---
+
+## Mobile wireframe — active thread (< 640 px)
+
+```
+┌─────────────────────┐
+│ [←] ▓ ი.ბ. ● online │
+│     [CV↗][პ.↗]      │
+├─────────────────────┤
+│ ↕ (scroll)          │
+│                     │
+│ ┌───────────────┐   │
+│ │ ▓ FC Dila     │   │
+│ │ გამ.! გ. ხ.?  │   │
+│ │          13:45│   │
+│ └───────────────┘   │
+│                     │
+│   ┌───────────────┐ │
+│   │ კი. რა პ.?    │ │
+│   │         13:47 │ │
+│   └───────────────┘ │
+│                     │
+│ ┌───────────────┐   │
+│ │ ▓ FC Dila     │   │
+│ │ ხ.: 800$/თვ.  │   │
+│ │          13:50│   │
+│ └───────────────┘   │
+│                     │
+│ ── TODAY ────────── │
+│                     │
+│ ┌───────────────┐   │
+│ │ ▓ FC Dila     │   │
+│ │ სად ხ. ამ.კლ? │   │
+│ │          14:30│   │
+│ └───────────────┘   │
+├─────────────────────┤
+│ ┌─────────────────┐ │
+│ │ {შეტ.···} [📎][➤]│ │
+│ └─────────────────┘ │
+└─────────────────────┘
+```
+
+---
+
 ## Annotations
 
 | ⚑   | Note                                                                                                                      |
@@ -96,3 +167,4 @@
 | E   | Conversation list sidebar collapses to a back-arrow on mobile (full-screen thread view).                                  |
 | F   | Only clubs can initiate a new conversation (from footballer detail page). Footballers can only reply.                     |
 | G   | Unread count badge on nav item is the sum of unread messages across all conversations. Cleared on thread open.            |
+| H   | Mobile shows either the conversation list OR the active thread — never both side-by-side. [←] back returns to list.       |

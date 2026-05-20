@@ -69,6 +69,72 @@
 
 ---
 
+## Mobile wireframe (< 640 px)
+
+```
+┌─────────────────────┐
+│ HEADER (club)       │
+│ [▓ logo]    [≡ ]    │
+├─────────────────────┤
+│ # კლ. პროფ. რედ.   │
+│                     │
+│ SECTION TABS (swipe)│
+│ [ვინ.][მედ.][შ.][ბ.]│
+├─────────────────────┤
+│ IDENTITY            │
+│ {კლ. სახ. ★}        │
+│ {დ.წ.} {ქვ. ★ [↓]} │
+│ {ქ. ★} {ლ. [↓]}    │
+│ {სტ.} {ტ.}          │
+│ {ვებ.}              │
+│          [შენახვა]  │
+│                     │
+│ Visibility: [●]     │
+│ Status: ✓ გადამ.    │
+└─────────────────────┘
+
+── Media tab ──────────
+┌─────────────────────┐
+│ MEDIA               │
+│ LOGO                │
+│ ▓▓▓▓ [ლ. ცვლ.] 2MB │
+│                     │
+│ COVER PHOTO         │
+│ ░░░░░░░░░░░░░░░░░░  │
+│ [ფ. ცვლ.] < 10MB    │
+│          [შენახვა]  │
+└─────────────────────┘
+
+── Roster tab ─────────
+┌─────────────────────┐
+│ ROSTER              │
+│ {სახ.} {პოზ. [↓]}  │
+│ [+ დამ.]            │
+│                     │
+│ · ი. ბ.  CM  [×]    │
+│ · გ. მ.  ST  [×]    │
+│ · ნ. კ.  GK  [×]    │
+│          [შენახვა]  │
+└─────────────────────┘
+
+── Bio tab ────────────
+┌─────────────────────┐
+│ HISTORY / BIO       │
+│ [B I U • ≡ 🔗]      │
+│ ░░░░░░░░░░░░░░░░░░  │
+│ ░░ rich text ░░░░░  │
+│ ░░░░░░░░░░░░░░░░░░  │
+│ [0/2000] [შენახვა]  │
+│                     │
+│ STADIUM             │
+│ {სტ. მისამ.}         │
+│ {Maps ლინ./კოო.}    │
+│          [შენახვა]  │
+└─────────────────────┘
+```
+
+---
+
 ## Annotations
 
 | ⚑   | Note                                                                                                                                                                       |
@@ -78,3 +144,4 @@
 | C   | Visibility toggle hides the club from the footballer directory but keeps the profile page accessible via direct URL.                                                       |
 | D   | Logo is displayed at 200×200 px on the public profile and as a 40×40 thumbnail in directory cards. Must be square.                                                         |
 | E   | Stadium map embed uses an iframe to Google Maps using the provided coordinates or link. Shown on the public club detail page.                                              |
+| F   | Mobile uses a swipeable tab layout. Section tabs map to: ვინ. (identity), მედ. (media), შ. (roster), ბ. (bio + stadium).                                                   |
