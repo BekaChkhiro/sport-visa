@@ -64,3 +64,4 @@ Thumbs.db
 *.local
 .planflow/worktrees.json
 .planflow/index-state.json
+.planflow/agents/
