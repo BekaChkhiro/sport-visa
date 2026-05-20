@@ -1,0 +1,15 @@
+node_modules/
+.next/
+out/
+build/
+dist/
+coverage/
+.turbo/
+package-lock.json
+pnpm-lock.yaml
+yarn.lock
+next-env.d.ts
+*.tsbuildinfo
+
+# Planning artifact — generated, do not reformat
+PROJECT_PLAN.md
