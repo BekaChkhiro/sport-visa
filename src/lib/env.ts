@@ -27,6 +27,13 @@ const serverSchema = z.object({
     .refine((v) => !v.endsWith('/'), 'R2_PUBLIC_BASE_URL must not end with a trailing slash')
     .optional()
     .or(z.literal('').transform(() => undefined)),
+
+  // Pusher (T1.7). All four are optional at boot; src/lib/pusher.ts throws on
+  // use if any are missing — same lazy-guard pattern as R2.
+  PUSHER_APP_ID: z.string().min(1).optional(),
+  PUSHER_KEY: z.string().min(1).optional(),
+  PUSHER_SECRET: z.string().min(1).optional(),
+  PUSHER_CLUSTER: z.string().min(1).optional(),
 });
 
 const clientSchema = z.object({
@@ -38,6 +45,10 @@ const clientSchema = z.object({
     .url()
     .optional()
     .or(z.literal('').transform(() => undefined)),
+  // Pusher key and cluster are safe to expose — they identify the app but
+  // carry no write privileges (the secret stays server-only).
+  NEXT_PUBLIC_PUSHER_KEY: z.string().min(1).optional(),
+  NEXT_PUBLIC_PUSHER_CLUSTER: z.string().min(1).optional(),
 });
 
 const envSchema = serverSchema.merge(clientSchema);
@@ -55,6 +66,12 @@ const processEnv = {
   R2_SECRET_ACCESS_KEY: process.env.R2_SECRET_ACCESS_KEY,
   R2_BUCKET: process.env.R2_BUCKET,
   R2_PUBLIC_BASE_URL: process.env.R2_PUBLIC_BASE_URL,
+  PUSHER_APP_ID: process.env.PUSHER_APP_ID,
+  PUSHER_KEY: process.env.PUSHER_KEY,
+  PUSHER_SECRET: process.env.PUSHER_SECRET,
+  PUSHER_CLUSTER: process.env.PUSHER_CLUSTER,
+  NEXT_PUBLIC_PUSHER_KEY: process.env.NEXT_PUBLIC_PUSHER_KEY,
+  NEXT_PUBLIC_PUSHER_CLUSTER: process.env.NEXT_PUBLIC_PUSHER_CLUSTER,
 };
 
 const parsed = envSchema.safeParse(processEnv);
