@@ -1,6 +1,6 @@
 # Sport Visa — Design Tokens
 
-> **Status**: Provisional (Phase 1). These tokens will be refined in T2.1 (Brand Identity) and re-applied in T2.7 once brand colours are confirmed.
+> **Status**: Finalised in T2.1 (Brand Identity). Logo mark: shield badge with V-mark in pitch-green. Palette locked — apply via T2.7 across all screens.
 
 All tokens live in `src/app/globals.css` as CSS custom properties. Tailwind utilities are wired through the `@theme inline` block, so `bg-primary`, `text-primary-foreground`, etc. resolve automatically in both light and dark modes.
 
@@ -53,6 +53,29 @@ All tokens live in `src/app/globals.css` as CSS custom properties. Tailwind util
 | `--info-foreground`        | white                       | white        | —                                   |
 | `--destructive`            | red-500                     | red-400      | Destructive actions, error states   |
 | `--destructive-foreground` | white                       | white        | —                                   |
+
+### Chart colours
+
+Five-colour palette for data visualisation (stats strip, dashboard charts). Brand-harmonious — anchored to the primary pitch green.
+
+| Token       | Light (oklch)     | Dark (oklch)      | Hue    |
+| ----------- | ----------------- | ----------------- | ------ |
+| `--chart-1` | `0.527 0.154 148` | `0.723 0.219 149` | Green  |
+| `--chart-2` | `0.54 0.14 250`   | `0.65 0.15 250`   | Blue   |
+| `--chart-3` | `0.75 0.16 70`    | `0.82 0.16 70`    | Amber  |
+| `--chart-4` | `0.55 0.13 290`   | `0.68 0.14 290`   | Purple |
+| `--chart-5` | `0.55 0.12 185`   | `0.68 0.13 185`   | Teal   |
+
+---
+
+## Logo
+
+The `<Logo>` component (`src/components/logo.tsx`) renders the Sport Visa mark:
+
+- **Badge**: shield shape filled with `--primary`; white V-mark inside (victory / Visa)
+- **Wordmark**: "Sport Visa" in `font-semibold tracking-tight`
+- **Props**: `size` (sm | md | lg), `showWordmark` (bool, default true)
+- **Dark-mode**: badge fill auto-adapts via `fill-primary`; white stroke stays white
 
 ---
 
