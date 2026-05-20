@@ -1,14 +1,29 @@
 import { z } from 'zod';
 
+const logLevelSchema = z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent']);
+
 const serverSchema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
   DATABASE_URL: z.string().url('DATABASE_URL must be a valid PostgreSQL connection string'),
+
+  LOG_LEVEL: logLevelSchema.optional(),
+  SENTRY_DSN: z
+    .string()
+    .url()
+    .optional()
+    .or(z.literal('').transform(() => undefined)),
+  SENTRY_ENVIRONMENT: z.string().optional(),
 });
 
 const clientSchema = z.object({
   NEXT_PUBLIC_APP_URL: z
     .string()
     .url('NEXT_PUBLIC_APP_URL must be a valid URL (e.g. http://localhost:3000)'),
+  NEXT_PUBLIC_SENTRY_DSN: z
+    .string()
+    .url()
+    .optional()
+    .or(z.literal('').transform(() => undefined)),
 });
 
 const envSchema = serverSchema.merge(clientSchema);
@@ -16,7 +31,11 @@ const envSchema = serverSchema.merge(clientSchema);
 const processEnv = {
   NODE_ENV: process.env.NODE_ENV,
   DATABASE_URL: process.env.DATABASE_URL,
+  LOG_LEVEL: process.env.LOG_LEVEL,
+  SENTRY_DSN: process.env.SENTRY_DSN,
+  SENTRY_ENVIRONMENT: process.env.SENTRY_ENVIRONMENT,
   NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
+  NEXT_PUBLIC_SENTRY_DSN: process.env.NEXT_PUBLIC_SENTRY_DSN,
 };
 
 const parsed = envSchema.safeParse(processEnv);

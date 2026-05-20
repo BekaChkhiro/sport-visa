@@ -101,6 +101,13 @@ npm run db:migrate:deploy      # apply pending migrations (CI / prod)
 `dotenv-cli`. Production gets `DATABASE_URL` from Railway service variables;
 CI gets it from GitHub Actions secrets.
 
+## Observability
+
+Structured logging (pino), request tracing, and Sentry error tracking are
+wired in `T1.5`. See [`docs/observability.md`](./docs/observability.md) for
+log levels, retention, the standard error JSON shape, and the request-ID
+flow. All three degrade gracefully when their env vars are unset.
+
 ## Test
 
 > Test runners land in later Phase 1 tasks (T1.5+ for unit/integration,
