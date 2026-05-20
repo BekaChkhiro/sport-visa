@@ -20,8 +20,16 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"]
-    }
+    },
+    "plugins": [{ "name": "next" }]
   },
-  "include": ["**/*.ts", "**/*.tsx", "**/*.mjs", "**/*.cjs"],
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    "**/*.mjs",
+    "**/*.cjs",
+    ".next/types/**/*.ts"
+  ],
   "exclude": ["node_modules", ".next", "out", "build", "dist", "coverage"]
 }
