@@ -63,3 +63,4 @@ Thumbs.db
 .cache/
 *.local
 .planflow/worktrees.json
+.planflow/index-state.json

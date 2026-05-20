@@ -30,9 +30,33 @@ Clone and install:
 git clone <repo-url> sport-visa
 cd sport-visa
 npm install
+cp .env.example .env.local   # fill in any blanks before `npm run dev`
 ```
 
 The `npm install` step also wires the git pre-commit hook via Husky.
+
+## Environment variables
+
+Every variable is documented in [`.env.example`](./.env.example) and validated
+at boot by `src/lib/env.ts` (zod). Booting with a missing or malformed value
+crashes the app immediately with a clear error — no silent fallbacks.
+
+Secret sources by environment:
+
+| Environment | Source                                                    |
+| ----------- | --------------------------------------------------------- |
+| Local dev   | `.env.local` (gitignored, copied from `.env.example`)     |
+| CI          | GitHub Actions repository / environment secrets           |
+| Production  | Railway service variables (set via the Railway dashboard) |
+
+Rules:
+
+- Never commit real secrets. All `.env*` files are gitignored except
+  `.env.example`.
+- Add any new variable to **both** `.env.example` (with a comment + safe
+  placeholder) **and** the zod schema in `src/lib/env.ts`.
+- Use the `NEXT_PUBLIC_` prefix only for values that are safe to ship to the
+  browser — they are inlined into the client bundle at build time.
 
 ## Run
 
@@ -78,7 +102,7 @@ sport-visa/
 
 ## Contributing
 
-1. Branch off `main` using the task ID: `task/T<phase>.<n>-<short-slug>`
+1. Branch off `master` using the task ID: `task/T<phase>.<n>-<short-slug>`
 2. Run `npm run lint && npm run typecheck` before pushing
 3. Open a PR; CI must be green
 
