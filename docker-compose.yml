@@ -1,0 +1,36 @@
+# Local development stack for Sport Visa.
+#
+# Brings up a PostgreSQL 16 instance matching the production target so Prisma
+# migrations run identically in dev and prod. The named volume `sport-visa-db`
+# survives `docker compose down`; use `docker compose down -v` to wipe data.
+#
+# Defaults align with `DATABASE_URL` in `.env.example`:
+#   postgresql://sport_visa:sport_visa@localhost:5432/sport_visa?schema=public
+#
+# Usage:
+#   docker compose up -d        # start Postgres in the background
+#   docker compose logs -f db   # tail logs
+#   docker compose down         # stop (keeps data)
+#   docker compose down -v      # stop + wipe
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: sport-visa-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: sport_visa
+      POSTGRES_PASSWORD: sport_visa
+      POSTGRES_DB: sport_visa
+    ports:
+      - '5432:5432'
+    volumes:
+      - sport-visa-db:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U sport_visa -d sport_visa']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  sport-visa-db:

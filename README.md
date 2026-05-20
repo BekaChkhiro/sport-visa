@@ -22,7 +22,7 @@ Requirements:
 
 - Node.js **>= 20** (Node 22 recommended)
 - npm 10+
-- Docker (for the local Postgres container — added in T1.4)
+- Docker (for the local Postgres container — see [Database](#database))
 
 Clone and install:
 
@@ -74,6 +74,33 @@ npm run typecheck    # tsc --noEmit
 Pre-commit hook runs `lint-staged` on staged files: ESLint `--fix` plus
 Prettier `--write` for code, Prettier for `*.{json,md,yml,yaml,css}`.
 
+## Database
+
+Local development uses PostgreSQL 16 via docker-compose. Prisma is the ORM;
+the schema lives at [`prisma/schema.prisma`](./prisma/schema.prisma) and the
+client singleton at [`src/lib/db.ts`](./src/lib/db.ts).
+
+Start the local Postgres and run the initial migration:
+
+```bash
+docker compose up -d           # start Postgres 16 on localhost:5432
+npm run db:migrate             # apply migrations (creates one on first run)
+npm run db:studio              # browse data at http://localhost:5555
+```
+
+Other scripts:
+
+```bash
+npm run db:generate            # regenerate Prisma Client after schema edits
+npm run db:push                # push schema without creating a migration (dev only)
+npm run db:reset               # drop + recreate the database, then re-apply migrations
+npm run db:migrate:deploy      # apply pending migrations (CI / prod)
+```
+
+`DATABASE_URL` is loaded from `.env.local` for every `db:*` script via
+`dotenv-cli`. Production gets `DATABASE_URL` from Railway service variables;
+CI gets it from GitHub Actions secrets.
+
 ## Test
 
 > Test runners land in later Phase 1 tasks (T1.5+ for unit/integration,
@@ -91,6 +118,8 @@ Coverage gate: minimum 70% line coverage on services. CI enforces.
 ```
 sport-visa/
 ├── src/                # application code (added in T1.2)
+├── prisma/             # schema.prisma + generated migrations
+├── docker-compose.yml  # local Postgres 16
 ├── PROJECT_PLAN.md     # roadmap, phases, acceptance criteria
 ├── package.json
 ├── tsconfig.json

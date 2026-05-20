@@ -16,7 +16,13 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "typecheck": "tsc --noEmit",
-    "prepare": "husky"
+    "prepare": "husky",
+    "db:generate": "prisma generate",
+    "db:migrate": "dotenv -e .env.local -- prisma migrate dev",
+    "db:migrate:deploy": "prisma migrate deploy",
+    "db:push": "dotenv -e .env.local -- prisma db push",
+    "db:reset": "dotenv -e .env.local -- prisma migrate reset",
+    "db:studio": "dotenv -e .env.local -- prisma studio"
   },
   "lint-staged": {
     "*.{ts,tsx,js,jsx,mjs,cjs}": [
@@ -33,6 +39,7 @@
     "@types/node": "^22.10.5",
     "@types/react": "^19.2.15",
     "@types/react-dom": "^19.2.3",
+    "dotenv-cli": "^11.0.0",
     "eslint": "^9.18.0",
     "eslint-config-next": "^15.5.18",
     "eslint-config-prettier": "^9.1.0",
@@ -40,11 +47,13 @@
     "lint-staged": "^15.4.1",
     "postcss": "^8.5.15",
     "prettier": "^3.4.2",
+    "prisma": "^6.19.3",
     "tailwindcss": "^4.3.0",
     "typescript": "^5.7.3",
     "typescript-eslint": "^8.20.0"
   },
   "dependencies": {
+    "@prisma/client": "^6.19.3",
     "@radix-ui/react-slot": "^1.2.4",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
