@@ -118,6 +118,67 @@
 
 ---
 
+## Mobile wireframe (< 640 px)
+
+```
+── Step 1: Service selection ──
+┌─────────────────────┐
+│ HEADER (footballer) │
+│ [← Dashboard]       │
+├─────────────────────┤
+│ # სერვ. მოთხ.       │
+│ STEP 1 / 2          │
+│                     │
+│ ┌─────────────────┐ │
+│ │ ▓ 🍽  კვება      │ │
+│ │ · კვ. გ.        │ │
+│ │ · ჯ. კვება      │ │
+│ │    [არჩ.]        │ │
+│ └─────────────────┘ │
+│ ┌─────────────────┐ │
+│ │ ▓ 💪  პ. ტრენ.  │ │
+│ │ · ინდ. გ.       │ │
+│ │    [არჩ.]        │ │
+│ └─────────────────┘ │
+│ ┌─────────────────┐ │
+│ │ ▓ 🏥  გ. ექ.    │ │
+│ │    [არჩ.]        │ │
+│ └─────────────────┘ │
+│ ┌─────────────────┐ │
+│ │ ▓ ···  სხვა     │ │
+│ │    [არჩ.]        │ │
+│ └─────────────────┘ │
+└─────────────────────┘
+
+── Step 2: Details ────
+┌─────────────────────┐
+│ [← ტ. ცვლ.]         │
+│ # კვება · STEP 2/2  │
+│                     │
+│ {დაწ. თ. ★}         │
+│ {დამ. თ. ★}         │
+│                     │
+│ PLAN TYPE ★         │
+│ (●) 3კვ. ( ) 4კვ.   │
+│ ( ) 5კვ./დ.         │
+│                     │
+│ DIET                │
+│ [ვეგ.][ვ-ნ.][გლ. თ.]│
+│                     │
+│ {დამ. შენ.} [0/500] │
+│                     │
+│ CONTACT             │
+│ (●) ელ.ფ. ( ) ტ.   │
+│ ( ) ჩატი            │
+│                     │
+│ ℹ 48სთ განხ.        │
+│                     │
+│ [← უ.][გ. გაგ.]    │
+└─────────────────────┘
+```
+
+---
+
 ## Annotations
 
 | ⚑   | Note                                                                                                                             |
@@ -127,3 +188,4 @@
 | C   | Date pickers use the native browser date input (no third-party calendar in MVP).                                                 |
 | D   | On submit, a Resend email is triggered to the admin inbox with the request details. A confirmation email goes to the footballer. |
 | E   | Service request list on the dashboard (screen 04) reflects status updates when admin marks them resolved.                        |
+| F   | Mobile stacks the service type cards vertically (1 column). Desktop uses a 2-column grid.                                        |

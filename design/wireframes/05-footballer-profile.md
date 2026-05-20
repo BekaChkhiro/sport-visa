@@ -75,6 +75,64 @@
 
 ---
 
+## Mobile wireframe (< 640 px)
+
+```
+┌─────────────────────┐
+│ HEADER (footballer) │
+│ [▓ logo]    [≡ ]    │
+├─────────────────────┤
+│ # პროფ. რედ.        │
+│                     │
+│ SECTION TABS (swipe)│
+│ [პირ.][სპ.][ფო.][ვ.]│
+├─────────────────────┤
+│ PERSONAL INFO       │
+│ ▓▓ [ავ. ცვლ.]       │
+│ {სახ. ★} {გვ. ★}   │
+│ {დ.თ. ★} {ეროვ. [↓]}│
+│ {ქ. ★}  {ქვ. [↓]}  │
+│ {ტელ.}              │
+│ {ბიო} [0/500]       │
+│          [შენახვა]  │
+├─────────────────────┤
+│ Visibility: [●] on  │
+│ Status: ✓ გადამ.    │
+└─────────────────────┘
+
+── Sport info tab ─────
+┌─────────────────────┐
+│ SPORT INFO          │
+│ POSITION ★          │
+│ [GK][CB][LB][RB]    │
+│ [CM][DM][AM][LW]    │
+│ [RW][CF][ST]        │
+│ FOOT ★              │
+│ (●)მ. ( )მ. ( )ო.  │
+│ {სიმ.} {წ.}         │
+│ {ამ. კლ.} {ნ.} [↓] │
+│ {ს. ლ.}             │
+│          [შენახვა]  │
+└─────────────────────┘
+
+── Gallery tab ────────
+┌─────────────────────┐
+│ PHOTO GALLERY       │
+│ ┌──┐┌──┐┌──┐┌ + ┐  │
+│ │░░││░░││░░││   │  │
+│ │[×]││[×]││[×]│    │
+│ └──┘└──┘└──┘└───┘  │
+│ 3/8        [+ ატვ.] │
+│                     │
+│ VIDEO LINKS         │
+│ {URL 1}  [×]        │
+│ [+ ვიდ.] (max 3)    │
+│          [შენახვა]  │
+└─────────────────────┘
+```
+
+---
+
 ## Annotations
 
 | ⚑   | Note                                                                                                                                                     |
@@ -84,3 +142,4 @@
 | C   | Each section saves independently with optimistic UI update + toast. No full-page submit.                                                                 |
 | D   | Account settings (email, password change, delete account) are in a separate `/account/settings` page linked from sidebar.                                |
 | E   | Profile visibility toggle (sidebar) controls whether clubs can find this footballer in the directory. Default ON after verification.                     |
+| F   | Mobile uses a tab-based layout instead of the desktop scroll-all-sections layout. Section tabs are swipeable.                                            |
