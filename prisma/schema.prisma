@@ -21,6 +21,18 @@ enum Role {
   ADMIN
 }
 
+// What an uploaded asset is for. Used by the upload presign endpoint to scope
+// keys (`<kind>/<id>.<ext>`) and by future feature code to query attachments.
+enum MediaKind {
+  AVATAR
+  GALLERY
+  CLUB_LOGO
+  CLUB_BANNER
+  POST_IMAGE
+  CHAT_ATTACHMENT
+  OTHER
+}
+
 model User {
   id        String   @id @default(cuid())
   email     String   @unique
@@ -29,4 +41,20 @@ model User {
   updatedAt DateTime @updatedAt
 
   @@map("users")
+}
+
+// One row per object stored in Cloudflare R2. Created by the /api/uploads/confirm
+// endpoint after the client PUTs to the presigned URL. `key` is the bucket-relative
+// object key (e.g. `avatar/clx123.jpg`); the read URL is derived from
+// R2_PUBLIC_BASE_URL at runtime so it isn't duplicated in the row.
+model Media {
+  id          String    @id @default(cuid())
+  key         String    @unique
+  kind        MediaKind
+  contentType String
+  size        Int
+  createdAt   DateTime  @default(now())
+
+  @@index([kind, createdAt])
+  @@map("media")
 }

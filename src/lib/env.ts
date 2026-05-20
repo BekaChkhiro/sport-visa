@@ -13,6 +13,20 @@ const serverSchema = z.object({
     .optional()
     .or(z.literal('').transform(() => undefined)),
   SENTRY_ENVIRONMENT: z.string().optional(),
+
+  // Cloudflare R2 (T1.6). All five are optional at boot so the app keeps
+  // running before R2 is provisioned, but src/lib/r2.ts crashes loud on use
+  // if any of them are missing — see `assertR2Configured`.
+  R2_ACCOUNT_ID: z.string().min(1).optional(),
+  R2_ACCESS_KEY_ID: z.string().min(1).optional(),
+  R2_SECRET_ACCESS_KEY: z.string().min(1).optional(),
+  R2_BUCKET: z.string().min(1).optional(),
+  R2_PUBLIC_BASE_URL: z
+    .string()
+    .url('R2_PUBLIC_BASE_URL must be a valid URL (no trailing slash)')
+    .refine((v) => !v.endsWith('/'), 'R2_PUBLIC_BASE_URL must not end with a trailing slash')
+    .optional()
+    .or(z.literal('').transform(() => undefined)),
 });
 
 const clientSchema = z.object({
@@ -36,6 +50,11 @@ const processEnv = {
   SENTRY_ENVIRONMENT: process.env.SENTRY_ENVIRONMENT,
   NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
   NEXT_PUBLIC_SENTRY_DSN: process.env.NEXT_PUBLIC_SENTRY_DSN,
+  R2_ACCOUNT_ID: process.env.R2_ACCOUNT_ID,
+  R2_ACCESS_KEY_ID: process.env.R2_ACCESS_KEY_ID,
+  R2_SECRET_ACCESS_KEY: process.env.R2_SECRET_ACCESS_KEY,
+  R2_BUCKET: process.env.R2_BUCKET,
+  R2_PUBLIC_BASE_URL: process.env.R2_PUBLIC_BASE_URL,
 };
 
 const parsed = envSchema.safeParse(processEnv);
