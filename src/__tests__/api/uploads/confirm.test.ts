@@ -1,4 +1,6 @@
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
+import { ApiError } from '@/lib/api-error';
 
 vi.mock('@/lib/env', () => ({
   env: {
@@ -29,6 +31,7 @@ vi.mock('@/lib/request-context', () => ({
 
 const mockHeadObject = vi.hoisted(() => vi.fn());
 const mockDeleteObject = vi.hoisted(() => vi.fn());
+const mockRequireUser = vi.hoisted(() => vi.fn());
 
 vi.mock('@/lib/r2', () => ({
   MAX_UPLOAD_BYTES: 10 * 1024 * 1024,
@@ -44,8 +47,14 @@ vi.mock('@/lib/db', () => ({
   db: { media: { create: vi.fn() } },
 }));
 
+vi.mock('@/lib/auth/require-user', () => ({
+  requireAuthenticatedUser: mockRequireUser,
+}));
+
 import { POST } from '@/app/api/uploads/confirm/route';
 import { db } from '@/lib/db';
+
+const SESSION_USER = { id: 'user-1', email: 'a@b.com', role: 'FOOTBALLER', emailVerified: null };
 
 function makeReq(body: unknown) {
   return new Request('http://localhost/api/uploads/confirm', {
@@ -66,7 +75,15 @@ const MEDIA_ROW = {
 };
 
 describe('POST /api/uploads/confirm', () => {
-  it('returns 201 with the media record on success', async () => {
+  beforeEach(() => {
+    mockHeadObject.mockReset();
+    mockDeleteObject.mockReset();
+    mockRequireUser.mockReset();
+    vi.mocked(db.media.create).mockReset();
+  });
+
+  it('returns 201 with the media record for an authenticated request', async () => {
+    mockRequireUser.mockResolvedValueOnce(SESSION_USER);
     mockHeadObject.mockResolvedValueOnce(HEAD_OK);
     vi.mocked(db.media.create).mockResolvedValueOnce(MEDIA_ROW as never);
 
@@ -76,7 +93,16 @@ describe('POST /api/uploads/confirm', () => {
     expect(body).toMatchObject({ id: 'cuid-1', url: 'https://cdn.example.com/avatar/test.jpg' });
   });
 
+  it('returns 401 for anonymous callers', async () => {
+    mockRequireUser.mockRejectedValueOnce(new ApiError('UNAUTHORIZED', 'Authentication required'));
+    const res = await POST(makeReq({ key: 'avatar/test.jpg', kind: 'AVATAR' }));
+    expect(res.status).toBe(401);
+    expect((await res.json()).error.code).toBe('UNAUTHORIZED');
+    expect(mockHeadObject).not.toHaveBeenCalled();
+  });
+
   it('returns 404 when the object is not in R2', async () => {
+    mockRequireUser.mockResolvedValueOnce(SESSION_USER);
     mockHeadObject.mockResolvedValueOnce(null);
     const res = await POST(makeReq({ key: 'avatar/missing.jpg', kind: 'AVATAR' }));
     expect(res.status).toBe(404);
@@ -84,6 +110,7 @@ describe('POST /api/uploads/confirm', () => {
   });
 
   it('returns 422 and deletes the object when content type is disallowed', async () => {
+    mockRequireUser.mockResolvedValueOnce(SESSION_USER);
     mockHeadObject.mockResolvedValueOnce({ contentLength: 100, contentType: 'application/pdf' });
     mockDeleteObject.mockResolvedValueOnce(undefined);
 
@@ -93,6 +120,7 @@ describe('POST /api/uploads/confirm', () => {
   });
 
   it('returns 422 and deletes the object when content length exceeds max', async () => {
+    mockRequireUser.mockResolvedValueOnce(SESSION_USER);
     mockHeadObject.mockResolvedValueOnce({
       contentLength: 20 * 1024 * 1024,
       contentType: 'image/jpeg',
@@ -105,11 +133,13 @@ describe('POST /api/uploads/confirm', () => {
   });
 
   it('returns 422 for missing required fields', async () => {
+    mockRequireUser.mockResolvedValueOnce(SESSION_USER);
     const res = await POST(makeReq({ key: 'avatar/test.jpg' }));
     expect(res.status).toBe(422);
   });
 
   it('returns 400 for a non-JSON body', async () => {
+    mockRequireUser.mockResolvedValueOnce(SESSION_USER);
     const req = new Request('http://localhost/api/uploads/confirm', {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain' },

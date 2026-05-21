@@ -32,7 +32,13 @@ vi.mock('pusher', () => ({
 }));
 
 import { ApiError } from '@/lib/api-error';
-import { authenticateChannel, channels, events, triggerEvent } from '@/lib/pusher';
+import {
+  authenticateChannel,
+  channels,
+  events,
+  isChannelAllowedForUser,
+  triggerEvent,
+} from '@/lib/pusher';
 
 describe('channels', () => {
   it('chat sorts user IDs lexicographically', () => {
@@ -85,6 +91,35 @@ describe('authenticateChannel', () => {
 
   it('throws BAD_REQUEST for a presence channel without user data', () => {
     expect(() => authenticateChannel('123.456', 'presence-room')).toThrow(ApiError);
+  });
+});
+
+describe('isChannelAllowedForUser', () => {
+  it('allows a participant on a private chat channel', () => {
+    expect(isChannelAllowedForUser('private-chat.alice.bob', 'alice')).toBe(true);
+    expect(isChannelAllowedForUser('private-chat.alice.bob', 'bob')).toBe(true);
+  });
+
+  it('denies a non-participant on a private chat channel', () => {
+    expect(isChannelAllowedForUser('private-chat.alice.bob', 'carol')).toBe(false);
+  });
+
+  it('allows only the owning user on a private-user channel', () => {
+    expect(isChannelAllowedForUser('private-user.uid-1.notifications', 'uid-1')).toBe(true);
+    expect(isChannelAllowedForUser('private-user.uid-1.notifications', 'uid-2')).toBe(false);
+  });
+
+  it('does not match a prefix of a different userId', () => {
+    expect(isChannelAllowedForUser('private-user.uid-12.notifications', 'uid-1')).toBe(false);
+  });
+
+  it('allows any authenticated user on presence channels', () => {
+    expect(isChannelAllowedForUser('presence-lobby', 'anyone')).toBe(true);
+  });
+
+  it('denies unknown / public channels (auth route should not be hit for them)', () => {
+    expect(isChannelAllowedForUser('club-feed.club-1', 'uid-1')).toBe(false);
+    expect(isChannelAllowedForUser('weird-channel', 'uid-1')).toBe(false);
   });
 });
 

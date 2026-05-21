@@ -576,6 +576,74 @@ These are mandatory for shipping. The validator will flag missing items.
   - ≥70% coverage on auth service files
   - Rate limiter triggers 429 under load test
 
+#### T3.8: Add session auth guards to non-NextAuth API routes
+- [ ] **Status**: TODO
+- **Complexity**: High
+- **Estimated**: 8 hours
+- **Dependencies**: T3.2, T3.5
+- **Description**:
+  - Wire `await auth()` into /api/uploads/presign, /api/uploads/confirm, /api/pusher/auth, /api/notifications, /api/notifications/[id], /api/email/send (each currently exposes a TODO referencing T3)
+  - Replace `placeholder-user` in Pusher channel auth with `session.user.id` and verify the caller is allowed on the requested channel (chat IDs must include them; user-notifications channel must match)
+  - Drop client-supplied `userId` from notifications query/body — derive it from the session so one user can't read or mutate another's notifications
+  - Lock /api/email/send to internal/ADMIN callers only and remove caller-controlled `bodyHtml` / `subject` (templates only) — current shape is an open phishing-launcher
+  - Add a shared `requireAuthenticatedUser()` helper that throws ApiError('UNAUTHORIZED') on miss so all routes share one shape
+  - Extend tests under src/__tests__/api/* to assert 401 on anonymous calls and 403 on cross-user attempts
+- **Acceptance Criteria**:
+  - Anonymous calls to every non-NextAuth route return 401 with the ApiError JSON envelope
+  - Pusher channel auth refuses subscriptions that do not match the caller's user ID
+  - Notifications endpoints ignore any client-supplied userId and act on session.user.id only
+  - /api/email/send rejects calls without an admin/internal credential and no longer accepts arbitrary HTML
+  - Full vitest suite passes; new tests cover anonymous-401 and cross-user-403 paths
+- **Test Task**: T3.7
+
+#### T3.9: Rate-limit public auth and email endpoints
+- [ ] **Status**: TODO
+- **Complexity**: Medium
+- **Estimated**: 4 hours
+- **Dependencies**: T3.3, T3.4, T3.8
+- **Description**:
+  - Generalise `src/lib/auth/rate-limit.ts` into a reusable bucket-keyed limiter or extract a thin abstraction so non-login flows can share it
+  - Apply it to `requestPasswordResetAction` (per email + per IP), `resendVerificationEmailAction` (per user), `/api/uploads/presign` (per session+IP), and the locked-down `/api/email/send`
+  - Return ApiError('RATE_LIMITED') / 429 with `requestId` so callers can correlate; the action variants surface a generic user-facing message
+  - Cover bucket overflow + cooldown in unit tests; ensure successful requests do not consume IP budget for unrelated users
+- **Acceptance Criteria**:
+  - Burst over the configured limit returns 429 / RATE_LIMITED on each protected endpoint
+  - Cooldown resets after the window without leaking buckets between tests
+  - Existing login rate-limit behaviour and tests still pass
+- **Test Task**: T3.7
+
+#### T3.10: Harden onboarding action validation and idempotency
+- [ ] **Status**: TODO
+- **Complexity**: Low
+- **Estimated**: 3 hours
+- **Dependencies**: T3.6
+- **Description**:
+  - Replace the silent-success branch in `saveFootballerProfile` / `saveClubProfile` (returns success without writing when a profile already exists) with either an explicit "already onboarded" status or a real update path — current behaviour drops user edits without feedback
+  - Strengthen `dateOfBirth` in `footballerStep1Schema` from `z.string().min(1)` to `z.coerce.date()` (or a YYYY-MM-DD regex) so invalid inputs fail before reaching Prisma
+  - Add an exhaustive `assertNever` (or 404) fallback in `roleDashboardPath` instead of defaulting unknown roles to the footballer dashboard
+  - Refresh stale comments — `src/app/auth/forgot-password/page.tsx:10-13` still describes T3.4 as not landed
+- **Acceptance Criteria**:
+  - Re-submitting the wizard with a profile already present returns a distinct status the UI can react to (no silent drop)
+  - Invalid dateOfBirth payloads are rejected by zod with a clear field error
+  - roleDashboardPath rejects unknown roles in a type-checked way
+- **Test Task**: T3.7
+
+#### T3.11: Phase 3 polish — strip placeholders and stray artefacts
+- [ ] **Status**: TODO
+- **Complexity**: Low
+- **Estimated**: 2 hours
+- **Dependencies**: T3.6
+- **Description**:
+  - Delete the working-tree-only `pnpm-lock.yaml` and `pnpm-workspace.yaml` (gitignored but present from a stray run; conflicts with the npm-only policy)
+  - Replace `src/app/page.tsx` (still the T1.2 shadcn demo) with a minimal stub so anonymous visitors don't see "ეს არის სატესტო გვერდი T1.2" — full landing lives in Phase 10
+  - Wire `npx prisma validate` (and ideally `prisma migrate diff --exit-code`) into the CI lint_type job so future schema drift fails CI before deploy
+  - Schedule a VerificationToken cleanup job (or document deferring to T13.x) to drop rows past `expires`
+- **Acceptance Criteria**:
+  - `git status` is clean and no pnpm-* files appear in the working tree after install
+  - Root `/` no longer shows the T1.2 placeholder copy
+  - CI fails when prisma schema and migrations diverge
+- **Test Task**: T3.7
+
 ---
 
 ### Phase 4: Footballer Profile & Dashboard

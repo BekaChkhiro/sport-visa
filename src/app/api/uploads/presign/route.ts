@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 
 import { ApiError, apiHandler } from '@/lib/api-error';
+import { requireAuthenticatedUser } from '@/lib/auth/require-user';
 import { logger } from '@/lib/logger';
 import {
   ALLOWED_IMAGE_TYPES,
@@ -22,6 +23,8 @@ const presignSchema = z.object({
 });
 
 export const POST = apiHandler(async (request: Request) => {
+  const user = await requireAuthenticatedUser();
+
   let body: unknown;
   try {
     body = await request.json();
@@ -50,7 +53,10 @@ export const POST = apiHandler(async (request: Request) => {
 
   const presigned = await createPresignedPutUrl({ kind, contentType, contentLength });
 
-  logger.info({ kind, contentType, contentLength, key: presigned.key }, 'r2_presigned_put_issued');
+  logger.info(
+    { userId: user.id, kind, contentType, contentLength, key: presigned.key },
+    'r2_presigned_put_issued',
+  );
 
   return NextResponse.json(presigned, { status: 200 });
 });

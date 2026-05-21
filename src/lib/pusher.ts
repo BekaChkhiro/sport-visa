@@ -70,6 +70,36 @@ export function authenticateChannel(
   return JSON.stringify(auth);
 }
 
+/**
+ * Returns true if `userId` is allowed to subscribe to `channelName`.
+ *
+ * The channel namespaces (defined in `channels` below) encode ownership
+ * directly into the name, so authorization is purely a string-shape check:
+ *   - `private-chat.<a>.<b>` — both participants are listed, sorted; the
+ *     caller must be `a` or `b`.
+ *   - `private-user.<userId>.<...>` — single-user channels; userId must match.
+ *   - `presence-<...>` — any authenticated user may join (their presence
+ *     payload identifies them; no cross-user leak).
+ *
+ * Public channels (no `private-` / `presence-` prefix) do not require auth
+ * and should never reach this code path — Pusher only calls the auth route
+ * for private/presence subscriptions. Default deny anything unrecognised.
+ */
+export function isChannelAllowedForUser(channelName: string, userId: string): boolean {
+  if (channelName.startsWith('private-chat.')) {
+    const parts = channelName.slice('private-chat.'.length).split('.');
+    return parts.includes(userId);
+  }
+  if (channelName.startsWith('private-user.')) {
+    const [chanUserId] = channelName.slice('private-user.'.length).split('.');
+    return chanUserId === userId;
+  }
+  if (channelName.startsWith('presence-')) {
+    return true;
+  }
+  return false;
+}
+
 // Channel naming conventions used across the app.
 // Centralised here so feature code never hard-codes channel strings.
 export const channels = {
