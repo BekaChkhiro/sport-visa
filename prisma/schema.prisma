@@ -86,19 +86,76 @@ enum ExperienceLevel {
 // ── Core models ───────────────────────────────────────────────────────────────
 
 model User {
-  id           String     @id @default(cuid())
-  email        String     @unique
-  passwordHash String?
-  role         Role
-  status       UserStatus @default(ACTIVE)
-  createdAt    DateTime   @default(now())
-  updatedAt    DateTime   @updatedAt
+  id            String     @id @default(cuid())
+  email         String     @unique
+  emailVerified DateTime?
+  // Optional first/last names captured at signup so the email-only welcome
+  // path has something to greet the user with before profile onboarding.
+  firstName     String?
+  lastName      String?
+  passwordHash  String?
+  role          Role
+  status        UserStatus @default(ACTIVE)
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
 
+  accounts          Account[]
+  sessions          Session[]
   notifications     Notification[]
   footballerProfile FootballerProfile?
   clubProfile       ClubProfile?
 
   @@map("users")
+}
+
+// NextAuth-managed OAuth account link. Empty in MVP (Credentials provider
+// only) but kept on-schema so adding Google OAuth in Phase 3.x is a no-op.
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+  @@map("accounts")
+}
+
+// NextAuth-managed session row. Used only when session strategy = "database".
+// We use JWT sessions, so this stays empty in MVP — kept for adapter contract
+// and easy swap if we move off JWT later.
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("sessions")
+}
+
+// Single-use tokens for email verification (T3.3) and password reset (T3.4).
+// NextAuth's PrismaAdapter writes here directly for the email verification
+// flow; we reuse the same table for password reset by prefixing identifier.
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
 }
 
 // In-app notification record. Created server-side via lib/notifications.ts

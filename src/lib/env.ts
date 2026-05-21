@@ -38,6 +38,15 @@ const serverSchema = z.object({
   // Resend (T1.8). Optional at boot; src/lib/resend.ts throws on use if missing.
   RESEND_API_KEY: z.string().min(1).optional(),
   RESEND_FROM: z.string().email('RESEND_FROM must be a valid email address').optional(),
+
+  // Auth.js / NextAuth (T3.2). AUTH_SECRET is required in production to sign
+  // JWT session tokens; in development NextAuth auto-generates a dev secret
+  // and warns. NEXTAUTH_URL is auto-detected on Vercel/Railway but we still
+  // accept it explicitly to keep callback URLs deterministic in CI.
+  AUTH_SECRET: z.string().min(1).optional(),
+  AUTH_TRUST_HOST: z
+    .union([z.literal('1'), z.literal('true'), z.literal('false'), z.literal('')])
+    .optional(),
 });
 
 const clientSchema = z.object({
@@ -78,6 +87,8 @@ const processEnv = {
   NEXT_PUBLIC_PUSHER_CLUSTER: process.env.NEXT_PUBLIC_PUSHER_CLUSTER,
   RESEND_API_KEY: process.env.RESEND_API_KEY,
   RESEND_FROM: process.env.RESEND_FROM,
+  AUTH_SECRET: process.env.AUTH_SECRET,
+  AUTH_TRUST_HOST: process.env.AUTH_TRUST_HOST,
 };
 
 const parsed = envSchema.safeParse(processEnv);
