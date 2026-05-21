@@ -46,4 +46,29 @@ describe('recordLoginAttempt', () => {
     }
     expect(recordLoginAttempt('10.0.0.6', 'A@B.CO').allowed).toBe(false);
   });
+
+  it('blocks the very next attempt after a sustained burst (T3.7 acceptance)', () => {
+    // Simulate a brute-force scraper hammering the same email from one IP.
+    let lastAllowed = true;
+    for (let i = 0; i < 5; i++) {
+      lastAllowed = recordLoginAttempt('203.0.113.7', 'burst@example.com').allowed;
+    }
+    expect(lastAllowed).toBe(true);
+
+    // The 6th-and-beyond must all be denied — fail fast, not eventually.
+    const after = Array.from(
+      { length: 50 },
+      () => recordLoginAttempt('203.0.113.7', 'burst@example.com').allowed,
+    );
+    expect(after.every((a) => a === false)).toBe(true);
+  });
+
+  it('isolates per-email buckets: blocking A does not block B', () => {
+    for (let i = 0; i < 5; i++) {
+      recordLoginAttempt(`172.20.${i}.1`, 'victim@example.com');
+    }
+    // Different email from a fresh IP is unaffected — limit is per-bucket,
+    // not global.
+    expect(recordLoginAttempt('172.20.99.1', 'bystander@example.com').allowed).toBe(true);
+  });
 });
