@@ -3,7 +3,14 @@ import { z } from 'zod';
 
 import { ApiError, apiHandler } from '@/lib/api-error';
 import { logger } from '@/lib/logger';
-import { sendApplicationStatusEmail, sendNotificationEmail, sendWelcomeEmail } from '@/lib/resend';
+import {
+  sendAccountVerificationEmail,
+  sendApplicationStatusEmail,
+  sendNotificationEmail,
+  sendPasswordResetEmail,
+  sendServiceRequestEmail,
+  sendWelcomeEmail,
+} from '@/lib/resend';
 import { env } from '@/lib/env';
 
 export const runtime = 'nodejs';
@@ -34,10 +41,38 @@ const notificationSchema = z.object({
   ctaUrl: z.string().url().optional(),
 });
 
+const passwordResetSchema = z.object({
+  type: z.literal('password_reset'),
+  to: z.string().email(),
+  recipientName: z.string().min(1).max(200),
+  resetUrl: z.string().url(),
+  expiresInHours: z.number().int().min(1).max(72),
+});
+
+const accountVerificationSchema = z.object({
+  type: z.literal('account_verification'),
+  to: z.string().email(),
+  recipientName: z.string().min(1).max(200),
+  status: z.enum(['approved', 'rejected']),
+  rejectionReason: z.string().max(2000).optional(),
+});
+
+const serviceRequestSchema = z.object({
+  type: z.literal('service_request'),
+  to: z.string().email(),
+  footballerName: z.string().min(1).max(200),
+  serviceType: z.string().min(1).max(200),
+  requestId: z.string().min(1).max(100),
+  action: z.enum(['submitted', 'resolved']),
+});
+
 const sendEmailSchema = z.discriminatedUnion('type', [
   welcomeSchema,
   applicationStatusSchema,
   notificationSchema,
+  passwordResetSchema,
+  accountVerificationSchema,
+  serviceRequestSchema,
 ]);
 
 export const POST = apiHandler(async (request: Request) => {
@@ -75,7 +110,7 @@ export const POST = apiHandler(async (request: Request) => {
       { to: payload.to, status: payload.status, emailId: result.id },
       'email_application_status_sent',
     );
-  } else {
+  } else if (payload.type === 'notification') {
     result = await sendNotificationEmail(payload.to, {
       recipientName: payload.recipientName,
       subject: payload.subject,
@@ -88,6 +123,37 @@ export const POST = apiHandler(async (request: Request) => {
     logger.info(
       { to: payload.to, subject: payload.subject, emailId: result.id },
       'email_notification_sent',
+    );
+  } else if (payload.type === 'password_reset') {
+    result = await sendPasswordResetEmail(payload.to, {
+      recipientName: payload.recipientName,
+      resetUrl: payload.resetUrl,
+      expiresInHours: payload.expiresInHours,
+      appUrl,
+    });
+    logger.info({ to: payload.to, emailId: result.id }, 'email_password_reset_sent');
+  } else if (payload.type === 'account_verification') {
+    result = await sendAccountVerificationEmail(payload.to, {
+      recipientName: payload.recipientName,
+      status: payload.status,
+      rejectionReason: payload.rejectionReason,
+      appUrl,
+    });
+    logger.info(
+      { to: payload.to, status: payload.status, emailId: result.id },
+      'email_account_verification_sent',
+    );
+  } else {
+    result = await sendServiceRequestEmail(payload.to, {
+      footballerName: payload.footballerName,
+      serviceType: payload.serviceType,
+      requestId: payload.requestId,
+      action: payload.action,
+      appUrl,
+    });
+    logger.info(
+      { to: payload.to, action: payload.action, emailId: result.id },
+      'email_service_request_sent',
     );
   }
 

@@ -33,14 +33,42 @@ enum MediaKind {
   OTHER
 }
 
+enum NotificationType {
+  ACCOUNT_APPROVED
+  ACCOUNT_REJECTED
+  SERVICE_REQUEST_SUBMITTED
+  SERVICE_REQUEST_RESOLVED
+  NEW_MESSAGE
+  APPLICATION_STATUS
+  GENERAL
+}
+
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  role      Role
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id            String         @id @default(cuid())
+  email         String         @unique
+  role          Role
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  notifications Notification[]
 
   @@map("users")
+}
+
+// In-app notification record. Created server-side via lib/notifications.ts
+// which also fires a Pusher event to the user's private channel.
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String
+  type      NotificationType
+  title     String
+  body      String
+  read      Boolean          @default(false)
+  createdAt DateTime         @default(now())
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@index([userId, read])
+  @@map("notifications")
 }
 
 // One row per object stored in Cloudflare R2. Created by the /api/uploads/confirm
