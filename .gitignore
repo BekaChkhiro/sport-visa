@@ -8,6 +8,11 @@ node_modules/
 !.yarn/releases
 !.yarn/versions
 
+# Project uses npm exclusively — block stray pnpm/yarn artifacts
+pnpm-lock.yaml
+pnpm-workspace.yaml
+yarn.lock
+
 # Build output
 .next/
 out/
@@ -62,6 +67,5 @@ Thumbs.db
 .prettiercache
 .cache/
 *.local
-.planflow/worktrees.json
-.planflow/index-state.json
-.planflow/agents/
+.planflow/
+**/.planflow/
