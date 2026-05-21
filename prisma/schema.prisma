@@ -15,10 +15,17 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// ── Enums ─────────────────────────────────────────────────────────────────────
+
 enum Role {
   FOOTBALLER
   CLUB
   ADMIN
+}
+
+enum UserStatus {
+  ACTIVE
+  BLOCKED
 }
 
 // What an uploaded asset is for. Used by the upload presign endpoint to scope
@@ -43,13 +50,53 @@ enum NotificationType {
   GENERAL
 }
 
+enum VerificationStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+}
+
+// Football field positions.
+enum Position {
+  GK
+  CB
+  LB
+  RB
+  CM
+  DM
+  AM
+  LW
+  RW
+  CF
+  ST
+}
+
+enum DominantFoot {
+  RIGHT
+  LEFT
+  BOTH
+}
+
+enum ExperienceLevel {
+  PROFESSIONAL
+  SEMI_PROFESSIONAL
+  AMATEUR
+}
+
+// ── Core models ───────────────────────────────────────────────────────────────
+
 model User {
-  id            String         @id @default(cuid())
-  email         String         @unique
-  role          Role
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
-  notifications Notification[]
+  id           String     @id @default(cuid())
+  email        String     @unique
+  passwordHash String?
+  role         Role
+  status       UserStatus @default(ACTIVE)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  notifications     Notification[]
+  footballerProfile FootballerProfile?
+  clubProfile       ClubProfile?
 
   @@map("users")
 }
@@ -85,4 +132,187 @@ model Media {
 
   @@index([kind, createdAt])
   @@map("media")
+}
+
+// ── Footballer profile ────────────────────────────────────────────────────────
+
+// One FootballerProfile per User with role=FOOTBALLER. Created during onboarding.
+// All optional fields may be filled later; `verificationStatus` gates directory
+// visibility until admin approves.
+model FootballerProfile {
+  id     String @id @default(cuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Personal info
+  firstName   String
+  lastName    String
+  dateOfBirth DateTime?
+  nationality String? // ISO alpha-2 country code
+  city        String?
+  country     String? // ISO alpha-2
+  phone       String?
+  bio         String?   @db.VarChar(500)
+
+  // Sport info
+  positions       Position[]
+  height          Int? // centimetres
+  weight          Int? // kilograms
+  dominantFoot    DominantFoot?
+  currentClub     String?
+  jerseyNumber    Int?
+  experienceLevel ExperienceLevel?
+  desiredLeague   String?
+
+  // Media — R2 keys; the full URL is composed at runtime from R2_PUBLIC_BASE_URL.
+  // Gallery photos live in the GalleryItem join table to support ordering.
+  avatarKey  String?
+  videoLinks String[] @default([]) // YouTube / Vimeo URLs, max 3
+
+  // Visibility & verification
+  verificationStatus VerificationStatus @default(PENDING)
+  rejectionReason    String?
+  isVisible          Boolean            @default(true)
+  profileViewCount   Int                @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  careerEntries CareerEntry[]
+  galleryItems  GalleryItem[]
+  shortlistedBy ClubShortlist[]
+  subscriptions ClubSubscription[]
+
+  @@index([verificationStatus, isVisible])
+  @@map("footballer_profiles")
+}
+
+// One entry per club in the footballer's career history.
+model CareerEntry {
+  id        String            @id @default(cuid())
+  profileId String
+  profile   FootballerProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  clubName   String
+  startYear  Int
+  endYear    Int? // null = current
+  position   Position?
+  orderIndex Int      @default(0) // client-side sort order
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([profileId])
+  @@map("career_entries")
+}
+
+// Ordered gallery photo entries for a footballer's profile.
+model GalleryItem {
+  id        String            @id @default(cuid())
+  profileId String
+  profile   FootballerProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  mediaKey   String // R2 object key
+  orderIndex Int    @default(0) // first item is the profile cover photo
+
+  createdAt DateTime @default(now())
+
+  @@index([profileId, orderIndex])
+  @@map("gallery_items")
+}
+
+// ── Club profile ──────────────────────────────────────────────────────────────
+
+// One ClubProfile per User with role=CLUB. Created during onboarding.
+model ClubProfile {
+  id     String @id @default(cuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Identity
+  name            String
+  foundedYear     Int?
+  country         String? // ISO alpha-2
+  city            String?
+  league          String?
+  officialWebsite String?
+
+  // Stadium info
+  stadiumName     String?
+  stadiumCapacity Int? // seats
+  stadiumAddress  String?
+  stadiumMapUrl   String? // Google Maps link or coordinates
+
+  // Media — R2 keys
+  logoKey  String?
+  coverKey String?
+
+  // Rich-text bio / history (rendered as HTML on the detail page)
+  bio String? @db.VarChar(2000)
+
+  // Visibility & verification
+  verificationStatus VerificationStatus @default(PENDING)
+  rejectionReason    String?
+  isVisible          Boolean            @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  rosterEntries      ClubRosterEntry[]
+  shortlistedPlayers ClubShortlist[]
+  subscribers        ClubSubscription[]
+
+  @@index([verificationStatus, isVisible])
+  @@map("club_profiles")
+}
+
+// Free-text roster entries for a club (MVP: not linked to platform accounts).
+model ClubRosterEntry {
+  id     String      @id @default(cuid())
+  clubId String
+  club   ClubProfile @relation(fields: [clubId], references: [id], onDelete: Cascade)
+
+  playerName   String
+  position     String?
+  jerseyNumber Int?
+  orderIndex   Int     @default(0)
+
+  createdAt DateTime @default(now())
+
+  @@index([clubId])
+  @@map("club_roster_entries")
+}
+
+// ── Social relations ──────────────────────────────────────────────────────────
+
+// A club saves a footballer to their shortlist (★ in the directory).
+model ClubShortlist {
+  id                  String            @id @default(cuid())
+  clubProfileId       String
+  footballerProfileId String
+  clubProfile         ClubProfile       @relation(fields: [clubProfileId], references: [id], onDelete: Cascade)
+  footballerProfile   FootballerProfile @relation(fields: [footballerProfileId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([clubProfileId, footballerProfileId])
+  @@index([clubProfileId])
+  @@index([footballerProfileId])
+  @@map("club_shortlists")
+}
+
+// A footballer subscribes to a club to receive newsfeed posts on their dashboard.
+model ClubSubscription {
+  id                  String            @id @default(cuid())
+  footballerProfileId String
+  clubProfileId       String
+  footballerProfile   FootballerProfile @relation(fields: [footballerProfileId], references: [id], onDelete: Cascade)
+  clubProfile         ClubProfile       @relation(fields: [clubProfileId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([footballerProfileId, clubProfileId])
+  @@index([footballerProfileId])
+  @@index([clubProfileId])
+  @@map("club_subscriptions")
 }
