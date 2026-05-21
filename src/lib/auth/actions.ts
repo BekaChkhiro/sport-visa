@@ -4,11 +4,14 @@ import { Prisma } from '@prisma/client';
 import { AuthError } from 'next-auth';
 
 import { db } from '@/lib/db';
+import { env } from '@/lib/env';
 import { logger } from '@/lib/logger';
+import { sendVerifyEmailEmail } from '@/lib/resend';
 
 import { signIn, signOut } from './index';
 import { hashPassword } from './password';
 import { signupSchema } from './schemas';
+import { createEmailVerificationToken } from './tokens';
 
 export type SignupActionState =
   | { status: 'idle' }
@@ -74,8 +77,27 @@ export async function signupAction(
     };
   }
 
-  // Auto-sign-in after successful signup so the user lands in onboarding
-  // without re-typing credentials.
+  // Generate an email-verification token and send it. Fire-and-forget so a
+  // transient email failure doesn't block registration — the user can resend
+  // from the /verification-pending page.
+  try {
+    const token = await createEmailVerificationToken(email);
+    const verifyUrl =
+      `${env.NEXT_PUBLIC_APP_URL}/api/auth/verify-email` +
+      `?token=${token}&email=${encodeURIComponent(email)}`;
+    const name = [firstName, lastName].filter(Boolean).join(' ');
+    await sendVerifyEmailEmail(email, {
+      recipientName: name || email,
+      verifyUrl,
+      expiresInHours: 24,
+      appUrl: env.NEXT_PUBLIC_APP_URL,
+    });
+  } catch (err) {
+    logger.error({ err, email }, 'signup_verification_email_failed');
+  }
+
+  // Auto-sign-in after successful signup so the user lands on the
+  // verification-pending page already authenticated.
   try {
     await signIn('credentials', {
       email,

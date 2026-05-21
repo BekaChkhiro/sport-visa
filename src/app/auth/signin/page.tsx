@@ -7,7 +7,13 @@ export const metadata: Metadata = {
   title: 'შესვლა',
 };
 
-export default function SigninPage() {
+type SearchParams = Promise<{ verified?: string; error?: string }>;
+
+export default async function SigninPage({ searchParams }: { searchParams: SearchParams }) {
+  const params = await searchParams;
+  const verified = params.verified === '1';
+  const queryError = params.error;
+
   return (
     <div className="space-y-6">
       <div className="space-y-2 text-center">
@@ -19,7 +25,7 @@ export default function SigninPage() {
           </Link>
         </p>
       </div>
-      <SigninForm />
+      <SigninForm verified={verified} queryError={queryError} />
     </div>
   );
 }

@@ -27,6 +27,11 @@ import {
   type ServiceRequestEmailProps,
 } from './email/templates/service-request';
 import {
+  verifyEmailHtml,
+  verifyEmailText,
+  type VerifyEmailProps,
+} from './email/templates/verify-email';
+import {
   welcomeEmailHtml,
   welcomeEmailText,
   type WelcomeEmailProps,
@@ -172,6 +177,28 @@ export async function sendAccountVerificationEmail(
     throw new ApiError(
       'INTERNAL',
       `Failed to send account verification email: ${error?.message ?? 'unknown error'}`,
+    );
+  }
+  return { id: data.id };
+}
+
+/** Send an email-address verification link to a newly-registered user. */
+export async function sendVerifyEmailEmail(
+  to: string,
+  props: VerifyEmailProps,
+): Promise<SendResult> {
+  const cfg = getResendConfig();
+  const { data, error } = await getClient().emails.send({
+    from: cfg.from,
+    to,
+    subject: 'Verify your Sport Visa email',
+    html: verifyEmailHtml(props),
+    text: verifyEmailText(props),
+  });
+  if (error || !data) {
+    throw new ApiError(
+      'INTERNAL',
+      `Failed to send verification email: ${error?.message ?? 'unknown error'}`,
     );
   }
   return { id: data.id };

@@ -9,6 +9,9 @@ import { auth } from '@/lib/auth';
 export default async function AuthLayout({ children }: { children: React.ReactNode }) {
   const session = await auth();
   if (session?.user) {
+    if (!session.user.emailVerified) {
+      redirect('/verification-pending');
+    }
     const role = session.user.role;
     if (role === 'ADMIN') redirect('/admin');
     if (role === 'CLUB') redirect('/dashboard/club');
