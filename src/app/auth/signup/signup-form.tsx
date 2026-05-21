@@ -25,7 +25,7 @@ export function SignupForm({ initialRole }: { initialRole: SignupRole }) {
 
   React.useEffect(() => {
     if (state.status === 'success') {
-      router.replace('/onboarding');
+      router.replace('/verification-pending');
       router.refresh();
     }
   }, [state.status, router]);
