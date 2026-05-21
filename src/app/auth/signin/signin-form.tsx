@@ -34,7 +34,7 @@ export function SigninForm({
 
   React.useEffect(() => {
     if (state.status === 'success') {
-      router.replace('/');
+      router.replace('/dashboard');
       router.refresh();
     }
   }, [state.status, router]);
