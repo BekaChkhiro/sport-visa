@@ -16,10 +16,9 @@ export default async function VerificationPendingPage() {
     redirect('/auth/signin');
   }
 
-  // Already verified — send them home; the auth layout / middleware will
-  // route them to the right dashboard.
+  // Already verified — middleware will route /dashboard to the right role page.
   if (session.user.emailVerified) {
-    redirect('/');
+    redirect('/dashboard');
   }
 
   const email = session.user.email ?? '';
