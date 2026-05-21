@@ -47,6 +47,12 @@ const serverSchema = z.object({
   AUTH_TRUST_HOST: z
     .union([z.literal('1'), z.literal('true'), z.literal('false'), z.literal('')])
     .optional(),
+
+  // Shared-secret for trusted server-to-server callers of /api/email/send
+  // (cron jobs, internal workers). Optional — when set, callers may pass
+  // the value as `x-internal-key` instead of an admin session. The endpoint
+  // also accepts an authenticated ADMIN session.
+  EMAIL_INTERNAL_KEY: z.string().min(16).optional(),
 });
 
 const clientSchema = z.object({
@@ -89,6 +95,7 @@ const processEnv = {
   RESEND_FROM: process.env.RESEND_FROM,
   AUTH_SECRET: process.env.AUTH_SECRET,
   AUTH_TRUST_HOST: process.env.AUTH_TRUST_HOST,
+  EMAIL_INTERNAL_KEY: process.env.EMAIL_INTERNAL_KEY,
 };
 
 const parsed = envSchema.safeParse(processEnv);

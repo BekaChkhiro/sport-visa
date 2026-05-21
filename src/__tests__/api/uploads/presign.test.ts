@@ -1,4 +1,6 @@
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
+import { ApiError } from '@/lib/api-error';
 
 vi.mock('@/lib/env', () => ({
   env: {
@@ -28,6 +30,7 @@ vi.mock('@/lib/request-context', () => ({
 }));
 
 const mockCreatePresignedPutUrl = vi.hoisted(() => vi.fn());
+const mockRequireUser = vi.hoisted(() => vi.fn());
 
 vi.mock('@/lib/r2', () => ({
   ALLOWED_IMAGE_TYPES: ['image/jpeg', 'image/png', 'image/webp', 'image/gif'],
@@ -39,7 +42,13 @@ vi.mock('@/lib/r2', () => ({
   createPresignedPutUrl: mockCreatePresignedPutUrl,
 }));
 
+vi.mock('@/lib/auth/require-user', () => ({
+  requireAuthenticatedUser: mockRequireUser,
+}));
+
 import { POST } from '@/app/api/uploads/presign/route';
+
+const SESSION_USER = { id: 'user-1', email: 'a@b.com', role: 'FOOTBALLER', emailVerified: null };
 
 function makeReq(body: unknown) {
   return new Request('http://localhost/api/uploads/presign', {
@@ -57,7 +66,13 @@ const PRESIGN_RESULT = {
 };
 
 describe('POST /api/uploads/presign', () => {
-  it('returns 200 with presigned URL for a valid request', async () => {
+  beforeEach(() => {
+    mockCreatePresignedPutUrl.mockReset();
+    mockRequireUser.mockReset();
+  });
+
+  it('returns 200 with presigned URL for an authenticated request', async () => {
+    mockRequireUser.mockResolvedValueOnce(SESSION_USER);
     mockCreatePresignedPutUrl.mockResolvedValueOnce(PRESIGN_RESULT);
     const res = await POST(
       makeReq({ kind: 'AVATAR', contentType: 'image/jpeg', contentLength: 1024 }),
@@ -69,7 +84,18 @@ describe('POST /api/uploads/presign', () => {
     });
   });
 
+  it('returns 401 for anonymous callers', async () => {
+    mockRequireUser.mockRejectedValueOnce(new ApiError('UNAUTHORIZED', 'Authentication required'));
+    const res = await POST(
+      makeReq({ kind: 'AVATAR', contentType: 'image/jpeg', contentLength: 1024 }),
+    );
+    expect(res.status).toBe(401);
+    expect((await res.json()).error.code).toBe('UNAUTHORIZED');
+    expect(mockCreatePresignedPutUrl).not.toHaveBeenCalled();
+  });
+
   it('returns 422 for an unsupported content type', async () => {
+    mockRequireUser.mockResolvedValueOnce(SESSION_USER);
     const res = await POST(
       makeReq({ kind: 'AVATAR', contentType: 'image/svg+xml', contentLength: 512 }),
     );
@@ -78,6 +104,7 @@ describe('POST /api/uploads/presign', () => {
   });
 
   it('returns 422 when the file size exceeds MAX_UPLOAD_BYTES', async () => {
+    mockRequireUser.mockResolvedValueOnce(SESSION_USER);
     const res = await POST(
       makeReq({ kind: 'GALLERY', contentType: 'image/jpeg', contentLength: 11 * 1024 * 1024 }),
     );
@@ -85,11 +112,13 @@ describe('POST /api/uploads/presign', () => {
   });
 
   it('returns 422 when required fields are missing', async () => {
+    mockRequireUser.mockResolvedValueOnce(SESSION_USER);
     const res = await POST(makeReq({ kind: 'AVATAR' }));
     expect(res.status).toBe(422);
   });
 
   it('returns 422 for an invalid MediaKind value', async () => {
+    mockRequireUser.mockResolvedValueOnce(SESSION_USER);
     const res = await POST(
       makeReq({ kind: 'SELFIE', contentType: 'image/jpeg', contentLength: 100 }),
     );
@@ -97,6 +126,7 @@ describe('POST /api/uploads/presign', () => {
   });
 
   it('returns 400 for a non-JSON body', async () => {
+    mockRequireUser.mockResolvedValueOnce(SESSION_USER);
     const req = new Request('http://localhost/api/uploads/presign', {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain' },

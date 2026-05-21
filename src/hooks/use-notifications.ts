@@ -30,7 +30,9 @@ export function useNotifications(userId: string | null) {
     if (!userId) return;
     setLoading(true);
     try {
-      const res = await fetch(`/api/notifications?userId=${encodeURIComponent(userId)}`);
+      // userId is intentionally not passed — the API derives it from the
+      // session so one user can't read another user's notifications.
+      const res = await fetch('/api/notifications');
       if (res.ok) {
         const data = (await res.json()) as { notifications: NotificationItem[] };
         setNotifications(data.notifications);
@@ -59,8 +61,6 @@ export function useNotifications(userId: string | null) {
       if (!userId) return;
       const res = await fetch(`/api/notifications/${encodeURIComponent(id)}`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId }),
       });
       if (res.ok) {
         setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, read: true } : n)));
@@ -71,11 +71,7 @@ export function useNotifications(userId: string | null) {
 
   const markAllRead = useCallback(async () => {
     if (!userId) return;
-    const res = await fetch('/api/notifications', {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId }),
-    });
+    const res = await fetch('/api/notifications', { method: 'PATCH' });
     if (res.ok) {
       setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
     }

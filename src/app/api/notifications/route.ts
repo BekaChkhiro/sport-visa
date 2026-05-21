@@ -1,28 +1,26 @@
 import { NextResponse } from 'next/server';
 
 import { apiHandler } from '@/lib/api-error';
+import { requireAuthenticatedUser } from '@/lib/auth/require-user';
 import { logger } from '@/lib/logger';
 import { listNotifications, markAllNotificationsRead } from '@/lib/notifications';
 
 export const runtime = 'nodejs';
 
-// TODO(T3): Replace userId extraction with a real session lookup once
-// NextAuth lands. For now the caller passes `userId` as a query param —
-// matching the placeholder pattern used in /api/pusher/auth.
+// `userId` is derived from the session, NOT from query/body. Any
+// client-supplied userId is ignored — preventing a logged-in user from
+// reading or mutating another user's notifications.
 
-/** GET /api/notifications?userId=<id>[&limit=<n>] — list a user's notifications. */
+/** GET /api/notifications[?limit=<n>] — list the caller's notifications. */
 export const GET = apiHandler(async (request: Request) => {
+  const user = await requireAuthenticatedUser();
+
   const { searchParams } = new URL(request.url);
-  const userId = searchParams.get('userId') ?? '';
   const limitParam = searchParams.get('limit');
   const limit = limitParam ? Math.min(parseInt(limitParam, 10) || 50, 100) : 50;
 
-  if (!userId) {
-    return NextResponse.json({ notifications: [] }, { status: 200 });
-  }
-
-  const notifications = await listNotifications(userId, limit);
-  logger.debug({ userId, count: notifications.length }, 'notifications_listed');
+  const notifications = await listNotifications(user.id, limit);
+  logger.debug({ userId: user.id, count: notifications.length }, 'notifications_listed');
 
   return NextResponse.json(
     {
@@ -39,26 +37,12 @@ export const GET = apiHandler(async (request: Request) => {
   );
 });
 
-/** PATCH /api/notifications — mark all notifications read for a user. */
-export const PATCH = apiHandler(async (request: Request) => {
-  let body: unknown;
-  try {
-    body = await request.json();
-  } catch {
-    body = {};
-  }
+/** PATCH /api/notifications — mark all of the caller's notifications read. */
+export const PATCH = apiHandler(async () => {
+  const user = await requireAuthenticatedUser();
 
-  const userId =
-    typeof body === 'object' && body !== null && 'userId' in body
-      ? String((body as Record<string, unknown>).userId)
-      : '';
-
-  if (!userId) {
-    return NextResponse.json({ updated: 0 }, { status: 200 });
-  }
-
-  const updated = await markAllNotificationsRead(userId);
-  logger.info({ userId, updated }, 'notifications_all_marked_read');
+  const updated = await markAllNotificationsRead(user.id);
+  logger.info({ userId: user.id, updated }, 'notifications_all_marked_read');
 
   return NextResponse.json({ updated }, { status: 200 });
 });

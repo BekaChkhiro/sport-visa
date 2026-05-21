@@ -2,18 +2,27 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 
 import { ApiError, apiHandler } from '@/lib/api-error';
+import { requireAuthenticatedUser } from '@/lib/auth/require-user';
+import { env } from '@/lib/env';
 import { logger } from '@/lib/logger';
 import {
   sendAccountVerificationEmail,
   sendApplicationStatusEmail,
-  sendNotificationEmail,
   sendPasswordResetEmail,
   sendServiceRequestEmail,
   sendWelcomeEmail,
 } from '@/lib/resend';
-import { env } from '@/lib/env';
 
 export const runtime = 'nodejs';
+
+const INTERNAL_KEY_HEADER = 'x-internal-key';
+
+// Allowlisted, templated payloads only. The previous `notification` shape
+// (caller-supplied subject + bodyHtml + bodyText) accepted arbitrary HTML and
+// would have let any caller with access to this route fire phishing-grade
+// emails from our domain. Removed deliberately — internal callers that need
+// custom email content should use the lib helpers directly (server-only) or
+// add a new templated type with a server-side schema.
 
 const welcomeSchema = z.object({
   type: z.literal('welcome'),
@@ -28,17 +37,6 @@ const applicationStatusSchema = z.object({
   clubName: z.string().min(1).max(200),
   status: z.enum(['accepted', 'rejected', 'shortlisted']),
   message: z.string().max(2000).optional(),
-});
-
-const notificationSchema = z.object({
-  type: z.literal('notification'),
-  to: z.string().email(),
-  recipientName: z.string().min(1).max(200),
-  subject: z.string().min(1).max(500),
-  bodyHtml: z.string().min(1).max(50000),
-  bodyText: z.string().min(1).max(50000),
-  ctaLabel: z.string().max(100).optional(),
-  ctaUrl: z.string().url().optional(),
 });
 
 const passwordResetSchema = z.object({
@@ -69,13 +67,36 @@ const serviceRequestSchema = z.object({
 const sendEmailSchema = z.discriminatedUnion('type', [
   welcomeSchema,
   applicationStatusSchema,
-  notificationSchema,
   passwordResetSchema,
   accountVerificationSchema,
   serviceRequestSchema,
 ]);
 
+/**
+ * Authorize the caller as either:
+ *   1. A trusted internal worker presenting `x-internal-key` matching
+ *      env.EMAIL_INTERNAL_KEY (when configured), or
+ *   2. An authenticated admin session.
+ *
+ * Throws ApiError on failure — the apiHandler maps it to a JSON envelope.
+ */
+async function authorizeEmailSender(request: Request): Promise<{ caller: string }> {
+  const presentedKey = request.headers.get(INTERNAL_KEY_HEADER);
+  const internalKey = env.EMAIL_INTERNAL_KEY;
+  if (presentedKey && internalKey && presentedKey === internalKey) {
+    return { caller: 'internal' };
+  }
+
+  const user = await requireAuthenticatedUser();
+  if (user.role !== 'ADMIN') {
+    throw new ApiError('FORBIDDEN', 'Admin role required to send email');
+  }
+  return { caller: `admin:${user.id}` };
+}
+
 export const POST = apiHandler(async (request: Request) => {
+  const { caller } = await authorizeEmailSender(request);
+
   let body: unknown;
   try {
     body = await request.json();
@@ -97,7 +118,7 @@ export const POST = apiHandler(async (request: Request) => {
 
   if (payload.type === 'welcome') {
     result = await sendWelcomeEmail(payload.to, { name: payload.name, appUrl });
-    logger.info({ to: payload.to, emailId: result.id }, 'email_welcome_sent');
+    logger.info({ caller, to: payload.to, emailId: result.id }, 'email_welcome_sent');
   } else if (payload.type === 'application_status') {
     result = await sendApplicationStatusEmail(payload.to, {
       playerName: payload.playerName,
@@ -107,22 +128,8 @@ export const POST = apiHandler(async (request: Request) => {
       appUrl,
     });
     logger.info(
-      { to: payload.to, status: payload.status, emailId: result.id },
+      { caller, to: payload.to, status: payload.status, emailId: result.id },
       'email_application_status_sent',
-    );
-  } else if (payload.type === 'notification') {
-    result = await sendNotificationEmail(payload.to, {
-      recipientName: payload.recipientName,
-      subject: payload.subject,
-      bodyHtml: payload.bodyHtml,
-      bodyText: payload.bodyText,
-      ctaLabel: payload.ctaLabel,
-      ctaUrl: payload.ctaUrl,
-      appUrl,
-    });
-    logger.info(
-      { to: payload.to, subject: payload.subject, emailId: result.id },
-      'email_notification_sent',
     );
   } else if (payload.type === 'password_reset') {
     result = await sendPasswordResetEmail(payload.to, {
@@ -131,7 +138,7 @@ export const POST = apiHandler(async (request: Request) => {
       expiresInHours: payload.expiresInHours,
       appUrl,
     });
-    logger.info({ to: payload.to, emailId: result.id }, 'email_password_reset_sent');
+    logger.info({ caller, to: payload.to, emailId: result.id }, 'email_password_reset_sent');
   } else if (payload.type === 'account_verification') {
     result = await sendAccountVerificationEmail(payload.to, {
       recipientName: payload.recipientName,
@@ -140,7 +147,7 @@ export const POST = apiHandler(async (request: Request) => {
       appUrl,
     });
     logger.info(
-      { to: payload.to, status: payload.status, emailId: result.id },
+      { caller, to: payload.to, status: payload.status, emailId: result.id },
       'email_account_verification_sent',
     );
   } else {
@@ -152,7 +159,7 @@ export const POST = apiHandler(async (request: Request) => {
       appUrl,
     });
     logger.info(
-      { to: payload.to, action: payload.action, emailId: result.id },
+      { caller, to: payload.to, action: payload.action, emailId: result.id },
       'email_service_request_sent',
     );
   }

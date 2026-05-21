@@ -1,4 +1,6 @@
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
+import { ApiError } from '@/lib/api-error';
 
 vi.mock('@/lib/env', () => ({
   env: { NODE_ENV: 'test', NEXT_PUBLIC_APP_URL: 'https://app.sportvisa.io' },
@@ -26,6 +28,7 @@ vi.mock('@/lib/request-context', () => ({
 }));
 
 const mockMarkRead = vi.hoisted(() => vi.fn());
+const mockRequireUser = vi.hoisted(() => vi.fn());
 
 vi.mock('@/lib/notifications', () => ({
   markNotificationRead: mockMarkRead,
@@ -34,44 +37,63 @@ vi.mock('@/lib/notifications', () => ({
   createNotification: vi.fn(),
 }));
 
+vi.mock('@/lib/auth/require-user', () => ({
+  requireAuthenticatedUser: mockRequireUser,
+}));
+
 import { PATCH } from '@/app/api/notifications/[id]/route';
+
+const SESSION_USER = {
+  id: 'session-user',
+  email: 'a@b.com',
+  role: 'FOOTBALLER',
+  emailVerified: null,
+};
 
 function makeContext(id: string) {
   return { params: Promise.resolve({ id }) };
 }
 
+function makeReq(id: string) {
+  return new Request(`http://localhost/api/notifications/${id}`, { method: 'PATCH' });
+}
+
 describe('PATCH /api/notifications/[id]', () => {
-  it('marks the notification as read and returns 200', async () => {
+  beforeEach(() => {
+    mockMarkRead.mockReset();
+    mockRequireUser.mockReset();
+  });
+
+  it('marks the notification as read using the session user', async () => {
+    mockRequireUser.mockResolvedValueOnce(SESSION_USER);
     mockMarkRead.mockResolvedValueOnce(true);
-    const req = new Request('http://localhost/api/notifications/n1', {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId: 'u1' }),
-    });
-    const res = await PATCH(req, makeContext('n1'));
+    const res = await PATCH(makeReq('n1'), makeContext('n1'));
     const body = await res.json();
     expect(res.status).toBe(200);
     expect(body).toEqual({ id: 'n1', read: true });
+    expect(mockMarkRead).toHaveBeenCalledWith('n1', 'session-user');
   });
 
-  it('returns 404 when notification is not found', async () => {
+  it('returns 404 when the notification belongs to another user (cross-user)', async () => {
+    // updateMany on (id, userId) returns count=0 for someone else's row.
+    mockRequireUser.mockResolvedValueOnce(SESSION_USER);
     mockMarkRead.mockResolvedValueOnce(false);
-    const req = new Request('http://localhost/api/notifications/missing', {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId: 'u1' }),
-    });
-    const res = await PATCH(req, makeContext('missing'));
+    const res = await PATCH(makeReq('belongs-to-victim'), makeContext('belongs-to-victim'));
+    expect(res.status).toBe(404);
+    expect((await res.json()).error.code).toBe('NOT_FOUND');
+  });
+
+  it('returns 404 when the notification is not found', async () => {
+    mockRequireUser.mockResolvedValueOnce(SESSION_USER);
+    mockMarkRead.mockResolvedValueOnce(false);
+    const res = await PATCH(makeReq('missing'), makeContext('missing'));
     expect(res.status).toBe(404);
   });
 
-  it('returns 400 when userId is missing', async () => {
-    const req = new Request('http://localhost/api/notifications/n1', {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({}),
-    });
-    const res = await PATCH(req, makeContext('n1'));
-    expect(res.status).toBe(400);
+  it('returns 401 for anonymous callers', async () => {
+    mockRequireUser.mockRejectedValueOnce(new ApiError('UNAUTHORIZED', 'Authentication required'));
+    const res = await PATCH(makeReq('n1'), makeContext('n1'));
+    expect(res.status).toBe(401);
+    expect(mockMarkRead).not.toHaveBeenCalled();
   });
 });

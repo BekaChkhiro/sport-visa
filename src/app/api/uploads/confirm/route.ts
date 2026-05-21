@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 
 import { ApiError, apiHandler } from '@/lib/api-error';
+import { requireAuthenticatedUser } from '@/lib/auth/require-user';
 import { db } from '@/lib/db';
 import { logger } from '@/lib/logger';
 import {
@@ -21,6 +22,8 @@ const confirmSchema = z.object({
 });
 
 export const POST = apiHandler(async (request: Request) => {
+  const user = await requireAuthenticatedUser();
+
   let body: unknown;
   try {
     body = await request.json();
@@ -74,7 +77,10 @@ export const POST = apiHandler(async (request: Request) => {
       select: { id: true, key: true, kind: true, contentType: true, size: true, createdAt: true },
     });
 
-    logger.info({ mediaId: media.id, key, kind, size: media.size }, 'r2_upload_confirmed');
+    logger.info(
+      { userId: user.id, mediaId: media.id, key, kind, size: media.size },
+      'r2_upload_confirmed',
+    );
 
     return NextResponse.json(
       {
