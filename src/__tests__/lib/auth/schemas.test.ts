@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
-import { forgotPasswordSchema, signinSchema, signupSchema } from '@/lib/auth/schemas';
+import {
+  forgotPasswordSchema,
+  resetPasswordSchema,
+  signinSchema,
+  signupSchema,
+} from '@/lib/auth/schemas';
 
 const validSignup = {
   role: 'FOOTBALLER',
@@ -90,5 +95,54 @@ describe('forgotPasswordSchema', () => {
   it('lowercases and trims the email', () => {
     const parsed = forgotPasswordSchema.parse({ email: '  Foo@Bar.COM ' });
     expect(parsed.email).toBe('foo@bar.com');
+  });
+});
+
+const validReset = {
+  token: 'abc123token',
+  email: 'user@example.com',
+  password: 'NewPass1',
+  passwordConfirm: 'NewPass1',
+};
+
+describe('resetPasswordSchema', () => {
+  it('accepts a valid reset payload', () => {
+    expect(resetPasswordSchema.safeParse(validReset).success).toBe(true);
+  });
+
+  it('lowercases and trims email', () => {
+    const result = resetPasswordSchema.parse({ ...validReset, email: '  USER@EXAMPLE.COM ' });
+    expect(result.email).toBe('user@example.com');
+  });
+
+  it('rejects mismatched passwords', () => {
+    const result = resetPasswordSchema.safeParse({
+      ...validReset,
+      passwordConfirm: 'DifferentPass1',
+    });
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.flatten().fieldErrors.passwordConfirm?.[0]).toBeTruthy();
+    }
+  });
+
+  it('rejects a password without a digit', () => {
+    expect(
+      resetPasswordSchema.safeParse({
+        ...validReset,
+        password: 'NoDigitPass',
+        passwordConfirm: 'NoDigitPass',
+      }).success,
+    ).toBe(false);
+  });
+
+  it('rejects an empty token', () => {
+    expect(resetPasswordSchema.safeParse({ ...validReset, token: '' }).success).toBe(false);
+  });
+
+  it('rejects an invalid email', () => {
+    expect(resetPasswordSchema.safeParse({ ...validReset, email: 'not-an-email' }).success).toBe(
+      false,
+    );
   });
 });

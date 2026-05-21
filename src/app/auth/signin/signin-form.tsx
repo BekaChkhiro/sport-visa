@@ -20,9 +20,11 @@ const QUERY_ERROR_MESSAGES: Record<string, string> = {
 
 export function SigninForm({
   verified = false,
+  passwordReset = false,
   queryError,
 }: {
   verified?: boolean;
+  passwordReset?: boolean;
   queryError?: string;
 }) {
   const router = useRouter();
@@ -55,6 +57,11 @@ export function SigninForm({
       {verified && (
         <div className="rounded-md border border-green-200 bg-green-50 p-3 text-sm text-green-900 dark:border-green-900/50 dark:bg-green-950/30 dark:text-green-200">
           ✓ ელ. ფოსტა დადასტურდა! შედი ანგარიშში.
+        </div>
+      )}
+      {passwordReset && (
+        <div className="rounded-md border border-green-200 bg-green-50 p-3 text-sm text-green-900 dark:border-green-900/50 dark:bg-green-950/30 dark:text-green-200">
+          ✓ პაროლი წარმატებით შეიცვალა! შედი ახალი პაროლით.
         </div>
       )}
       {queryErrorMessage && (

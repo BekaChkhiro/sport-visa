@@ -7,11 +7,12 @@ export const metadata: Metadata = {
   title: 'შესვლა',
 };
 
-type SearchParams = Promise<{ verified?: string; error?: string }>;
+type SearchParams = Promise<{ verified?: string; error?: string; reset?: string }>;
 
 export default async function SigninPage({ searchParams }: { searchParams: SearchParams }) {
   const params = await searchParams;
   const verified = params.verified === '1';
+  const passwordReset = params.reset === '1';
   const queryError = params.error;
 
   return (
@@ -25,7 +26,7 @@ export default async function SigninPage({ searchParams }: { searchParams: Searc
           </Link>
         </p>
       </div>
-      <SigninForm verified={verified} queryError={queryError} />
+      <SigninForm verified={verified} passwordReset={passwordReset} queryError={queryError} />
     </div>
   );
 }

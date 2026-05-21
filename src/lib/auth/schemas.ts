@@ -44,3 +44,17 @@ export const forgotPasswordSchema = z.object({
 });
 
 export type ForgotPasswordInput = z.infer<typeof forgotPasswordSchema>;
+
+export const resetPasswordSchema = z
+  .object({
+    token: z.string().min(1, 'ტოკენი სავალდებულოა'),
+    email: z.string().trim().toLowerCase().email('სწორი ელ. ფოსტა შეიყვანე'),
+    password: passwordSchema,
+    passwordConfirm: z.string(),
+  })
+  .refine((v) => v.password === v.passwordConfirm, {
+    message: 'პაროლები არ ემთხვევა',
+    path: ['passwordConfirm'],
+  });
+
+export type ResetPasswordInput = z.infer<typeof resetPasswordSchema>;
