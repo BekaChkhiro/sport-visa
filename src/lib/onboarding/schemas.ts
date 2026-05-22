@@ -86,10 +86,34 @@ function toOptInt(v: unknown): number | undefined {
 }
 
 export const footballerStep1Schema = z.object({
-  dateOfBirth: z.string().min(1, 'დაბადების თარიღი სავალდებულოა'),
-  nationality: z.string().min(1, 'ეროვნება სავალდებულოა').max(2),
+  dateOfBirth: z
+    .string()
+    .min(1, 'დაბადების თარიღი სავალდებულოა')
+    .superRefine((v, ctx) => {
+      const ts = Date.parse(v);
+      if (Number.isNaN(ts)) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'სწორი თარიღი შეიყვანო' });
+        return z.NEVER;
+      }
+      const ageYears = (Date.now() - ts) / (365.25 * 24 * 60 * 60 * 1000);
+      if (ageYears < 12 || ageYears > 75) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'ასაკი უნდა იყოს 12-დან 75 წლამდე',
+        });
+      }
+    }),
+  nationality: z
+    .string()
+    .min(1, 'ეროვნება სავალდებულოა')
+    .regex(/^[A-Za-z]{2}$/, 'ეროვნება — 2-ასოიანი ISO კოდი')
+    .transform((v) => v.toUpperCase()),
   city: z.string().trim().min(1, 'ქალაქი სავალდებულოა').max(100),
-  country: z.string().min(1, 'ქვეყანა სავალდებულოა').max(2),
+  country: z
+    .string()
+    .min(1, 'ქვეყანა სავალდებულოა')
+    .regex(/^[A-Za-z]{2}$/, 'ქვეყანა — 2-ასოიანი ISO კოდი')
+    .transform((v) => v.toUpperCase()),
   phone: z.preprocess(toOptStr, z.string().max(30).optional()),
   bio: z.preprocess(toOptStr, z.string().max(500).optional()),
 });
@@ -114,12 +138,22 @@ export type FootballerOnboardingInput = z.infer<typeof footballerOnboardingSchem
 export const clubOnboardingSchema = z.object({
   name: z.string().trim().min(1, 'კლუბის სახელი სავალდებულოა').max(200),
   foundedYear: z.preprocess(toOptInt, z.number().int().min(1850).max(2030).optional()),
-  country: z.preprocess(toOptStr, z.string().max(2).optional()),
+  country: z.preprocess(
+    toOptStr,
+    z
+      .string()
+      .regex(/^[A-Za-z]{2}$/, 'ქვეყანა — 2-ასოიანი ISO კოდი')
+      .transform((v) => v.toUpperCase())
+      .optional(),
+  ),
   city: z.preprocess(toOptStr, z.string().trim().max(100).optional()),
   league: z.preprocess(toOptStr, z.string().max(100).optional()),
   stadiumName: z.preprocess(toOptStr, z.string().max(200).optional()),
   stadiumCapacity: z.preprocess(toOptInt, z.number().int().min(0).optional()),
-  officialWebsite: z.preprocess(toOptStr, z.string().max(300).optional()),
+  officialWebsite: z.preprocess(
+    toOptStr,
+    z.string().url('სწორი URL შეიყვანო (https://...)').max(300).optional(),
+  ),
   bio: z.preprocess(toOptStr, z.string().max(1000).optional()),
 });
 

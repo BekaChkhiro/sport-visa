@@ -1,5 +1,6 @@
 'use server';
 
+import { Prisma } from '@prisma/client';
 import type { DominantFoot, ExperienceLevel, Position } from '@prisma/client';
 
 import { auth } from '@/lib/auth';
@@ -66,6 +67,10 @@ export async function saveFootballerProfile(data: unknown): Promise<OnboardingAc
       },
     });
   } catch (err) {
+    if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002') {
+      // Concurrent request already created the profile — idempotent success.
+      return { status: 'success' };
+    }
     logger.error({ err, userId }, 'onboarding_footballer_create_failed');
     return { status: 'error', message: 'პროფილის შექმნა ვერ მოხერხდა. სცადე თავიდან.' };
   }
@@ -115,6 +120,10 @@ export async function saveClubProfile(data: unknown): Promise<OnboardingActionSt
       },
     });
   } catch (err) {
+    if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002') {
+      // Concurrent request already created the profile — idempotent success.
+      return { status: 'success' };
+    }
     logger.error({ err, userId }, 'onboarding_club_create_failed');
     return { status: 'error', message: 'პროფილის შექმნა ვერ მოხერხდა. სცადე თავიდან.' };
   }
