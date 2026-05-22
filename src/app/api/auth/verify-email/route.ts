@@ -3,6 +3,7 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { db } from '@/lib/db';
 import { env } from '@/lib/env';
 import { logger } from '@/lib/logger';
+import { recordVerifyEmailAttempt } from '@/lib/auth/rate-limit';
 import { consumeEmailVerificationToken } from '@/lib/auth/tokens';
 
 export const runtime = 'nodejs';
@@ -18,6 +19,14 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   const email = searchParams.get('email');
 
   const base = env.NEXT_PUBLIC_APP_URL;
+
+  const ip =
+    request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ??
+    request.headers.get('x-real-ip') ??
+    'unknown';
+  if (!recordVerifyEmailAttempt(ip).allowed) {
+    return NextResponse.redirect(new URL('/auth/signin?error=rate-limited', base));
+  }
 
   if (!token || !email) {
     return NextResponse.redirect(new URL('/auth/signin?error=invalid-link', base));

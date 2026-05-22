@@ -41,6 +41,15 @@ vi.mock('@/lib/auth/index', () => ({
   signOut: mockSignOut,
 }));
 
+const mockRecordSignupAttempt = vi.hoisted(() => vi.fn(() => ({ allowed: true })));
+vi.mock('@/lib/auth/rate-limit', () => ({
+  recordSignupAttempt: mockRecordSignupAttempt,
+}));
+
+vi.mock('@/lib/auth/ip', () => ({
+  getCallerIp: vi.fn(async () => '127.0.0.1'),
+}));
+
 // next-auth itself is imported by actions.ts for the AuthError class. The
 // real module pulls in next/server in a way Vitest can't resolve, so stub it.
 vi.mock('next-auth', () => ({
@@ -92,6 +101,8 @@ beforeEach(() => {
   mockSendVerifyEmail.mockReset();
   mockCreateToken.mockReset();
   mockSignIn.mockReset();
+  mockRecordSignupAttempt.mockReset();
+  mockRecordSignupAttempt.mockReturnValue({ allowed: true });
 });
 
 describe('signupAction — happy path', () => {
@@ -135,6 +146,15 @@ describe('signupAction — happy path', () => {
     await signupAction({ status: 'idle' }, buildForm({ email: '  BEKA@EXAMPLE.COM ' }));
 
     expect(mockUserCreate.mock.calls[0]![0].data.email).toBe('beka@example.com');
+  });
+});
+
+describe('signupAction — rate limiting', () => {
+  it('returns error when rate limit is exceeded (no DB call)', async () => {
+    mockRecordSignupAttempt.mockReturnValueOnce({ allowed: false });
+    const result = await signupAction({ status: 'idle' }, buildForm());
+    expect(result.status).toBe('error');
+    expect(mockUserCreate).not.toHaveBeenCalled();
   });
 });
 

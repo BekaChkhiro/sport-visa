@@ -3,6 +3,11 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 vi.mock('@/lib/env', () => ({
   env: { NODE_ENV: 'test', NEXT_PUBLIC_APP_URL: 'https://app.sportvisa.io' },
 }));
+
+const mockRecordVerifyEmailAttempt = vi.hoisted(() => vi.fn(() => ({ allowed: true })));
+vi.mock('@/lib/auth/rate-limit', () => ({
+  recordVerifyEmailAttempt: mockRecordVerifyEmailAttempt,
+}));
 vi.mock('@/lib/logger', () => ({
   logger: { info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn() },
 }));
@@ -42,18 +47,33 @@ vi.mock('@/lib/db', () => ({ db: { user: { update: mockUserUpdate } } }));
 
 import { GET } from '@/app/api/auth/verify-email/route';
 
-function buildRequest(url: string) {
+function buildRequest(url: string, ip = '127.0.0.1') {
+  const headers = { get: (name: string) => (name === 'x-forwarded-for' ? ip : null) };
   return {
     nextUrl: new URL(url),
+    headers,
   } as unknown as Parameters<typeof GET>[0];
 }
 
 beforeEach(() => {
   mockConsumeToken.mockReset();
   mockUserUpdate.mockReset();
+  mockRecordVerifyEmailAttempt.mockReset();
+  mockRecordVerifyEmailAttempt.mockReturnValue({ allowed: true });
 });
 
 describe('GET /api/auth/verify-email', () => {
+  it('redirects to rate-limited error when the IP is rate-limited', async () => {
+    mockRecordVerifyEmailAttempt.mockReturnValueOnce({ allowed: false });
+    const res = (await GET(
+      buildRequest(
+        'https://app.sportvisa.io/api/auth/verify-email?token=abc&email=user@example.com',
+      ),
+    )) as unknown as { url: string };
+    expect(res.url).toContain('/auth/signin?error=rate-limited');
+    expect(mockConsumeToken).not.toHaveBeenCalled();
+  });
+
   it('redirects to invalid-link error when the token is missing', async () => {
     const res = (await GET(
       buildRequest('https://app.sportvisa.io/api/auth/verify-email?email=user@example.com'),

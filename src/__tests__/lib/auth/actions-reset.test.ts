@@ -26,6 +26,15 @@ vi.mock('@/lib/auth/tokens', () => ({
   consumePasswordResetToken: mockConsumeResetToken,
 }));
 
+const mockRecordPasswordResetAttempt = vi.hoisted(() => vi.fn(() => ({ allowed: true })));
+vi.mock('@/lib/auth/rate-limit', () => ({
+  recordPasswordResetAttempt: mockRecordPasswordResetAttempt,
+}));
+
+vi.mock('@/lib/auth/ip', () => ({
+  getCallerIp: vi.fn(async () => '127.0.0.1'),
+}));
+
 import { requestPasswordResetAction, resetPasswordAction } from '@/lib/auth/actions-reset';
 
 beforeEach(() => {
@@ -35,6 +44,8 @@ beforeEach(() => {
   mockSendReset.mockReset();
   mockCreateResetToken.mockReset();
   mockConsumeResetToken.mockReset();
+  mockRecordPasswordResetAttempt.mockReset();
+  mockRecordPasswordResetAttempt.mockReturnValue({ allowed: true });
 });
 
 function forgotForm(email: string | undefined): FormData {
@@ -42,6 +53,16 @@ function forgotForm(email: string | undefined): FormData {
   if (email !== undefined) fd.set('email', email);
   return fd;
 }
+
+describe('requestPasswordResetAction — rate limiting', () => {
+  it('returns success-shaped response when rate-limited (no email sent, no DB call)', async () => {
+    mockRecordPasswordResetAttempt.mockReturnValueOnce({ allowed: false });
+    const out = await requestPasswordResetAction(forgotForm('someone@example.com'));
+    expect(out).toEqual({ status: 'success' });
+    expect(mockFindUnique).not.toHaveBeenCalled();
+    expect(mockSendReset).not.toHaveBeenCalled();
+  });
+});
 
 describe('requestPasswordResetAction — user-enumeration safety', () => {
   it('returns the SAME success state for a known email and an unknown one', async () => {

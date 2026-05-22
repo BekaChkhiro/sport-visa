@@ -9,7 +9,9 @@ import { logger } from '@/lib/logger';
 import { sendVerifyEmailEmail } from '@/lib/resend';
 
 import { signIn, signOut } from './index';
+import { getCallerIp } from './ip';
 import { hashPassword } from './password';
+import { recordSignupAttempt } from './rate-limit';
 import { signupSchema } from './schemas';
 import { createEmailVerificationToken } from './tokens';
 
@@ -26,6 +28,12 @@ export async function signupAction(
   _prev: SignupActionState,
   formData: FormData,
 ): Promise<SignupActionState> {
+  const ip = await getCallerIp();
+  const { allowed } = recordSignupAttempt(ip);
+  if (!allowed) {
+    return { status: 'error', message: 'ძალიან ბევრი მცდელობა. სცადე მოგვიანებით.' };
+  }
+
   const raw = {
     role: formData.get('role'),
     firstName: formData.get('firstName'),
