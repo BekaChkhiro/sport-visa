@@ -2,10 +2,56 @@ import { redirect } from 'next/navigation';
 import type { Metadata } from 'next';
 
 import { auth } from '@/lib/auth';
+import { db } from '@/lib/db';
+import type { VerificationStatus } from '@/components/verification-badge';
+import { FootballerDashboardClient } from './footballer-dashboard-client';
 
 export const metadata: Metadata = {
   title: 'Dashboard',
 };
+
+type PrismaVerificationStatus = 'PENDING' | 'VERIFIED' | 'REJECTED';
+
+function toUiVerificationStatus(status: PrismaVerificationStatus): VerificationStatus {
+  return status.toLowerCase() as VerificationStatus;
+}
+
+function computeProfileCompletion(profile: {
+  dateOfBirth: Date | null;
+  nationality: string | null;
+  city: string | null;
+  phone: string | null;
+  bio: string | null;
+  positions: string[];
+  height: number | null;
+  weight: number | null;
+  dominantFoot: string | null;
+  currentClub: string | null;
+  experienceLevel: string | null;
+  avatarKey: string | null;
+}): { percent: number; missingFields: string[] } {
+  const checks: [boolean, string][] = [
+    [!!profile.dateOfBirth, 'დაბადების თარიღი'],
+    [!!profile.nationality, 'ეროვნება'],
+    [!!profile.city, 'ქალაქი'],
+    [!!profile.phone, 'ტელეფონი'],
+    [!!profile.bio, 'ბიო'],
+    [profile.positions.length > 0, 'პოზიცია'],
+    [!!profile.height, 'სიმაღლე'],
+    [!!profile.weight, 'წონა'],
+    [!!profile.dominantFoot, 'სასურველი ფეხი'],
+    [!!profile.currentClub, 'მიმდინარე კლუბი'],
+    [!!profile.experienceLevel, 'გამოცდილება'],
+    [!!profile.avatarKey, 'ავატარი'],
+  ];
+
+  const filled = checks.filter(([ok]) => ok).length;
+  const missingFields = checks.filter(([ok]) => !ok).map(([, label]) => label);
+  return {
+    percent: Math.round((filled / checks.length) * 100),
+    missingFields,
+  };
+}
 
 export default async function FootballerDashboardPage() {
   const session = await auth();
@@ -18,60 +64,79 @@ export default async function FootballerDashboardPage() {
     redirect('/dashboard');
   }
 
-  const name = session.user.name ?? session.user.email ?? 'ფეხბურთელო';
+  const userId = session.user.id;
+
+  const [profile, unreadNotifications] = await Promise.all([
+    db.footballerProfile.findUnique({
+      where: { userId },
+      select: {
+        firstName: true,
+        lastName: true,
+        nationality: true,
+        city: true,
+        positions: true,
+        avatarKey: true,
+        dateOfBirth: true,
+        phone: true,
+        bio: true,
+        height: true,
+        weight: true,
+        dominantFoot: true,
+        currentClub: true,
+        experienceLevel: true,
+        verificationStatus: true,
+        profileViewCount: true,
+        shortlistedBy: { select: { id: true } },
+        subscriptions: {
+          select: {
+            clubProfile: {
+              select: { id: true, name: true, logoKey: true },
+            },
+          },
+        },
+      },
+    }),
+    db.notification.count({ where: { userId, read: false } }),
+  ]);
+
+  if (!profile) {
+    redirect('/onboarding');
+  }
+
+  const completion = computeProfileCompletion(profile);
+  const name = `${profile.firstName} ${profile.lastName}`.trim();
+  const initials = [profile.firstName[0], profile.lastName[0]]
+    .filter(Boolean)
+    .join('')
+    .toUpperCase();
+  const r2BaseUrl = process.env.R2_PUBLIC_BASE_URL ?? '';
+
+  const subscribedClubs = profile.subscriptions.map((s) => ({
+    id: s.clubProfile.id,
+    name: s.clubProfile.name,
+    logoUrl: s.clubProfile.logoKey ? `${r2BaseUrl}/${s.clubProfile.logoKey}` : undefined,
+  }));
 
   return (
-    <div className="container mx-auto px-4 py-12 max-w-5xl">
-      <div className="space-y-2 mb-8">
-        <h1 className="text-2xl font-semibold">გამარჯობა, {name}</h1>
-        <p className="text-muted-foreground text-sm">ფეხბურთელის Dashboard</p>
-      </div>
-
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <DashboardCard
-          title="პროფილის სტატუსი"
-          description="პროფილი შევსებულია ნაწილობრივ. დაასრულე მისი შევსება."
-          href="/onboarding"
-          cta="პროფილის შევსება"
-        />
-        <DashboardCard
-          title="განაცხადები"
-          description="შენი სამსახურის განაცხადების სტატუსი."
-          href="#"
-          cta="ნახვა"
-        />
-        <DashboardCard
-          title="შეტყობინებები"
-          description="ახალი შეტყობინებები კლუბებისგან."
-          href="#"
-          cta="ნახვა"
-        />
-      </div>
-    </div>
-  );
-}
-
-function DashboardCard({
-  title,
-  description,
-  href,
-  cta,
-}: {
-  title: string;
-  description: string;
-  href: string;
-  cta: string;
-}) {
-  return (
-    <div className="rounded-lg border bg-card p-5 space-y-3">
-      <h2 className="font-medium">{title}</h2>
-      <p className="text-sm text-muted-foreground">{description}</p>
-      <a
-        href={href}
-        className="inline-block text-sm text-primary hover:underline underline-offset-4"
-      >
-        {cta} →
-      </a>
-    </div>
+    <FootballerDashboardClient
+      currentPath="/dashboard/footballer"
+      user={{
+        name,
+        initials,
+        image: profile.avatarKey ? `${r2BaseUrl}/${profile.avatarKey}` : undefined,
+        position: profile.positions[0] ?? undefined,
+        nationality: profile.nationality ?? undefined,
+        verificationStatus: toUiVerificationStatus(profile.verificationStatus),
+        profileCompletion: completion.percent,
+      }}
+      stats={{
+        views: profile.profileViewCount,
+        saves: profile.shortlistedBy.length,
+        unreadMessages: 0,
+      }}
+      unreadNotifications={unreadNotifications}
+      subscribedClubs={subscribedClubs}
+      profileMissingFields={completion.missingFields}
+    />
   );
 }
