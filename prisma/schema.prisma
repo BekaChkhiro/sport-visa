@@ -224,6 +224,7 @@ model FootballerProfile {
   // Media — R2 keys; the full URL is composed at runtime from R2_PUBLIC_BASE_URL.
   // Gallery photos live in the GalleryItem join table to support ordering.
   avatarKey  String?
+  coverKey   String? // hero/banner image shown on the detail page
   videoLinks String[] @default([]) // YouTube / Vimeo URLs, max 3
 
   // Visibility & verification
