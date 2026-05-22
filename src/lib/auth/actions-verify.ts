@@ -5,6 +5,7 @@ import { logger } from '@/lib/logger';
 import { sendVerifyEmailEmail } from '@/lib/resend';
 
 import { auth } from './index';
+import { recordResendVerificationAttempt } from './rate-limit';
 import { createEmailVerificationToken } from './tokens';
 
 export type ResendVerificationState =
@@ -24,6 +25,11 @@ export async function resendVerificationEmailAction(): Promise<ResendVerificatio
   }
 
   const email = session.user.email;
+
+  const { allowed } = recordResendVerificationAttempt(email);
+  if (!allowed) {
+    return { status: 'error', message: 'ძალიან ბევრი მოთხოვნა. სცადე ერთი საათის შემდეგ.' };
+  }
   const name = session.user.name ?? email;
 
   try {

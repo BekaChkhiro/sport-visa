@@ -5,7 +5,9 @@ import { env } from '@/lib/env';
 import { logger } from '@/lib/logger';
 import { sendPasswordResetEmail } from '@/lib/resend';
 
+import { getCallerIp } from './ip';
 import { hashPassword } from './password';
+import { recordPasswordResetAttempt } from './rate-limit';
 import { forgotPasswordSchema, resetPasswordSchema } from './schemas';
 import { consumePasswordResetToken, createPasswordResetToken } from './tokens';
 
@@ -25,6 +27,13 @@ export async function requestPasswordResetAction(
   }
 
   const { email } = parsed.data;
+
+  const ip = await getCallerIp();
+  const { allowed } = recordPasswordResetAttempt(ip, email);
+  if (!allowed) {
+    // Return success-shaped response to avoid leaking whether the address is known.
+    return { status: 'success' };
+  }
 
   // Fetch user silently — we return the same response whether the address
   // exists or not so callers cannot enumerate registered accounts.

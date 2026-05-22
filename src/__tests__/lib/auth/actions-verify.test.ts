@@ -16,15 +16,32 @@ vi.mock('@/lib/resend', () => ({ sendVerifyEmailEmail: mockSendVerify }));
 const mockCreateToken = vi.hoisted(() => vi.fn());
 vi.mock('@/lib/auth/tokens', () => ({ createEmailVerificationToken: mockCreateToken }));
 
+const mockRecordResendVerificationAttempt = vi.hoisted(() => vi.fn(() => ({ allowed: true })));
+vi.mock('@/lib/auth/rate-limit', () => ({
+  recordResendVerificationAttempt: mockRecordResendVerificationAttempt,
+}));
+
 import { resendVerificationEmailAction } from '@/lib/auth/actions-verify';
 
 beforeEach(() => {
   mockAuth.mockReset();
   mockSendVerify.mockReset();
   mockCreateToken.mockReset();
+  mockRecordResendVerificationAttempt.mockReset();
+  mockRecordResendVerificationAttempt.mockReturnValue({ allowed: true });
 });
 
 describe('resendVerificationEmailAction', () => {
+  it('returns error when rate-limited (no token created, no email sent)', async () => {
+    mockAuth.mockResolvedValueOnce({
+      user: { email: 'user@example.com', emailVerified: null },
+    });
+    mockRecordResendVerificationAttempt.mockReturnValueOnce({ allowed: false });
+    const out = await resendVerificationEmailAction();
+    expect(out.status).toBe('error');
+    expect(mockCreateToken).not.toHaveBeenCalled();
+  });
+
   it('rejects unauthenticated callers', async () => {
     mockAuth.mockResolvedValueOnce(null);
     const out = await resendVerificationEmailAction();
