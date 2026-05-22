@@ -4,8 +4,7 @@ import { auth } from '@/lib/auth';
 
 // Auth pages are unauthenticated-only. If a session exists we kick the user
 // straight to their role dashboard (admin → /admin, club → /dashboard/club,
-// footballer → /dashboard/footballer). T3.5 owns the actual dashboards;
-// this layout just defends the routes.
+// footballer → /dashboard/footballer).
 export default async function AuthLayout({ children }: { children: React.ReactNode }) {
   const session = await auth();
   if (session?.user) {

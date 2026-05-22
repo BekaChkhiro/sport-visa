@@ -7,10 +7,6 @@ export const metadata: Metadata = {
   title: 'პაროლის აღდგენა',
 };
 
-// Placeholder for the password reset email flow that lands in T3.4.
-// The form here always returns a generic "if the address exists you'll get
-// an email" message so the page works end-to-end (no enumeration) even
-// before Resend wiring is in place.
 export default function ForgotPasswordPage() {
   return (
     <div className="space-y-6">
