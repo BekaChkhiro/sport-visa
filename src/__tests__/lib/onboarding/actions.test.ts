@@ -22,9 +22,19 @@ vi.mock('@/lib/db', () => ({
   },
 }));
 
-// Prisma enum types are erased at runtime; the action passes them straight
-// through, so an empty stub is enough for the spec.
-vi.mock('@prisma/client', () => ({}));
+vi.mock('@prisma/client', () => {
+  class PrismaClientKnownRequestError extends Error {
+    code: string;
+    constructor(message: string, opts: { code: string; clientVersion: string }) {
+      super(message);
+      this.name = 'PrismaClientKnownRequestError';
+      this.code = opts.code;
+    }
+  }
+  return { Prisma: { PrismaClientKnownRequestError } };
+});
+
+import { Prisma } from '@prisma/client';
 
 import { saveClubProfile, saveFootballerProfile } from '@/lib/onboarding/actions';
 
@@ -110,6 +120,21 @@ describe('saveFootballerProfile — happy path & idempotency', () => {
     const out = await saveFootballerProfile(baseFootballer);
     expect(out.status).toBe('error');
   });
+
+  it('treats a P2002 unique-constraint error as idempotent success (concurrent create race)', async () => {
+    mockAuth.mockResolvedValueOnce({ user: { id: 'u1', role: 'FOOTBALLER' } });
+    mockFpFindUnique.mockResolvedValueOnce(null);
+    mockUserFindUnique.mockResolvedValueOnce({ firstName: 'X', lastName: 'Y' });
+    mockFpCreate.mockRejectedValueOnce(
+      new Prisma.PrismaClientKnownRequestError('Unique constraint failed', {
+        code: 'P2002',
+        clientVersion: '5.0.0',
+      }),
+    );
+
+    const out = await saveFootballerProfile(baseFootballer);
+    expect(out).toEqual({ status: 'success' });
+  });
 });
 
 describe('saveFootballerProfile — validation', () => {
@@ -142,6 +167,46 @@ describe('saveFootballerProfile — validation', () => {
     if (out.status === 'error') {
       expect(out.fieldErrors?.positions).toBeTruthy();
     }
+  });
+
+  it('rejects a future dateOfBirth', async () => {
+    mockAuth.mockResolvedValueOnce({ user: { id: 'u1', role: 'FOOTBALLER' } });
+    const out = await saveFootballerProfile({ ...baseFootballer, dateOfBirth: '2040-06-01' });
+    expect(out.status).toBe('error');
+    if (out.status === 'error') {
+      expect(out.fieldErrors?.dateOfBirth).toBeTruthy();
+    }
+    expect(mockFpCreate).not.toHaveBeenCalled();
+  });
+
+  it('rejects a non-date string for dateOfBirth', async () => {
+    mockAuth.mockResolvedValueOnce({ user: { id: 'u1', role: 'FOOTBALLER' } });
+    const out = await saveFootballerProfile({ ...baseFootballer, dateOfBirth: 'not-a-date' });
+    expect(out.status).toBe('error');
+    if (out.status === 'error') {
+      expect(out.fieldErrors?.dateOfBirth).toBeTruthy();
+    }
+    expect(mockFpCreate).not.toHaveBeenCalled();
+  });
+
+  it('rejects a nationality that is not a 2-letter ISO code', async () => {
+    mockAuth.mockResolvedValueOnce({ user: { id: 'u1', role: 'FOOTBALLER' } });
+    const out = await saveFootballerProfile({ ...baseFootballer, nationality: 'GEO' });
+    expect(out.status).toBe('error');
+    if (out.status === 'error') {
+      expect(out.fieldErrors?.nationality).toBeTruthy();
+    }
+    expect(mockFpCreate).not.toHaveBeenCalled();
+  });
+
+  it('rejects a country that is not a 2-letter ISO code', async () => {
+    mockAuth.mockResolvedValueOnce({ user: { id: 'u1', role: 'FOOTBALLER' } });
+    const out = await saveFootballerProfile({ ...baseFootballer, country: 'GEO' });
+    expect(out.status).toBe('error');
+    if (out.status === 'error') {
+      expect(out.fieldErrors?.country).toBeTruthy();
+    }
+    expect(mockFpCreate).not.toHaveBeenCalled();
   });
 });
 
@@ -220,5 +285,39 @@ describe('saveClubProfile — happy path & idempotency', () => {
 
     const out = await saveClubProfile(baseClub);
     expect(out.status).toBe('error');
+  });
+
+  it('treats a P2002 unique-constraint error as idempotent success (concurrent create race)', async () => {
+    mockAuth.mockResolvedValueOnce({ user: { id: 'u2', role: 'CLUB' } });
+    mockCpFindUnique.mockResolvedValueOnce(null);
+    mockCpCreate.mockRejectedValueOnce(
+      new Prisma.PrismaClientKnownRequestError('Unique constraint failed', {
+        code: 'P2002',
+        clientVersion: '5.0.0',
+      }),
+    );
+
+    const out = await saveClubProfile(baseClub);
+    expect(out).toEqual({ status: 'success' });
+  });
+
+  it('rejects an officialWebsite that is not a valid URL', async () => {
+    mockAuth.mockResolvedValueOnce({ user: { id: 'u2', role: 'CLUB' } });
+    const out = await saveClubProfile({ ...baseClub, officialWebsite: 'not-a-url' });
+    expect(out.status).toBe('error');
+    if (out.status === 'error') {
+      expect(out.fieldErrors?.officialWebsite).toBeTruthy();
+    }
+    expect(mockCpCreate).not.toHaveBeenCalled();
+  });
+
+  it('accepts a valid https officialWebsite URL', async () => {
+    mockAuth.mockResolvedValueOnce({ user: { id: 'u2', role: 'CLUB' } });
+    mockCpFindUnique.mockResolvedValueOnce(null);
+    mockCpCreate.mockResolvedValueOnce({ id: 'cp2' });
+
+    const out = await saveClubProfile({ ...baseClub, officialWebsite: 'https://fcdinamo.ge' });
+    expect(out).toEqual({ status: 'success' });
+    expect(mockCpCreate).toHaveBeenCalledTimes(1);
   });
 });
