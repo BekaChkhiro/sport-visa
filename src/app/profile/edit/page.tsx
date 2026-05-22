@@ -45,6 +45,13 @@ export default async function ProfileEditPage() {
       phone: true,
       bio: true,
       positions: true,
+      dominantFoot: true,
+      height: true,
+      weight: true,
+      currentClub: true,
+      jerseyNumber: true,
+      experienceLevel: true,
+      desiredLeague: true,
       avatarKey: true,
       verificationStatus: true,
       profileViewCount: true,
@@ -82,6 +89,16 @@ export default async function ProfileEditPage() {
         country: profile.country ?? '',
         phone: profile.phone ?? '',
         bio: profile.bio ?? '',
+      }}
+      initialSportInfo={{
+        positions: profile.positions,
+        dominantFoot: profile.dominantFoot ?? '',
+        height: profile.height != null ? String(profile.height) : '',
+        weight: profile.weight != null ? String(profile.weight) : '',
+        currentClub: profile.currentClub ?? '',
+        jerseyNumber: profile.jerseyNumber != null ? String(profile.jerseyNumber) : '',
+        experienceLevel: profile.experienceLevel ?? '',
+        desiredLeague: profile.desiredLeague ?? '',
       }}
     />
   );
