@@ -24,6 +24,9 @@ import {
   updateCareerEntry,
   deleteCareerEntry,
   updateAgentInfo,
+  addGalleryItem,
+  deleteGalleryItem,
+  reorderGalleryItems,
 } from '@/lib/profile/actions';
 import {
   COUNTRIES,
@@ -73,6 +76,13 @@ type AgentInfo = {
   agentEmail: string;
 };
 
+type GalleryPhoto = {
+  id: string;
+  mediaKey: string;
+  url: string;
+  isTemp?: boolean;
+};
+
 type ProfileEditClientProps = {
   currentPath: string;
   user: {
@@ -86,6 +96,7 @@ type ProfileEditClientProps = {
   initialSportInfo: SportInfo;
   initialCareerEntries: CareerEntry[];
   initialAgentInfo: AgentInfo;
+  initialGalleryPhotos: GalleryPhoto[];
 };
 
 export function ProfileEditClient({
@@ -95,6 +106,7 @@ export function ProfileEditClient({
   initialSportInfo,
   initialCareerEntries,
   initialAgentInfo,
+  initialGalleryPhotos,
 }: ProfileEditClientProps) {
   const router = useRouter();
 
@@ -110,6 +122,7 @@ export function ProfileEditClient({
 
         <PersonalInfoSection initialData={initialPersonalInfo} />
         <SportInfoSection initialData={initialSportInfo} />
+        <PhotoGallerySection initialPhotos={initialGalleryPhotos} />
         <CareerHistorySection initialEntries={initialCareerEntries} />
         <AgentInfoSection initialData={initialAgentInfo} />
       </div>
@@ -488,6 +501,190 @@ function SportInfoSection({ initialData }: { initialData: SportInfo }) {
             {status === 'saving' ? 'შენახვა...' : 'შენახვა'}
           </Button>
         </div>
+      </div>
+    </section>
+  );
+}
+
+// ── Photo gallery section ─────────────────────────────────────────────────────
+
+const MAX_GALLERY_PHOTOS = 8;
+
+function PhotoGallerySection({ initialPhotos }: { initialPhotos: GalleryPhoto[] }) {
+  const [photos, setPhotos] = React.useState<GalleryPhoto[]>(initialPhotos);
+  const [uploading, setUploading] = React.useState(false);
+  const [uploadError, setUploadError] = React.useState('');
+  const [draggingId, setDraggingId] = React.useState<string | null>(null);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+
+  async function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    e.target.value = '';
+
+    if (photos.length >= MAX_GALLERY_PHOTOS) {
+      setUploadError(`მაქსიმუმ ${MAX_GALLERY_PHOTOS} ფოტო შეიძლება`);
+      return;
+    }
+
+    setUploading(true);
+    setUploadError('');
+
+    try {
+      const presignRes = await fetch('/api/uploads/presign', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ kind: 'GALLERY', contentType: file.type, contentLength: file.size }),
+      });
+      if (!presignRes.ok) {
+        const err = (await presignRes.json().catch(() => ({}))) as { message?: string };
+        throw new Error(err.message ?? 'ატვირთვის შეცდომა');
+      }
+      const { key, uploadUrl, requiredHeaders } = (await presignRes.json()) as {
+        key: string;
+        uploadUrl: string;
+        requiredHeaders: Record<string, string>;
+      };
+
+      const putRes = await fetch(uploadUrl, {
+        method: 'PUT',
+        headers: requiredHeaders,
+        body: file,
+      });
+      if (!putRes.ok) throw new Error('ატვირთვა ვერ მოხდა');
+
+      const confirmRes = await fetch('/api/uploads/confirm', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ key, kind: 'GALLERY' }),
+      });
+      if (!confirmRes.ok) {
+        const err = (await confirmRes.json().catch(() => ({}))) as { message?: string };
+        throw new Error(err.message ?? 'დადასტურების შეცდომა');
+      }
+      const { url } = (await confirmRes.json()) as { url: string };
+
+      const result = await addGalleryItem(key);
+      if (result.status === 'error') throw new Error(result.message);
+
+      setPhotos((prev) => [...prev, { id: result.id, mediaKey: key, url }]);
+    } catch (err) {
+      setUploadError(err instanceof Error ? err.message : 'ატვირთვის შეცდომა');
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  async function handleDelete(photo: GalleryPhoto) {
+    const result = await deleteGalleryItem(photo.id);
+    if (result.status === 'success') {
+      setPhotos((prev) => prev.filter((p) => p.id !== photo.id));
+    }
+  }
+
+  function handleDrop(targetId: string) {
+    if (!draggingId || draggingId === targetId) return;
+
+    const fromIdx = photos.findIndex((p) => p.id === draggingId);
+    const toIdx = photos.findIndex((p) => p.id === targetId);
+    if (fromIdx === -1 || toIdx === -1) return;
+
+    const next = [...photos];
+    const [moved] = next.splice(fromIdx, 1);
+    if (!moved) return;
+    next.splice(toIdx, 0, moved);
+    setPhotos(next);
+    setDraggingId(null);
+    void reorderGalleryItems(next.map((p) => p.id));
+  }
+
+  return (
+    <section aria-labelledby="photo-gallery-heading">
+      <div className="mb-4">
+        <h2
+          id="photo-gallery-heading"
+          className="text-xs font-semibold uppercase tracking-widest text-muted-foreground"
+        >
+          ფოტო გალერეა
+        </h2>
+      </div>
+
+      <div className="rounded-xl border border-border bg-card p-6 space-y-4">
+        <div className="grid grid-cols-4 gap-2">
+          {photos.map((photo, idx) => (
+            <div
+              key={photo.id}
+              draggable
+              onDragStart={() => setDraggingId(photo.id)}
+              onDragOver={(e) => e.preventDefault()}
+              onDrop={() => handleDrop(photo.id)}
+              onDragEnd={() => setDraggingId(null)}
+              className={cn(
+                'relative aspect-square rounded-lg overflow-hidden border border-border cursor-grab',
+                draggingId === photo.id && 'opacity-50 border-primary',
+              )}
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={photo.url} alt={`ფოტო ${idx + 1}`} className="w-full h-full object-cover" />
+              {idx === 0 && (
+                <span className="absolute top-1 left-1 text-[10px] leading-none bg-primary/80 text-primary-foreground px-1 py-0.5 rounded">
+                  გარეკ.
+                </span>
+              )}
+              <button
+                type="button"
+                onClick={() => handleDelete(photo)}
+                className="absolute top-1 right-1 h-5 w-5 rounded-full bg-background/80 text-foreground hover:bg-destructive hover:text-destructive-foreground flex items-center justify-center text-xs leading-none transition-colors"
+                aria-label="ფოტოს წაშლა"
+              >
+                ×
+              </button>
+            </div>
+          ))}
+
+          {photos.length < MAX_GALLERY_PHOTOS && (
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploading}
+              className="aspect-square rounded-lg border-2 border-dashed border-border hover:border-primary flex items-center justify-center text-2xl text-muted-foreground hover:text-primary transition-colors disabled:opacity-50"
+              aria-label="ფოტოს ატვირთვა"
+            >
+              {uploading ? '…' : '+'}
+            </button>
+          )}
+        </div>
+
+        <div className="flex items-center justify-between">
+          <span className="text-sm text-muted-foreground">
+            {photos.length}/{MAX_GALLERY_PHOTOS} ფოტო
+          </span>
+          {photos.length < MAX_GALLERY_PHOTOS && (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploading}
+            >
+              {uploading ? 'ატვირთვა...' : '+ ატვირთვა'}
+            </Button>
+          )}
+        </div>
+
+        {uploadError ? (
+          <p role="alert" className="text-sm text-destructive">
+            {uploadError}
+          </p>
+        ) : null}
+
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/jpeg,image/png,image/webp"
+          className="hidden"
+          onChange={handleFileSelect}
+        />
       </div>
     </section>
   );

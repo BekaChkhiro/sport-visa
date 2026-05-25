@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache';
 
 import { auth } from '@/lib/auth';
 import { db } from '@/lib/db';
+import { deleteObject } from '@/lib/r2';
 
 import {
   updatePersonalInfoSchema,
@@ -179,6 +180,91 @@ export async function deleteCareerEntry(id: string): Promise<ProfileActionState>
   }
 
   await db.careerEntry.delete({ where: { id } });
+
+  revalidatePath('/profile/edit');
+  return { status: 'success' };
+}
+
+// ── gallery ───────────────────────────────────────────────────────────────────
+
+export type AddGalleryItemState =
+  | { status: 'success'; id: string }
+  | { status: 'error'; message: string };
+
+const MAX_GALLERY_PHOTOS = 8;
+
+export async function addGalleryItem(key: string): Promise<AddGalleryItemState> {
+  const session = await auth();
+  if (!session?.user?.id) return { status: 'error', message: 'ავტორიზაცია საჭიროა' };
+  if (session.user.role !== 'FOOTBALLER') return { status: 'error', message: 'წვდომა აკრძალულია' };
+
+  const profileId = await getFootballerProfileId(session.user.id);
+  if (!profileId) return { status: 'error', message: 'პროფილი ვერ მოიძებნა' };
+
+  const count = await db.galleryItem.count({ where: { profileId } });
+  if (count >= MAX_GALLERY_PHOTOS) {
+    return { status: 'error', message: `მაქსიმუმ ${MAX_GALLERY_PHOTOS} ფოტო შეიძლება` };
+  }
+
+  const item = await db.galleryItem.create({
+    data: { profileId, mediaKey: key, orderIndex: count },
+    select: { id: true },
+  });
+
+  revalidatePath('/profile/edit');
+  return { status: 'success', id: item.id };
+}
+
+export async function deleteGalleryItem(id: string): Promise<ProfileActionState> {
+  const session = await auth();
+  if (!session?.user?.id) return { status: 'error', message: 'ავტორიზაცია საჭიროა' };
+  if (session.user.role !== 'FOOTBALLER') return { status: 'error', message: 'წვდომა აკრძალულია' };
+
+  const profileId = await getFootballerProfileId(session.user.id);
+  if (!profileId) return { status: 'error', message: 'პროფილი ვერ მოიძებნა' };
+
+  const item = await db.galleryItem.findUnique({
+    where: { id },
+    select: { profileId: true, mediaKey: true },
+  });
+  if (!item || item.profileId !== profileId) {
+    return { status: 'error', message: 'ფოტო ვერ მოიძებნა' };
+  }
+
+  await db.galleryItem.delete({ where: { id } });
+
+  try {
+    await deleteObject(item.mediaKey);
+  } catch {
+    // best-effort — DB row is gone regardless
+  }
+
+  revalidatePath('/profile/edit');
+  return { status: 'success' };
+}
+
+export async function reorderGalleryItems(orderedIds: string[]): Promise<ProfileActionState> {
+  const session = await auth();
+  if (!session?.user?.id) return { status: 'error', message: 'ავტორიზაცია საჭიროა' };
+  if (session.user.role !== 'FOOTBALLER') return { status: 'error', message: 'წვდომა აკრძალულია' };
+
+  const profileId = await getFootballerProfileId(session.user.id);
+  if (!profileId) return { status: 'error', message: 'პროფილი ვერ მოიძებნა' };
+
+  const owned = await db.galleryItem.findMany({
+    where: { profileId },
+    select: { id: true },
+  });
+  const ownedSet = new Set(owned.map((i) => i.id));
+  if (orderedIds.some((id) => !ownedSet.has(id))) {
+    return { status: 'error', message: 'ფოტო ვერ მოიძებნა' };
+  }
+
+  await db.$transaction(
+    orderedIds.map((id, idx) =>
+      db.galleryItem.update({ where: { id }, data: { orderIndex: idx } }),
+    ),
+  );
 
   revalidatePath('/profile/edit');
   return { status: 'success' };
