@@ -137,6 +137,12 @@ function FootballerSidebar({
             </Link>
           </Button>
           <Button variant="outline" size="sm" asChild className="flex-1">
+            <Link href="/profile/preview">
+              <EyeIcon className="size-3.5" />
+              პრევიუ
+            </Link>
+          </Button>
+          <Button variant="outline" size="sm" asChild className="flex-1">
             <Link href="/profile/cv">
               <DownloadIcon className="size-3.5" />
               CV
