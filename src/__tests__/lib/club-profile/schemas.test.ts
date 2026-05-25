@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { updateClubIdentitySchema } from '@/lib/club-profile/schemas';
+import { clubRosterEntrySchema, updateClubIdentitySchema } from '@/lib/club-profile/schemas';
 
 const currentYear = new Date().getFullYear();
 
@@ -121,5 +121,77 @@ describe('updateClubIdentitySchema', () => {
   it('rejects a negative stadiumCapacity', () => {
     const r = updateClubIdentitySchema.safeParse({ ...validIdentity, stadiumCapacity: -1 });
     expect(r.success).toBe(false);
+  });
+});
+
+describe('clubRosterEntrySchema', () => {
+  const validEntry = { playerName: 'ი. ბაბუნაშვილი' };
+
+  it('accepts a minimum-valid payload (name only)', () => {
+    expect(clubRosterEntrySchema.safeParse(validEntry).success).toBe(true);
+  });
+
+  it('rejects an empty playerName', () => {
+    const r = clubRosterEntrySchema.safeParse({ playerName: '' });
+    expect(r.success).toBe(false);
+    if (!r.success) expect(r.error.flatten().fieldErrors.playerName).toBeTruthy();
+  });
+
+  it('rejects a playerName over 120 characters', () => {
+    const r = clubRosterEntrySchema.safeParse({ playerName: 'a'.repeat(121) });
+    expect(r.success).toBe(false);
+  });
+
+  it('accepts a full valid payload', () => {
+    const r = clubRosterEntrySchema.safeParse({
+      playerName: 'გ. მამარდაშვილი',
+      position: 'GK',
+      jerseyNumber: 1,
+    });
+    expect(r.success).toBe(true);
+  });
+
+  it('accepts every valid position code', () => {
+    for (const pos of ['GK', 'CB', 'LB', 'RB', 'CM', 'DM', 'AM', 'LW', 'RW', 'CF', 'ST']) {
+      const r = clubRosterEntrySchema.safeParse({ ...validEntry, position: pos });
+      expect(r.success).toBe(true);
+    }
+  });
+
+  it('rejects an invalid position code', () => {
+    const r = clubRosterEntrySchema.safeParse({ ...validEntry, position: 'XX' });
+    expect(r.success).toBe(false);
+    if (!r.success) expect(r.error.flatten().fieldErrors.position).toBeTruthy();
+  });
+
+  it('coerces empty position string to undefined', () => {
+    const r = clubRosterEntrySchema.parse({ ...validEntry, position: '' });
+    expect(r.position).toBeUndefined();
+  });
+
+  it('coerces empty jerseyNumber string to undefined', () => {
+    const r = clubRosterEntrySchema.parse({ ...validEntry, jerseyNumber: '' });
+    expect(r.jerseyNumber).toBeUndefined();
+  });
+
+  it('coerces string jerseyNumber to number', () => {
+    const r = clubRosterEntrySchema.safeParse({ ...validEntry, jerseyNumber: '9' });
+    expect(r.success).toBe(true);
+    if (r.success) expect(r.data.jerseyNumber).toBe(9);
+  });
+
+  it('rejects jerseyNumber below 1', () => {
+    const r = clubRosterEntrySchema.safeParse({ ...validEntry, jerseyNumber: 0 });
+    expect(r.success).toBe(false);
+  });
+
+  it('rejects jerseyNumber above 99', () => {
+    const r = clubRosterEntrySchema.safeParse({ ...validEntry, jerseyNumber: 100 });
+    expect(r.success).toBe(false);
+  });
+
+  it('trims whitespace from playerName', () => {
+    const r = clubRosterEntrySchema.parse({ playerName: '  გ. მ.  ' });
+    expect(r.playerName).toBe('გ. მ.');
   });
 });

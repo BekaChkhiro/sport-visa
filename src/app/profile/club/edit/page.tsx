@@ -52,6 +52,10 @@ export default async function ClubProfileEditPage() {
         select: { id: true, year: true, title: true, description: true },
         orderBy: [{ year: 'asc' }, { orderIndex: 'asc' }],
       },
+      rosterEntries: {
+        select: { id: true, playerName: true, position: true, jerseyNumber: true },
+        orderBy: [{ orderIndex: 'asc' }, { createdAt: 'asc' }],
+      },
     },
   });
 
@@ -99,6 +103,7 @@ export default async function ClubProfileEditPage() {
       }}
       initialBio={profile.bio ?? ''}
       initialHistoryEvents={profile.historyEvents}
+      initialRosterEntries={profile.rosterEntries}
       isVisible={profile.isVisible}
     />
   );

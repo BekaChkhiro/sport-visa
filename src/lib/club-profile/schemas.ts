@@ -65,3 +65,38 @@ export type ClubHistoryEventInput = z.infer<typeof clubHistoryEventSchema>;
 export type ClubHistoryEventAddState =
   | { status: 'success'; eventId: string }
   | { status: 'error'; message: string; fieldErrors?: Record<string, string[]> };
+
+// Allowed position codes for roster entries. Mirrors the Position enum used on
+// the footballer side; stored as a free-text string in the DB so we can loosen
+// later without a migration.
+export const ROSTER_POSITIONS = [
+  'GK',
+  'CB',
+  'LB',
+  'RB',
+  'CM',
+  'DM',
+  'AM',
+  'LW',
+  'RW',
+  'CF',
+  'ST',
+] as const;
+
+export const clubRosterEntrySchema = z.object({
+  playerName: z.string().trim().min(1, 'მოთამაშის სახელი სავალდებულოა').max(120),
+  position: z.preprocess(
+    toOptStr,
+    z.enum(ROSTER_POSITIONS, { message: 'არასწორი პოზიცია' }).optional(),
+  ),
+  jerseyNumber: z.preprocess(
+    toOptInt,
+    z.number().int().min(1, 'ნომერი 1–99').max(99, 'ნომერი 1–99').optional(),
+  ),
+});
+
+export type ClubRosterEntryInput = z.infer<typeof clubRosterEntrySchema>;
+
+export type ClubRosterEntryAddState =
+  | { status: 'success'; entryId: string }
+  | { status: 'error'; message: string; fieldErrors?: Record<string, string[]> };
