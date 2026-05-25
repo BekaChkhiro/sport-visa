@@ -23,6 +23,10 @@ import {
   updateClubLogo,
   updateClubCover,
   updateClubVisibility,
+  updateClubBio,
+  addClubHistoryEvent,
+  updateClubHistoryEvent,
+  deleteClubHistoryEvent,
 } from '@/lib/club-profile/actions';
 import { cn } from '@/lib/utils';
 
@@ -46,6 +50,21 @@ type MediaState = {
   coverKey?: string;
 };
 
+type HistoryEvent = {
+  id: string;
+  year: number;
+  title: string;
+  description: string | null;
+};
+
+type EventDraft = {
+  year: string;
+  title: string;
+  description: string;
+};
+
+const EMPTY_DRAFT: EventDraft = { year: '', title: '', description: '' };
+
 type ClubProfileEditClientProps = {
   currentPath: string;
   user: {
@@ -58,6 +77,8 @@ type ClubProfileEditClientProps = {
   stats: AppSidebarStats;
   initialIdentity: IdentityForm;
   initialMedia: MediaState;
+  initialBio: string;
+  initialHistoryEvents: HistoryEvent[];
   isVisible: boolean;
 };
 
@@ -71,6 +92,8 @@ export function ClubProfileEditClient({
   stats,
   initialIdentity,
   initialMedia,
+  initialBio,
+  initialHistoryEvents,
   isVisible,
 }: ClubProfileEditClientProps) {
   const router = useRouter();
@@ -93,6 +116,8 @@ export function ClubProfileEditClient({
 
         <IdentitySection initialData={initialIdentity} />
         <MediaSection initialData={initialMedia} />
+        <BioSection initialBio={initialBio} />
+        <HistoryTimelineSection initialEvents={initialHistoryEvents} />
         <VisibilitySection initialVisible={isVisible} />
       </div>
     </AppShell>
@@ -537,6 +562,393 @@ function VisibilitySection({ initialVisible }: { initialVisible: boolean }) {
         ) : null}
       </div>
     </section>
+  );
+}
+
+// ── Bio section ───────────────────────────────────────────────────────────────
+
+function BioSection({ initialBio }: { initialBio: string }) {
+  const [bio, setBio] = React.useState(initialBio);
+  const [status, setStatus] = React.useState<SectionStatus>('idle');
+  const [errorMessage, setErrorMessage] = React.useState('');
+
+  async function handleSave() {
+    setStatus('saving');
+    setErrorMessage('');
+    const result = await updateClubBio({ bio });
+    if (result.status === 'success') {
+      setStatus('saved');
+      setTimeout(() => setStatus('idle'), 3000);
+    } else {
+      setStatus('error');
+      setErrorMessage(result.message);
+    }
+  }
+
+  return (
+    <section aria-labelledby="bio-heading">
+      <div className="mb-4">
+        <h2
+          id="bio-heading"
+          className="text-xs font-semibold uppercase tracking-widest text-muted-foreground"
+        >
+          ისტ. / ბიო
+        </h2>
+      </div>
+
+      <div className="rounded-xl border border-border bg-card p-6 space-y-4">
+        <div className="space-y-1.5">
+          <Label htmlFor="bio-textarea">კლუბის ისტ. / ბიო</Label>
+          <textarea
+            id="bio-textarea"
+            value={bio}
+            onChange={(e) => {
+              setBio(e.target.value);
+              if (status !== 'idle') setStatus('idle');
+            }}
+            placeholder="კლუბის ისტორია და ბიო..."
+            maxLength={2000}
+            rows={6}
+            className="flex min-h-[120px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 resize-y"
+          />
+          <div className="flex justify-end">
+            <span
+              className={cn(
+                'text-xs',
+                bio.length > 1900 ? 'text-amber-500' : 'text-muted-foreground',
+              )}
+            >
+              {bio.length}/2000
+            </span>
+          </div>
+        </div>
+
+        {errorMessage ? (
+          <p role="alert" className="text-sm text-destructive">
+            {errorMessage}
+          </p>
+        ) : null}
+
+        <div className="flex items-center justify-end gap-3">
+          {status === 'saved' ? (
+            <p className="text-sm text-emerald-600 dark:text-emerald-400">✓ შენახულია</p>
+          ) : null}
+          <Button onClick={handleSave} disabled={status === 'saving'}>
+            {status === 'saving' ? 'შენახვა...' : 'შენახვა'}
+          </Button>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ── History timeline section ───────────────────────────────────────────────────
+
+function HistoryTimelineSection({ initialEvents }: { initialEvents: HistoryEvent[] }) {
+  const [events, setEvents] = React.useState<HistoryEvent[]>(initialEvents);
+  const [addingNew, setAddingNew] = React.useState(false);
+  const [editingId, setEditingId] = React.useState<string | null>(null);
+  const [draft, setDraft] = React.useState<EventDraft>(EMPTY_DRAFT);
+  const [draftErrors, setDraftErrors] = React.useState<Record<string, string>>({});
+  const [formStatus, setFormStatus] = React.useState<SectionStatus>('idle');
+  const [formError, setFormError] = React.useState('');
+  const [deletingId, setDeletingId] = React.useState<string | null>(null);
+  const [savedMessage, setSavedMessage] = React.useState(false);
+
+  function openAdd() {
+    setEditingId(null);
+    setDraft(EMPTY_DRAFT);
+    setDraftErrors({});
+    setFormStatus('idle');
+    setFormError('');
+    setAddingNew(true);
+  }
+
+  function openEdit(event: HistoryEvent) {
+    setAddingNew(false);
+    setDraft({
+      year: String(event.year),
+      title: event.title,
+      description: event.description ?? '',
+    });
+    setDraftErrors({});
+    setFormStatus('idle');
+    setFormError('');
+    setEditingId(event.id);
+  }
+
+  function cancelForm() {
+    setAddingNew(false);
+    setEditingId(null);
+    setDraft(EMPTY_DRAFT);
+    setDraftErrors({});
+    setFormStatus('idle');
+    setFormError('');
+  }
+
+  function setField(field: keyof EventDraft, value: string) {
+    setDraft((prev) => ({ ...prev, [field]: value }));
+    setDraftErrors((prev) => ({ ...prev, [field]: '' }));
+  }
+
+  function flashSaved() {
+    setSavedMessage(true);
+    setTimeout(() => setSavedMessage(false), 3000);
+  }
+
+  async function handleAdd() {
+    setFormStatus('saving');
+    setFormError('');
+    setDraftErrors({});
+    const result = await addClubHistoryEvent({
+      year: draft.year,
+      title: draft.title,
+      description: draft.description,
+    });
+    if (result.status === 'success') {
+      const newEvent: HistoryEvent = {
+        id: result.eventId,
+        year: Number(draft.year),
+        title: draft.title,
+        description: draft.description || null,
+      };
+      setEvents((prev) => [...prev, newEvent].sort((a, b) => a.year - b.year));
+      setAddingNew(false);
+      setDraft(EMPTY_DRAFT);
+      setFormStatus('idle');
+      flashSaved();
+    } else {
+      setFormStatus('error');
+      setFormError(result.message);
+      if (result.fieldErrors) {
+        const flat: Record<string, string> = {};
+        for (const [k, msgs] of Object.entries(result.fieldErrors)) {
+          if (msgs?.[0]) flat[k] = msgs[0];
+        }
+        setDraftErrors(flat);
+      }
+    }
+  }
+
+  async function handleEdit() {
+    if (!editingId) return;
+    setFormStatus('saving');
+    setFormError('');
+    setDraftErrors({});
+    const result = await updateClubHistoryEvent(editingId, {
+      year: draft.year,
+      title: draft.title,
+      description: draft.description,
+    });
+    if (result.status === 'success') {
+      setEvents((prev) =>
+        prev
+          .map((e) =>
+            e.id === editingId
+              ? {
+                  ...e,
+                  year: Number(draft.year),
+                  title: draft.title,
+                  description: draft.description || null,
+                }
+              : e,
+          )
+          .sort((a, b) => a.year - b.year),
+      );
+      setEditingId(null);
+      setDraft(EMPTY_DRAFT);
+      setFormStatus('idle');
+      flashSaved();
+    } else {
+      setFormStatus('error');
+      setFormError(result.message);
+      if (result.fieldErrors) {
+        const flat: Record<string, string> = {};
+        for (const [k, msgs] of Object.entries(result.fieldErrors)) {
+          if (msgs?.[0]) flat[k] = msgs[0];
+        }
+        setDraftErrors(flat);
+      }
+    }
+  }
+
+  async function handleDelete(id: string) {
+    setDeletingId(id);
+    const result = await deleteClubHistoryEvent(id);
+    setDeletingId(null);
+    if (result.status === 'success') {
+      setEvents((prev) => prev.filter((e) => e.id !== id));
+      flashSaved();
+    }
+  }
+
+  return (
+    <section aria-labelledby="history-timeline-heading">
+      <div className="mb-4 flex items-center justify-between">
+        <h2
+          id="history-timeline-heading"
+          className="text-xs font-semibold uppercase tracking-widest text-muted-foreground"
+        >
+          ისტ. მოვლენები
+        </h2>
+        {!addingNew && !editingId ? (
+          <Button type="button" variant="outline" size="sm" onClick={openAdd}>
+            + მოვლენის დამატება
+          </Button>
+        ) : null}
+      </div>
+
+      <div className="rounded-xl border border-border bg-card p-6 space-y-3">
+        {addingNew ? (
+          <EventForm
+            draft={draft}
+            errors={draftErrors}
+            status={formStatus}
+            errorMessage={formError}
+            onChange={setField}
+            onSave={handleAdd}
+            onCancel={cancelForm}
+          />
+        ) : null}
+
+        {events.length === 0 && !addingNew ? (
+          <p className="text-sm text-muted-foreground text-center py-4">
+            ჯერ არ არის მოვლენები. დაამატე პირველი.
+          </p>
+        ) : null}
+
+        {events.map((event) =>
+          editingId === event.id ? (
+            <EventForm
+              key={event.id}
+              draft={draft}
+              errors={draftErrors}
+              status={formStatus}
+              errorMessage={formError}
+              onChange={setField}
+              onSave={handleEdit}
+              onCancel={cancelForm}
+            />
+          ) : (
+            <div
+              key={event.id}
+              className="flex items-start justify-between gap-2 rounded-lg border border-border px-4 py-3"
+            >
+              <div className="min-w-0">
+                <p className="text-sm font-medium">
+                  <span className="text-muted-foreground">{event.year}</span>
+                  {' · '}
+                  {event.title}
+                </p>
+                {event.description ? (
+                  <p className="mt-0.5 text-xs text-muted-foreground line-clamp-2">
+                    {event.description}
+                  </p>
+                ) : null}
+              </div>
+              <div className="flex shrink-0 gap-1">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => openEdit(event)}
+                  disabled={deletingId === event.id}
+                >
+                  რედ.
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="text-destructive hover:text-destructive"
+                  onClick={() => handleDelete(event.id)}
+                  disabled={deletingId === event.id}
+                >
+                  {deletingId === event.id ? '...' : 'წაშ.'}
+                </Button>
+              </div>
+            </div>
+          ),
+        )}
+
+        {savedMessage && !addingNew && !editingId ? (
+          <p className="text-sm text-emerald-600 dark:text-emerald-400 text-right">✓ შენახულია</p>
+        ) : null}
+      </div>
+    </section>
+  );
+}
+
+// ── Event form ────────────────────────────────────────────────────────────────
+
+function EventForm({
+  draft,
+  errors,
+  status,
+  errorMessage,
+  onChange,
+  onSave,
+  onCancel,
+}: {
+  draft: EventDraft;
+  errors: Record<string, string>;
+  status: SectionStatus;
+  errorMessage: string;
+  onChange: (field: keyof EventDraft, value: string) => void;
+  onSave: () => void;
+  onCancel: () => void;
+}) {
+  return (
+    <div className="rounded-lg border border-border bg-muted/30 p-4 space-y-3">
+      <div className="grid grid-cols-3 gap-3">
+        <Field label="წელი ★" error={errors.year}>
+          <Input
+            type="number"
+            value={draft.year}
+            onChange={(e) => onChange('year', e.target.value)}
+            placeholder={String(new Date().getFullYear())}
+            min={1800}
+            max={new Date().getFullYear()}
+          />
+        </Field>
+        <Field label="სათაური ★" error={errors.title} className="col-span-2">
+          <Input
+            value={draft.title}
+            onChange={(e) => onChange('title', e.target.value)}
+            placeholder="პირველი ტიტული"
+          />
+        </Field>
+      </div>
+      <Field label="აღწერა (სურ., მაქს. 500)" error={errors.description}>
+        <textarea
+          value={draft.description}
+          onChange={(e) => onChange('description', e.target.value)}
+          placeholder="მოვლენის დამატებითი ინფ."
+          maxLength={500}
+          rows={2}
+          className="flex min-h-[60px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 resize-none"
+        />
+      </Field>
+      {errorMessage ? (
+        <p role="alert" className="text-sm text-destructive">
+          {errorMessage}
+        </p>
+      ) : null}
+      <div className="flex justify-end gap-2">
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={onCancel}
+          disabled={status === 'saving'}
+        >
+          გაუქ.
+        </Button>
+        <Button type="button" size="sm" onClick={onSave} disabled={status === 'saving'}>
+          {status === 'saving' ? 'შენახვა...' : 'შენახვა'}
+        </Button>
+      </div>
+    </div>
   );
 }
 

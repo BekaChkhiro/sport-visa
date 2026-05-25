@@ -42,3 +42,26 @@ export type ClubIdentityInput = z.infer<typeof updateClubIdentitySchema>;
 export type ClubActionState =
   | { status: 'success' }
   | { status: 'error'; message: string; fieldErrors?: Record<string, string[]> };
+
+export const updateClubBioSchema = z.object({
+  bio: z.preprocess(toOptStr, z.string().max(2000, 'ბიო/ისტ. მაქს. 2000 სიმბ.').optional()),
+});
+
+export const clubHistoryEventSchema = z.object({
+  year: z.preprocess(
+    toOptInt,
+    z
+      .number()
+      .int()
+      .min(1800, 'წელი 1800-ზე მეტი')
+      .max(new Date().getFullYear(), 'მომავალი წელი არ შეიძლება'),
+  ),
+  title: z.string().trim().min(1, 'სათაური სავალდებულოა').max(200),
+  description: z.preprocess(toOptStr, z.string().max(500).optional()),
+});
+
+export type ClubHistoryEventInput = z.infer<typeof clubHistoryEventSchema>;
+
+export type ClubHistoryEventAddState =
+  | { status: 'success'; eventId: string }
+  | { status: 'error'; message: string; fieldErrors?: Record<string, string[]> };

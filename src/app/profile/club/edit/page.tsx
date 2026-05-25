@@ -43,10 +43,15 @@ export default async function ClubProfileEditPage() {
       officialWebsite: true,
       logoKey: true,
       coverKey: true,
+      bio: true,
       isVisible: true,
       verificationStatus: true,
       profileViewCount: true,
       _count: { select: { shortlistedPlayers: true } },
+      historyEvents: {
+        select: { id: true, year: true, title: true, description: true },
+        orderBy: [{ year: 'asc' }, { orderIndex: 'asc' }],
+      },
     },
   });
 
@@ -92,6 +97,8 @@ export default async function ClubProfileEditPage() {
         coverUrl: profile.coverKey ? `${r2BaseUrl}/${profile.coverKey}` : undefined,
         coverKey: profile.coverKey ?? undefined,
       }}
+      initialBio={profile.bio ?? ''}
+      initialHistoryEvents={profile.historyEvents}
       isVisible={profile.isVisible}
     />
   );
