@@ -2,10 +2,19 @@ import { redirect } from 'next/navigation';
 import type { Metadata } from 'next';
 
 import { auth } from '@/lib/auth';
+import { db } from '@/lib/db';
+import type { VerificationStatus } from '@/components/verification-badge';
+import { ClubDashboardClient } from './club-dashboard-client';
 
 export const metadata: Metadata = {
   title: 'Dashboard',
 };
+
+type PrismaVerificationStatus = 'PENDING' | 'VERIFIED' | 'REJECTED';
+
+function toUiVerificationStatus(status: PrismaVerificationStatus): VerificationStatus {
+  return status.toLowerCase() as VerificationStatus;
+}
 
 export default async function ClubDashboardPage() {
   const session = await auth();
@@ -18,60 +27,85 @@ export default async function ClubDashboardPage() {
     redirect('/dashboard');
   }
 
-  const name = session.user.name ?? session.user.email ?? 'კლუბო';
+  const userId = session.user.id;
+  const r2BaseUrl = process.env.R2_PUBLIC_BASE_URL ?? '';
+
+  const [profile, unreadNotifications] = await Promise.all([
+    db.clubProfile.findUnique({
+      where: { userId },
+      select: {
+        name: true,
+        city: true,
+        logoKey: true,
+        verificationStatus: true,
+        profileViewCount: true,
+        shortlistedPlayers: {
+          orderBy: { createdAt: 'desc' },
+          take: 10,
+          select: {
+            createdAt: true,
+            footballerProfile: {
+              select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+                positions: true,
+                height: true,
+                nationality: true,
+                avatarKey: true,
+              },
+            },
+          },
+        },
+        _count: {
+          select: { shortlistedPlayers: true },
+        },
+      },
+    }),
+    db.notification.count({ where: { userId, read: false } }),
+  ]);
+
+  if (!profile) {
+    redirect('/onboarding');
+  }
+
+  const initials = profile.name
+    .split(' ')
+    .slice(0, 2)
+    .map((w) => w[0])
+    .join('')
+    .toUpperCase();
+
+  const recentShortlist = profile.shortlistedPlayers.map((entry) => ({
+    id: entry.footballerProfile.id,
+    firstName: entry.footballerProfile.firstName,
+    lastName: entry.footballerProfile.lastName,
+    positions: entry.footballerProfile.positions,
+    height: entry.footballerProfile.height,
+    nationality: entry.footballerProfile.nationality,
+    avatarUrl: entry.footballerProfile.avatarKey
+      ? `${r2BaseUrl}/${entry.footballerProfile.avatarKey}`
+      : undefined,
+    shortlistedAt: entry.createdAt.toISOString(),
+  }));
 
   return (
-    <div className="container mx-auto px-4 py-12 max-w-5xl">
-      <div className="space-y-2 mb-8">
-        <h1 className="text-2xl font-semibold">გამარჯობა, {name}</h1>
-        <p className="text-muted-foreground text-sm">კლუბის Dashboard</p>
-      </div>
-
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <DashboardCard
-          title="პროფილის სტატუსი"
-          description="კლუბის პროფილი შევსებულია ნაწილობრივ. დაასრულე მისი შევსება."
-          href="/onboarding"
-          cta="პროფილის შევსება"
-        />
-        <DashboardCard
-          title="ფეხბურთელთა ძიება"
-          description="გაეცანი ხელმისაწვდომ ფეხბურთელებს."
-          href="/directory"
-          cta="დაათვალიერე"
-        />
-        <DashboardCard
-          title="შემოკლებული სია"
-          description="შენი შენახული ფეხბურთელების სია."
-          href="#"
-          cta="ნახვა"
-        />
-      </div>
-    </div>
-  );
-}
-
-function DashboardCard({
-  title,
-  description,
-  href,
-  cta,
-}: {
-  title: string;
-  description: string;
-  href: string;
-  cta: string;
-}) {
-  return (
-    <div className="rounded-lg border bg-card p-5 space-y-3">
-      <h2 className="font-medium">{title}</h2>
-      <p className="text-sm text-muted-foreground">{description}</p>
-      <a
-        href={href}
-        className="inline-block text-sm text-primary hover:underline underline-offset-4"
-      >
-        {cta} →
-      </a>
-    </div>
+    <ClubDashboardClient
+      currentPath="/dashboard/club"
+      user={{
+        name: profile.name,
+        initials,
+        image: profile.logoKey ? `${r2BaseUrl}/${profile.logoKey}` : undefined,
+        city: profile.city ?? undefined,
+        verificationStatus: toUiVerificationStatus(profile.verificationStatus),
+      }}
+      stats={{
+        views: profile.profileViewCount,
+        shortlistCount: profile._count.shortlistedPlayers,
+        unreadMessages: 0,
+      }}
+      unreadNotifications={unreadNotifications}
+      recentShortlist={recentShortlist}
+    />
   );
 }
