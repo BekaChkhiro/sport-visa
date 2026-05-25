@@ -70,6 +70,10 @@ export default async function ProfileEditPage() {
           orderIndex: true,
         },
       },
+      galleryItems: {
+        orderBy: { orderIndex: 'asc' },
+        select: { id: true, mediaKey: true, orderIndex: true },
+      },
     },
   });
 
@@ -127,6 +131,11 @@ export default async function ProfileEditPage() {
         agentPhone: profile.agentPhone ?? '',
         agentEmail: profile.agentEmail ?? '',
       }}
+      initialGalleryPhotos={profile.galleryItems.map((g) => ({
+        id: g.id,
+        mediaKey: g.mediaKey,
+        url: `${r2BaseUrl}/${g.mediaKey}`,
+      }))}
     />
   );
 }
