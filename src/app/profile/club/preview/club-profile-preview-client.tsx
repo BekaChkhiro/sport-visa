@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { VerificationBadge, type VerificationStatus } from '@/components/verification-badge';
 import { ArrowLeftIcon, EyeIcon, StarIcon, MapPinIcon, GlobeIcon } from '@/components/icons';
 import { COUNTRIES } from '@/lib/onboarding/schemas';
+import { buildMapEmbedSrc } from '@/lib/club-profile/map-embed';
 import { cn } from '@/lib/utils';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -450,32 +451,6 @@ function StadiumTab({
       </div>
     </section>
   );
-}
-
-function buildMapEmbedSrc(url?: string): string | null {
-  if (!url) return null;
-
-  // Google Maps share/place URL → embed
-  if (url.includes('google.com/maps') || url.includes('maps.google.com')) {
-    // Already an embed URL
-    if (url.includes('/embed')) return url;
-    // Convert share URL to embed URL using q= param
-    try {
-      const u = new URL(url);
-      const q = u.searchParams.get('q') ?? url;
-      return `https://www.google.com/maps?q=${encodeURIComponent(q)}&output=embed`;
-    } catch {
-      return null;
-    }
-  }
-
-  // Coordinates like "41.6938,44.8015"
-  const coordMatch = url.match(/^(-?\d+\.?\d*),\s*(-?\d+\.?\d*)$/);
-  if (coordMatch) {
-    return `https://www.google.com/maps?q=${coordMatch[1]},${coordMatch[2]}&output=embed`;
-  }
-
-  return null;
 }
 
 // ── News tab ──────────────────────────────────────────────────────────────────
