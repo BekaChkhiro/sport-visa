@@ -221,6 +221,11 @@ model FootballerProfile {
   experienceLevel ExperienceLevel?
   desiredLeague   String?
 
+  // Sports agent / representative contact info.
+  agentName  String?
+  agentPhone String?
+  agentEmail String?
+
   // Media — R2 keys; the full URL is composed at runtime from R2_PUBLIC_BASE_URL.
   // Gallery photos live in the GalleryItem join table to support ordering.
   avatarKey  String?

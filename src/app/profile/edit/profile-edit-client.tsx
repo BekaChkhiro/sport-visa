@@ -17,7 +17,14 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import type { VerificationStatus } from '@/components/verification-badge';
-import { updatePersonalInfo, updateSportInfo } from '@/lib/profile/actions';
+import {
+  updatePersonalInfo,
+  updateSportInfo,
+  addCareerEntry,
+  updateCareerEntry,
+  deleteCareerEntry,
+  updateAgentInfo,
+} from '@/lib/profile/actions';
 import {
   COUNTRIES,
   DOMINANT_FOOT_LABELS,
@@ -51,6 +58,21 @@ type SportInfo = {
   desiredLeague: string;
 };
 
+type CareerEntry = {
+  id: string;
+  clubName: string;
+  startYear: number;
+  endYear?: number;
+  position?: string;
+  orderIndex: number;
+};
+
+type AgentInfo = {
+  agentName: string;
+  agentPhone: string;
+  agentEmail: string;
+};
+
 type ProfileEditClientProps = {
   currentPath: string;
   user: {
@@ -62,6 +84,8 @@ type ProfileEditClientProps = {
   };
   initialPersonalInfo: PersonalInfo;
   initialSportInfo: SportInfo;
+  initialCareerEntries: CareerEntry[];
+  initialAgentInfo: AgentInfo;
 };
 
 export function ProfileEditClient({
@@ -69,6 +93,8 @@ export function ProfileEditClient({
   user,
   initialPersonalInfo,
   initialSportInfo,
+  initialCareerEntries,
+  initialAgentInfo,
 }: ProfileEditClientProps) {
   const router = useRouter();
 
@@ -84,6 +110,8 @@ export function ProfileEditClient({
 
         <PersonalInfoSection initialData={initialPersonalInfo} />
         <SportInfoSection initialData={initialSportInfo} />
+        <CareerHistorySection initialEntries={initialCareerEntries} />
+        <AgentInfoSection initialData={initialAgentInfo} />
       </div>
     </AppShell>
   );
@@ -441,6 +469,408 @@ function SportInfoSection({ initialData }: { initialData: SportInfo }) {
             placeholder="Georgian Erovnuli Liga"
           />
         </Field>
+
+        {errorMessage ? (
+          <p role="alert" className="text-sm text-destructive">
+            {errorMessage}
+          </p>
+        ) : null}
+
+        <div className="flex items-center justify-end gap-3">
+          {status === 'saved' ? (
+            <p className="text-sm text-emerald-600 dark:text-emerald-400">✓ შენახულია</p>
+          ) : null}
+          <Button
+            onClick={handleSave}
+            disabled={status === 'saving'}
+            className={cn(status === 'error' && 'border-destructive')}
+          >
+            {status === 'saving' ? 'შენახვა...' : 'შენახვა'}
+          </Button>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ── Career history section ────────────────────────────────────────────────────
+
+type CareerEntryForm = {
+  clubName: string;
+  startYear: string;
+  endYear: string;
+  position: string;
+};
+
+const EMPTY_CAREER_FORM: CareerEntryForm = {
+  clubName: '',
+  startYear: '',
+  endYear: '',
+  position: '',
+};
+
+function CareerHistorySection({ initialEntries }: { initialEntries: CareerEntry[] }) {
+  const [entries, setEntries] = React.useState<CareerEntry[]>(initialEntries);
+  const [editingId, setEditingId] = React.useState<string | 'new' | null>(null);
+  const [form, setForm] = React.useState<CareerEntryForm>(EMPTY_CAREER_FORM);
+  const [errors, setErrors] = React.useState<Record<string, string>>({});
+  const [saving, setSaving] = React.useState(false);
+  const [errorMessage, setErrorMessage] = React.useState('');
+
+  function openAdd() {
+    setForm(EMPTY_CAREER_FORM);
+    setErrors({});
+    setErrorMessage('');
+    setEditingId('new');
+  }
+
+  function openEdit(entry: CareerEntry) {
+    setForm({
+      clubName: entry.clubName,
+      startYear: String(entry.startYear),
+      endYear: entry.endYear != null ? String(entry.endYear) : '',
+      position: entry.position ?? '',
+    });
+    setErrors({});
+    setErrorMessage('');
+    setEditingId(entry.id);
+  }
+
+  function cancel() {
+    setEditingId(null);
+    setForm(EMPTY_CAREER_FORM);
+    setErrors({});
+    setErrorMessage('');
+  }
+
+  function setField(field: keyof CareerEntryForm, value: string) {
+    setForm((prev) => ({ ...prev, [field]: value }));
+    setErrors((prev) => ({ ...prev, [field]: '' }));
+  }
+
+  async function handleSave() {
+    setSaving(true);
+    setErrorMessage('');
+    setErrors({});
+
+    const payload = {
+      clubName: form.clubName,
+      startYear: form.startYear,
+      endYear: form.endYear || undefined,
+      position: form.position || undefined,
+      orderIndex:
+        editingId === 'new'
+          ? entries.length
+          : (entries.find((e) => e.id === editingId)?.orderIndex ?? 0),
+    };
+
+    const result =
+      editingId === 'new'
+        ? await addCareerEntry(payload)
+        : await updateCareerEntry(editingId!, payload);
+
+    setSaving(false);
+
+    if (result.status === 'success') {
+      if (editingId === 'new') {
+        const tempEntry: CareerEntry = {
+          id: `temp-${Date.now()}`,
+          clubName: form.clubName,
+          startYear: Number(form.startYear),
+          endYear: form.endYear ? Number(form.endYear) : undefined,
+          position: form.position || undefined,
+          orderIndex: entries.length,
+        };
+        setEntries((prev) => [...prev, tempEntry]);
+      } else {
+        setEntries((prev) =>
+          prev.map((e) =>
+            e.id === editingId
+              ? {
+                  ...e,
+                  clubName: form.clubName,
+                  startYear: Number(form.startYear),
+                  endYear: form.endYear ? Number(form.endYear) : undefined,
+                  position: form.position || undefined,
+                }
+              : e,
+          ),
+        );
+      }
+      cancel();
+    } else {
+      setErrorMessage(result.message);
+      if (result.fieldErrors) {
+        const flat: Record<string, string> = {};
+        for (const [k, msgs] of Object.entries(result.fieldErrors)) {
+          if (msgs?.[0]) flat[k] = msgs[0];
+        }
+        setErrors(flat);
+      }
+    }
+  }
+
+  async function handleDelete(id: string) {
+    const result = await deleteCareerEntry(id);
+    if (result.status === 'success') {
+      setEntries((prev) => prev.filter((e) => e.id !== id));
+      if (editingId === id) cancel();
+    }
+  }
+
+  return (
+    <section aria-labelledby="career-history-heading">
+      <div className="mb-4">
+        <h2
+          id="career-history-heading"
+          className="text-xs font-semibold uppercase tracking-widest text-muted-foreground"
+        >
+          კარიერის ისტორია
+        </h2>
+      </div>
+
+      <div className="rounded-xl border border-border bg-card p-6 space-y-4">
+        {entries.length === 0 && editingId === null ? (
+          <p className="text-sm text-muted-foreground">
+            კარიერის ჩანაწერი არ არის. დაამატე პირველი.
+          </p>
+        ) : null}
+
+        <ul className="space-y-2">
+          {entries.map((entry) => (
+            <li key={entry.id}>
+              {editingId === entry.id ? (
+                <CareerEntryFormRow
+                  form={form}
+                  errors={errors}
+                  errorMessage={errorMessage}
+                  saving={saving}
+                  onField={setField}
+                  onSave={handleSave}
+                  onCancel={cancel}
+                />
+              ) : (
+                <div className="flex items-center justify-between gap-2 py-1">
+                  <span className="text-sm">
+                    <span className="font-medium">{entry.clubName}</span>
+                    <span className="text-muted-foreground ml-2">
+                      {entry.startYear}–{entry.endYear ?? 'დღ.'}
+                    </span>
+                    {entry.position ? (
+                      <span className="text-muted-foreground ml-2">{entry.position}</span>
+                    ) : null}
+                  </span>
+                  <div className="flex gap-1 shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => openEdit(entry)}
+                      className="h-7 w-7 rounded text-muted-foreground hover:text-foreground hover:bg-muted flex items-center justify-center text-sm transition-colors"
+                      aria-label="რედაქტირება"
+                    >
+                      ✏
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleDelete(entry.id)}
+                      className="h-7 w-7 rounded text-muted-foreground hover:text-destructive hover:bg-destructive/10 flex items-center justify-center text-sm transition-colors"
+                      aria-label="წაშლა"
+                    >
+                      ×
+                    </button>
+                  </div>
+                </div>
+              )}
+            </li>
+          ))}
+        </ul>
+
+        {editingId === 'new' ? (
+          <CareerEntryFormRow
+            form={form}
+            errors={errors}
+            errorMessage={errorMessage}
+            saving={saving}
+            onField={setField}
+            onSave={handleSave}
+            onCancel={cancel}
+          />
+        ) : (
+          <button
+            type="button"
+            onClick={openAdd}
+            className="flex items-center gap-1 text-sm text-primary hover:underline"
+          >
+            + კლუბის / გუნდის დამატება
+          </button>
+        )}
+      </div>
+    </section>
+  );
+}
+
+function CareerEntryFormRow({
+  form,
+  errors,
+  errorMessage,
+  saving,
+  onField,
+  onSave,
+  onCancel,
+}: {
+  form: CareerEntryForm;
+  errors: Record<string, string>;
+  errorMessage: string;
+  saving: boolean;
+  onField: (field: keyof CareerEntryForm, value: string) => void;
+  onSave: () => void;
+  onCancel: () => void;
+}) {
+  return (
+    <div className="border border-border rounded-lg p-4 space-y-3 bg-muted/30">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <Field label="კლუბი / გუნდი ★" error={errors.clubName} className="sm:col-span-2">
+          <Input
+            value={form.clubName}
+            onChange={(e) => onField('clubName', e.target.value)}
+            placeholder="FC Dinamo Tbilisi"
+            aria-invalid={Boolean(errors.clubName)}
+          />
+        </Field>
+
+        <Field label="დაწყება (წ.) ★" error={errors.startYear}>
+          <Input
+            type="number"
+            value={form.startYear}
+            onChange={(e) => onField('startYear', e.target.value)}
+            placeholder="2020"
+            min={1950}
+            max={new Date().getFullYear()}
+            aria-invalid={Boolean(errors.startYear)}
+          />
+        </Field>
+
+        <Field label="დასრულება (წ.)" error={errors.endYear}>
+          <Input
+            type="number"
+            value={form.endYear}
+            onChange={(e) => onField('endYear', e.target.value)}
+            placeholder="მიმდ. (ცარიელი)"
+            min={1950}
+            max={new Date().getFullYear()}
+            aria-invalid={Boolean(errors.endYear)}
+          />
+        </Field>
+
+        <Field label="პოზიცია" error={errors.position}>
+          <Select value={form.position} onValueChange={(v) => onField('position', v)}>
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="— სურვ. —" />
+            </SelectTrigger>
+            <SelectContent>
+              {POSITION_VALUES.map((pos) => (
+                <SelectItem key={pos} value={pos}>
+                  {pos} — {POSITION_LABELS[pos]}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </Field>
+      </div>
+
+      {errorMessage ? (
+        <p role="alert" className="text-sm text-destructive">
+          {errorMessage}
+        </p>
+      ) : null}
+
+      <div className="flex items-center justify-end gap-2">
+        <Button type="button" variant="outline" size="sm" onClick={onCancel}>
+          გაუქმება
+        </Button>
+        <Button type="button" size="sm" onClick={onSave} disabled={saving}>
+          {saving ? 'შენახვა...' : 'შენახვა'}
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+// ── Agent info section ────────────────────────────────────────────────────────
+
+function AgentInfoSection({ initialData }: { initialData: AgentInfo }) {
+  const [form, setForm] = React.useState<AgentInfo>(initialData);
+  const [errors, setErrors] = React.useState<Record<string, string>>({});
+  const [status, setStatus] = React.useState<SectionStatus>('idle');
+  const [errorMessage, setErrorMessage] = React.useState('');
+
+  function set(field: keyof AgentInfo, value: string) {
+    setForm((prev) => ({ ...prev, [field]: value }));
+    setErrors((prev) => ({ ...prev, [field]: '' }));
+  }
+
+  async function handleSave() {
+    setStatus('saving');
+    setErrorMessage('');
+    setErrors({});
+
+    const result = await updateAgentInfo(form);
+
+    if (result.status === 'success') {
+      setStatus('saved');
+      setTimeout(() => setStatus('idle'), 3000);
+    } else {
+      setStatus('error');
+      setErrorMessage(result.message);
+      if (result.fieldErrors) {
+        const flat: Record<string, string> = {};
+        for (const [k, msgs] of Object.entries(result.fieldErrors)) {
+          if (msgs?.[0]) flat[k] = msgs[0];
+        }
+        setErrors(flat);
+      }
+    }
+  }
+
+  return (
+    <section aria-labelledby="agent-info-heading">
+      <div className="mb-4">
+        <h2
+          id="agent-info-heading"
+          className="text-xs font-semibold uppercase tracking-widest text-muted-foreground"
+        >
+          აგენტის ინფორმაცია
+        </h2>
+      </div>
+
+      <div className="rounded-xl border border-border bg-card p-6 space-y-5">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <Field label="აგენტის სახელი" error={errors.agentName} className="sm:col-span-2">
+            <Input
+              value={form.agentName}
+              onChange={(e) => set('agentName', e.target.value)}
+              placeholder="გიორგი მაგალითი"
+            />
+          </Field>
+
+          <Field label="აგენტის ტელეფონი" error={errors.agentPhone}>
+            <Input
+              type="tel"
+              value={form.agentPhone}
+              onChange={(e) => set('agentPhone', e.target.value)}
+              placeholder="+995 5XX XXX XXX"
+            />
+          </Field>
+
+          <Field label="აგენტის ელ.ფოსტა" error={errors.agentEmail}>
+            <Input
+              type="email"
+              value={form.agentEmail}
+              onChange={(e) => set('agentEmail', e.target.value)}
+              placeholder="agent@example.com"
+              aria-invalid={Boolean(errors.agentEmail)}
+            />
+          </Field>
+        </div>
 
         {errorMessage ? (
           <p role="alert" className="text-sm text-destructive">
