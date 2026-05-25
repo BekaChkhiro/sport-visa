@@ -317,16 +317,37 @@ model ClubProfile {
   verificationStatus VerificationStatus @default(PENDING)
   rejectionReason    String?
   isVisible          Boolean            @default(true)
+  profileViewCount   Int                @default(0)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   rosterEntries      ClubRosterEntry[]
+  historyEvents      ClubHistoryEvent[]
   shortlistedPlayers ClubShortlist[]
   subscribers        ClubSubscription[]
 
   @@index([verificationStatus, isVisible])
   @@map("club_profiles")
+}
+
+// Notable milestones / events in a club's history (e.g. trophy wins, founding moments).
+// Free-text in MVP; ordered by year then orderIndex.
+model ClubHistoryEvent {
+  id     String      @id @default(cuid())
+  clubId String
+  club   ClubProfile @relation(fields: [clubId], references: [id], onDelete: Cascade)
+
+  year        Int
+  title       String
+  description String?   @db.VarChar(500)
+  orderIndex  Int       @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([clubId, year])
+  @@map("club_history_events")
 }
 
 // Free-text roster entries for a club (MVP: not linked to platform accounts).
