@@ -12,6 +12,11 @@ concurrency:
 
 env:
   NODE_VERSION: '20'
+  # Unit tests import src/lib/db.ts, which constructs a PrismaClient; Prisma
+  # requires DATABASE_URL (prisma/schema.prisma: url = env("DATABASE_URL")) to
+  # be defined at construction time. The tests mock the actual queries, so a
+  # dummy connection string is enough — CI never connects to a real database.
+  DATABASE_URL: 'postgresql://postgres:postgres@localhost:5432/sportvisa_test'
 
 jobs:
   lint_type:
