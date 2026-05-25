@@ -6,7 +6,13 @@ import { auth } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { deleteObject } from '@/lib/r2';
 
-import { updateClubIdentitySchema, type ClubActionState } from './schemas';
+import {
+  updateClubIdentitySchema,
+  updateClubBioSchema,
+  clubHistoryEventSchema,
+  type ClubActionState,
+  type ClubHistoryEventAddState,
+} from './schemas';
 
 function revalidateClubPaths() {
   revalidatePath('/profile/club/edit');
@@ -112,6 +118,121 @@ export async function updateClubVisibility(isVisible: boolean): Promise<ClubActi
     where: { userId: session.user.id },
     data: { isVisible },
   });
+
+  revalidateClubPaths();
+  return { status: 'success' };
+}
+
+export async function updateClubBio(data: unknown): Promise<ClubActionState> {
+  const session = await auth();
+  if (!session?.user?.id) return { status: 'error', message: 'ავტორიზაცია საჭიროა' };
+  if (session.user.role !== 'CLUB') return { status: 'error', message: 'წვდომა აკრძალულია' };
+
+  const parsed = updateClubBioSchema.safeParse(data);
+  if (!parsed.success) {
+    return { status: 'error', message: 'ბიო/ისტ. 2000 სიმბოლოს მეტი ვერ იქნება' };
+  }
+
+  await db.clubProfile.update({
+    where: { userId: session.user.id },
+    data: { bio: parsed.data.bio ?? null },
+  });
+
+  revalidateClubPaths();
+  return { status: 'success' };
+}
+
+export async function addClubHistoryEvent(data: unknown): Promise<ClubHistoryEventAddState> {
+  const session = await auth();
+  if (!session?.user?.id) return { status: 'error', message: 'ავტორიზაცია საჭიროა' };
+  if (session.user.role !== 'CLUB') return { status: 'error', message: 'წვდომა აკრძალულია' };
+
+  const parsed = clubHistoryEventSchema.safeParse(data);
+  if (!parsed.success) {
+    const fieldErrors: Record<string, string[]> = {};
+    for (const [k, issues] of Object.entries(parsed.error.flatten().fieldErrors)) {
+      if (issues) fieldErrors[k] = issues;
+    }
+    return { status: 'error', message: 'შეავსე ფორმა სწორად', fieldErrors };
+  }
+
+  const club = await db.clubProfile.findUnique({
+    where: { userId: session.user.id },
+    select: { id: true },
+  });
+  if (!club) return { status: 'error', message: 'პროფილი ვერ მოიძებნა' };
+
+  const event = await db.clubHistoryEvent.create({
+    data: {
+      clubId: club.id,
+      year: parsed.data.year,
+      title: parsed.data.title,
+      description: parsed.data.description ?? null,
+      orderIndex: 0,
+    },
+  });
+
+  revalidateClubPaths();
+  return { status: 'success', eventId: event.id };
+}
+
+export async function updateClubHistoryEvent(id: string, data: unknown): Promise<ClubActionState> {
+  const session = await auth();
+  if (!session?.user?.id) return { status: 'error', message: 'ავტორიზაცია საჭიროა' };
+  if (session.user.role !== 'CLUB') return { status: 'error', message: 'წვდომა აკრძალულია' };
+
+  const parsed = clubHistoryEventSchema.safeParse(data);
+  if (!parsed.success) {
+    const fieldErrors: Record<string, string[]> = {};
+    for (const [k, issues] of Object.entries(parsed.error.flatten().fieldErrors)) {
+      if (issues) fieldErrors[k] = issues;
+    }
+    return { status: 'error', message: 'შეავსე ფორმა სწორად', fieldErrors };
+  }
+
+  const club = await db.clubProfile.findUnique({
+    where: { userId: session.user.id },
+    select: { id: true },
+  });
+  if (!club) return { status: 'error', message: 'პროფილი ვერ მოიძებნა' };
+
+  const existing = await db.clubHistoryEvent.findFirst({
+    where: { id, clubId: club.id },
+    select: { id: true },
+  });
+  if (!existing) return { status: 'error', message: 'მოვლენა ვერ მოიძებნა' };
+
+  await db.clubHistoryEvent.update({
+    where: { id },
+    data: {
+      year: parsed.data.year,
+      title: parsed.data.title,
+      description: parsed.data.description ?? null,
+    },
+  });
+
+  revalidateClubPaths();
+  return { status: 'success' };
+}
+
+export async function deleteClubHistoryEvent(id: string): Promise<ClubActionState> {
+  const session = await auth();
+  if (!session?.user?.id) return { status: 'error', message: 'ავტორიზაცია საჭიროა' };
+  if (session.user.role !== 'CLUB') return { status: 'error', message: 'წვდომა აკრძალულია' };
+
+  const club = await db.clubProfile.findUnique({
+    where: { userId: session.user.id },
+    select: { id: true },
+  });
+  if (!club) return { status: 'error', message: 'პროფილი ვერ მოიძებნა' };
+
+  const existing = await db.clubHistoryEvent.findFirst({
+    where: { id, clubId: club.id },
+    select: { id: true },
+  });
+  if (!existing) return { status: 'error', message: 'მოვლენა ვერ მოიძებნა' };
+
+  await db.clubHistoryEvent.delete({ where: { id } });
 
   revalidateClubPaths();
   return { status: 'success' };
