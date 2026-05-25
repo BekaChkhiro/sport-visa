@@ -95,6 +95,19 @@ export const careerEntrySchema = z.object({
 
 export type CareerEntryInput = z.infer<typeof careerEntrySchema>;
 
+// ── agent info ────────────────────────────────────────────────────────────────
+
+export const updateAgentInfoSchema = z.object({
+  agentName: z.preprocess(toOptStr, z.string().max(200).optional()),
+  agentPhone: z.preprocess(toOptStr, z.string().max(50).optional()),
+  agentEmail: z.preprocess(
+    toOptStr,
+    z.string().email('სწორი ელ.ფოსტა შეიყვანო').max(200).optional(),
+  ),
+});
+
+export type UpdateAgentInfoInput = z.infer<typeof updateAgentInfoSchema>;
+
 // ── video links ───────────────────────────────────────────────────────────────
 
 const VIDEO_URL_RE = /^https?:\/\/(www\.)?(youtube\.com|youtu\.be|vimeo\.com)\/.+/;

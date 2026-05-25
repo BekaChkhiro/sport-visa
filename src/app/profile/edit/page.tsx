@@ -55,7 +55,21 @@ export default async function ProfileEditPage() {
       avatarKey: true,
       verificationStatus: true,
       profileViewCount: true,
+      agentName: true,
+      agentPhone: true,
+      agentEmail: true,
       shortlistedBy: { select: { id: true } },
+      careerEntries: {
+        orderBy: [{ orderIndex: 'asc' }, { startYear: 'desc' }],
+        select: {
+          id: true,
+          clubName: true,
+          startYear: true,
+          endYear: true,
+          position: true,
+          orderIndex: true,
+        },
+      },
     },
   });
 
@@ -99,6 +113,19 @@ export default async function ProfileEditPage() {
         jerseyNumber: profile.jerseyNumber != null ? String(profile.jerseyNumber) : '',
         experienceLevel: profile.experienceLevel ?? '',
         desiredLeague: profile.desiredLeague ?? '',
+      }}
+      initialCareerEntries={profile.careerEntries.map((e) => ({
+        id: e.id,
+        clubName: e.clubName,
+        startYear: e.startYear,
+        endYear: e.endYear ?? undefined,
+        position: e.position ?? undefined,
+        orderIndex: e.orderIndex,
+      }))}
+      initialAgentInfo={{
+        agentName: profile.agentName ?? '',
+        agentPhone: profile.agentPhone ?? '',
+        agentEmail: profile.agentEmail ?? '',
       }}
     />
   );
