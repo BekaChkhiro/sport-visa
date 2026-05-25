@@ -12,6 +12,10 @@ const mockRosterCreate = vi.hoisted(() => vi.fn());
 const mockRosterUpdate = vi.hoisted(() => vi.fn());
 const mockRosterDelete = vi.hoisted(() => vi.fn());
 const mockRosterFindFirst = vi.hoisted(() => vi.fn());
+const mockHistoryCreate = vi.hoisted(() => vi.fn());
+const mockHistoryFindFirst = vi.hoisted(() => vi.fn());
+const mockHistoryUpdate = vi.hoisted(() => vi.fn());
+const mockHistoryDelete = vi.hoisted(() => vi.fn());
 
 vi.mock('@/lib/db', () => ({
   db: {
@@ -25,6 +29,12 @@ vi.mock('@/lib/db', () => ({
       delete: mockRosterDelete,
       findFirst: mockRosterFindFirst,
     },
+    clubHistoryEvent: {
+      create: mockHistoryCreate,
+      findFirst: mockHistoryFindFirst,
+      update: mockHistoryUpdate,
+      delete: mockHistoryDelete,
+    },
   },
 }));
 
@@ -35,6 +45,10 @@ import {
   updateClubLogo,
   updateClubCover,
   updateClubVisibility,
+  updateClubBio,
+  addClubHistoryEvent,
+  updateClubHistoryEvent,
+  deleteClubHistoryEvent,
   addClubRosterEntry,
   updateClubRosterEntry,
   deleteClubRosterEntry,
@@ -54,6 +68,10 @@ beforeEach(() => {
   mockRosterUpdate.mockReset();
   mockRosterDelete.mockReset();
   mockRosterFindFirst.mockReset();
+  mockHistoryCreate.mockReset();
+  mockHistoryFindFirst.mockReset();
+  mockHistoryUpdate.mockReset();
+  mockHistoryDelete.mockReset();
 });
 
 // ── updateClubIdentity ────────────────────────────────────────────────────────
@@ -432,5 +450,305 @@ describe('deleteClubRosterEntry', () => {
 
     expect(r.status).toBe('success');
     expect(mockRosterDelete).toHaveBeenCalledWith({ where: { id: 'r1' } });
+  });
+});
+
+// ── updateClubBio ─────────────────────────────────────────────────────────────
+
+describe('updateClubBio — auth & role guards', () => {
+  it('rejects unauthenticated caller', async () => {
+    mockAuth.mockResolvedValueOnce(null);
+    const r = await updateClubBio({ bio: 'Some bio text' });
+    expect(r.status).toBe('error');
+    expect(mockCpUpdate).not.toHaveBeenCalled();
+  });
+
+  it('rejects FOOTBALLER users', async () => {
+    mockAuth.mockResolvedValueOnce(footballerSession);
+    const r = await updateClubBio({ bio: 'Some bio text' });
+    expect(r.status).toBe('error');
+    expect(mockCpUpdate).not.toHaveBeenCalled();
+  });
+});
+
+describe('updateClubBio — validation', () => {
+  it('rejects bio longer than 2000 characters', async () => {
+    mockAuth.mockResolvedValueOnce(clubSession);
+    const r = await updateClubBio({ bio: 'a'.repeat(2001) });
+    expect(r.status).toBe('error');
+    expect(mockCpUpdate).not.toHaveBeenCalled();
+  });
+});
+
+describe('updateClubBio — happy path', () => {
+  it('saves a non-empty bio', async () => {
+    mockAuth.mockResolvedValueOnce(clubSession);
+    mockCpUpdate.mockResolvedValueOnce({});
+
+    const r = await updateClubBio({ bio: 'FC Dinamo ისტ.' });
+
+    expect(r.status).toBe('success');
+    expect(mockCpUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({ data: { bio: 'FC Dinamo ისტ.' } }),
+    );
+  });
+
+  it('saves null when bio is omitted', async () => {
+    mockAuth.mockResolvedValueOnce(clubSession);
+    mockCpUpdate.mockResolvedValueOnce({});
+
+    const r = await updateClubBio({});
+
+    expect(r.status).toBe('success');
+    expect(mockCpUpdate).toHaveBeenCalledWith(expect.objectContaining({ data: { bio: null } }));
+  });
+
+  it('saves null when bio is an empty string', async () => {
+    mockAuth.mockResolvedValueOnce(clubSession);
+    mockCpUpdate.mockResolvedValueOnce({});
+
+    const r = await updateClubBio({ bio: '' });
+
+    expect(r.status).toBe('success');
+    expect(mockCpUpdate).toHaveBeenCalledWith(expect.objectContaining({ data: { bio: null } }));
+  });
+});
+
+// ── addClubHistoryEvent ───────────────────────────────────────────────────────
+
+const validHistoryPayload = { year: 1925, title: 'კლუბის დაარსება' };
+
+describe('addClubHistoryEvent — auth & role guards', () => {
+  it('rejects unauthenticated caller', async () => {
+    mockAuth.mockResolvedValueOnce(null);
+    const r = await addClubHistoryEvent(validHistoryPayload);
+    expect(r.status).toBe('error');
+    expect(mockHistoryCreate).not.toHaveBeenCalled();
+  });
+
+  it('rejects FOOTBALLER users', async () => {
+    mockAuth.mockResolvedValueOnce(footballerSession);
+    const r = await addClubHistoryEvent(validHistoryPayload);
+    expect(r.status).toBe('error');
+    expect(mockHistoryCreate).not.toHaveBeenCalled();
+  });
+});
+
+describe('addClubHistoryEvent — validation', () => {
+  it('returns fieldErrors on empty title', async () => {
+    mockAuth.mockResolvedValueOnce(clubSession);
+    const r = await addClubHistoryEvent({ year: 1990, title: '' });
+    expect(r.status).toBe('error');
+    if (r.status === 'error') expect(r.fieldErrors?.title).toBeTruthy();
+    expect(mockHistoryCreate).not.toHaveBeenCalled();
+  });
+
+  it('returns fieldErrors when year is missing', async () => {
+    mockAuth.mockResolvedValueOnce(clubSession);
+    const r = await addClubHistoryEvent({ title: 'Something' });
+    expect(r.status).toBe('error');
+    if (r.status === 'error') expect(r.fieldErrors?.year).toBeTruthy();
+  });
+
+  it('returns error when year is in the future', async () => {
+    mockAuth.mockResolvedValueOnce(clubSession);
+    const r = await addClubHistoryEvent({ year: 9999, title: 'Future' });
+    expect(r.status).toBe('error');
+    expect(mockHistoryCreate).not.toHaveBeenCalled();
+  });
+});
+
+describe('addClubHistoryEvent — happy path', () => {
+  it('creates an event and returns eventId', async () => {
+    mockAuth.mockResolvedValueOnce(clubSession);
+    mockCpFindUnique.mockResolvedValueOnce({ id: 'club1' });
+    mockHistoryCreate.mockResolvedValueOnce({ id: 'ev1' });
+
+    const r = await addClubHistoryEvent(validHistoryPayload);
+
+    expect(r.status).toBe('success');
+    if (r.status === 'success') expect(r.eventId).toBe('ev1');
+    expect(mockHistoryCreate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          clubId: 'club1',
+          year: 1925,
+          title: 'კლუბის დაარსება',
+        }),
+      }),
+    );
+  });
+
+  it('stores null for omitted description', async () => {
+    mockAuth.mockResolvedValueOnce(clubSession);
+    mockCpFindUnique.mockResolvedValueOnce({ id: 'club1' });
+    mockHistoryCreate.mockResolvedValueOnce({ id: 'ev2' });
+
+    await addClubHistoryEvent({ year: 2000, title: 'No desc' });
+
+    expect(mockHistoryCreate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ description: null }),
+      }),
+    );
+  });
+
+  it('stores description when provided', async () => {
+    mockAuth.mockResolvedValueOnce(clubSession);
+    mockCpFindUnique.mockResolvedValueOnce({ id: 'club1' });
+    mockHistoryCreate.mockResolvedValueOnce({ id: 'ev3' });
+
+    await addClubHistoryEvent({ year: 2010, title: 'Championship', description: 'Won the cup' });
+
+    expect(mockHistoryCreate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ description: 'Won the cup' }),
+      }),
+    );
+  });
+
+  it('returns error when club profile is missing', async () => {
+    mockAuth.mockResolvedValueOnce(clubSession);
+    mockCpFindUnique.mockResolvedValueOnce(null);
+
+    const r = await addClubHistoryEvent(validHistoryPayload);
+
+    expect(r.status).toBe('error');
+    expect(mockHistoryCreate).not.toHaveBeenCalled();
+  });
+});
+
+// ── updateClubHistoryEvent ────────────────────────────────────────────────────
+
+describe('updateClubHistoryEvent — auth & role guards', () => {
+  it('rejects unauthenticated caller', async () => {
+    mockAuth.mockResolvedValueOnce(null);
+    const r = await updateClubHistoryEvent('ev1', validHistoryPayload);
+    expect(r.status).toBe('error');
+    expect(mockHistoryUpdate).not.toHaveBeenCalled();
+  });
+
+  it('rejects FOOTBALLER users', async () => {
+    mockAuth.mockResolvedValueOnce(footballerSession);
+    const r = await updateClubHistoryEvent('ev1', validHistoryPayload);
+    expect(r.status).toBe('error');
+  });
+});
+
+describe('updateClubHistoryEvent — validation', () => {
+  it('returns fieldErrors on invalid payload', async () => {
+    mockAuth.mockResolvedValueOnce(clubSession);
+    const r = await updateClubHistoryEvent('ev1', { year: 1990, title: '' });
+    expect(r.status).toBe('error');
+    if (r.status === 'error') expect(r.fieldErrors?.title).toBeTruthy();
+  });
+});
+
+describe('updateClubHistoryEvent — ownership & happy path', () => {
+  it('returns error when event does not belong to the club', async () => {
+    mockAuth.mockResolvedValueOnce(clubSession);
+    mockCpFindUnique.mockResolvedValueOnce({ id: 'club1' });
+    mockHistoryFindFirst.mockResolvedValueOnce(null);
+
+    const r = await updateClubHistoryEvent('ev-other', validHistoryPayload);
+
+    expect(r.status).toBe('error');
+    expect(mockHistoryUpdate).not.toHaveBeenCalled();
+  });
+
+  it('updates the event on happy path', async () => {
+    mockAuth.mockResolvedValueOnce(clubSession);
+    mockCpFindUnique.mockResolvedValueOnce({ id: 'club1' });
+    mockHistoryFindFirst.mockResolvedValueOnce({ id: 'ev1' });
+    mockHistoryUpdate.mockResolvedValueOnce({});
+
+    const r = await updateClubHistoryEvent('ev1', {
+      year: 1926,
+      title: 'Updated title',
+      description: 'desc',
+    });
+
+    expect(r.status).toBe('success');
+    expect(mockHistoryUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: 'ev1' },
+        data: expect.objectContaining({ year: 1926, title: 'Updated title', description: 'desc' }),
+      }),
+    );
+  });
+
+  it('sets null for omitted description on update', async () => {
+    mockAuth.mockResolvedValueOnce(clubSession);
+    mockCpFindUnique.mockResolvedValueOnce({ id: 'club1' });
+    mockHistoryFindFirst.mockResolvedValueOnce({ id: 'ev1' });
+    mockHistoryUpdate.mockResolvedValueOnce({});
+
+    await updateClubHistoryEvent('ev1', validHistoryPayload);
+
+    expect(mockHistoryUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ description: null }),
+      }),
+    );
+  });
+
+  it('returns error when club profile is missing', async () => {
+    mockAuth.mockResolvedValueOnce(clubSession);
+    mockCpFindUnique.mockResolvedValueOnce(null);
+
+    const r = await updateClubHistoryEvent('ev1', validHistoryPayload);
+
+    expect(r.status).toBe('error');
+    expect(mockHistoryUpdate).not.toHaveBeenCalled();
+  });
+});
+
+// ── deleteClubHistoryEvent ────────────────────────────────────────────────────
+
+describe('deleteClubHistoryEvent', () => {
+  it('rejects unauthenticated caller', async () => {
+    mockAuth.mockResolvedValueOnce(null);
+    const r = await deleteClubHistoryEvent('ev1');
+    expect(r.status).toBe('error');
+    expect(mockHistoryDelete).not.toHaveBeenCalled();
+  });
+
+  it('rejects FOOTBALLER users', async () => {
+    mockAuth.mockResolvedValueOnce(footballerSession);
+    const r = await deleteClubHistoryEvent('ev1');
+    expect(r.status).toBe('error');
+  });
+
+  it('returns error when event does not belong to the club', async () => {
+    mockAuth.mockResolvedValueOnce(clubSession);
+    mockCpFindUnique.mockResolvedValueOnce({ id: 'club1' });
+    mockHistoryFindFirst.mockResolvedValueOnce(null);
+
+    const r = await deleteClubHistoryEvent('ev-other');
+
+    expect(r.status).toBe('error');
+    expect(mockHistoryDelete).not.toHaveBeenCalled();
+  });
+
+  it('deletes the event on happy path', async () => {
+    mockAuth.mockResolvedValueOnce(clubSession);
+    mockCpFindUnique.mockResolvedValueOnce({ id: 'club1' });
+    mockHistoryFindFirst.mockResolvedValueOnce({ id: 'ev1' });
+    mockHistoryDelete.mockResolvedValueOnce({});
+
+    const r = await deleteClubHistoryEvent('ev1');
+
+    expect(r.status).toBe('success');
+    expect(mockHistoryDelete).toHaveBeenCalledWith({ where: { id: 'ev1' } });
+  });
+
+  it('returns error when club profile is missing', async () => {
+    mockAuth.mockResolvedValueOnce(clubSession);
+    mockCpFindUnique.mockResolvedValueOnce(null);
+
+    const r = await deleteClubHistoryEvent('ev1');
+
+    expect(r.status).toBe('error');
+    expect(mockHistoryDelete).not.toHaveBeenCalled();
   });
 });

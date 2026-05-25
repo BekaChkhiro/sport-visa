@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
-import { clubRosterEntrySchema, updateClubIdentitySchema } from '@/lib/club-profile/schemas';
+import {
+  clubHistoryEventSchema,
+  clubRosterEntrySchema,
+  updateClubBioSchema,
+  updateClubIdentitySchema,
+} from '@/lib/club-profile/schemas';
 
 const currentYear = new Date().getFullYear();
 
@@ -193,5 +198,117 @@ describe('clubRosterEntrySchema', () => {
   it('trims whitespace from playerName', () => {
     const r = clubRosterEntrySchema.parse({ playerName: '  გ. მ.  ' });
     expect(r.playerName).toBe('გ. მ.');
+  });
+});
+
+describe('updateClubBioSchema', () => {
+  it('accepts a non-empty bio', () => {
+    const r = updateClubBioSchema.safeParse({ bio: 'FC Dinamo ისტ.' });
+    expect(r.success).toBe(true);
+  });
+
+  it('accepts a bio exactly 2000 characters long', () => {
+    const r = updateClubBioSchema.safeParse({ bio: 'a'.repeat(2000) });
+    expect(r.success).toBe(true);
+  });
+
+  it('rejects a bio exceeding 2000 characters', () => {
+    const r = updateClubBioSchema.safeParse({ bio: 'a'.repeat(2001) });
+    expect(r.success).toBe(false);
+  });
+
+  it('coerces an empty string bio to undefined', () => {
+    const r = updateClubBioSchema.parse({ bio: '' });
+    expect(r.bio).toBeUndefined();
+  });
+
+  it('accepts a missing bio field', () => {
+    const r = updateClubBioSchema.safeParse({});
+    expect(r.success).toBe(true);
+  });
+
+  it('coerces null bio to undefined', () => {
+    const r = updateClubBioSchema.parse({ bio: null });
+    expect(r.bio).toBeUndefined();
+  });
+});
+
+describe('clubHistoryEventSchema', () => {
+  const currentYear = new Date().getFullYear();
+  const validEvent = { year: 1925, title: 'კლუბის დაარსება' };
+
+  it('accepts a minimum-valid payload', () => {
+    expect(clubHistoryEventSchema.safeParse(validEvent).success).toBe(true);
+  });
+
+  it('accepts a full valid payload with description', () => {
+    const r = clubHistoryEventSchema.safeParse({
+      ...validEvent,
+      description: 'გაიხსნა ახალი სტადიონი',
+    });
+    expect(r.success).toBe(true);
+  });
+
+  it('rejects an empty title', () => {
+    const r = clubHistoryEventSchema.safeParse({ ...validEvent, title: '' });
+    expect(r.success).toBe(false);
+    if (!r.success) expect(r.error.flatten().fieldErrors.title).toBeTruthy();
+  });
+
+  it('rejects a title over 200 characters', () => {
+    const r = clubHistoryEventSchema.safeParse({ ...validEvent, title: 'a'.repeat(201) });
+    expect(r.success).toBe(false);
+  });
+
+  it('trims whitespace from title', () => {
+    const r = clubHistoryEventSchema.parse({ ...validEvent, title: '  საჩემპიონო  ' });
+    expect(r.title).toBe('საჩემპიონო');
+  });
+
+  it('rejects year below 1800', () => {
+    const r = clubHistoryEventSchema.safeParse({ ...validEvent, year: 1799 });
+    expect(r.success).toBe(false);
+    if (!r.success) expect(r.error.flatten().fieldErrors.year).toBeTruthy();
+  });
+
+  it('accepts year equal to 1800', () => {
+    const r = clubHistoryEventSchema.safeParse({ ...validEvent, year: 1800 });
+    expect(r.success).toBe(true);
+  });
+
+  it('accepts the current year', () => {
+    const r = clubHistoryEventSchema.safeParse({ ...validEvent, year: currentYear });
+    expect(r.success).toBe(true);
+  });
+
+  it('rejects a year in the future', () => {
+    const r = clubHistoryEventSchema.safeParse({ ...validEvent, year: currentYear + 1 });
+    expect(r.success).toBe(false);
+  });
+
+  it('coerces a string year to number', () => {
+    const r = clubHistoryEventSchema.safeParse({ ...validEvent, year: '1990' });
+    expect(r.success).toBe(true);
+    if (r.success) expect(r.data.year).toBe(1990);
+  });
+
+  it('rejects a missing year', () => {
+    const r = clubHistoryEventSchema.safeParse({ title: 'No year' });
+    expect(r.success).toBe(false);
+  });
+
+  it('coerces empty string description to undefined', () => {
+    const r = clubHistoryEventSchema.parse({ ...validEvent, description: '' });
+    expect(r.description).toBeUndefined();
+  });
+
+  it('rejects a description over 500 characters', () => {
+    const r = clubHistoryEventSchema.safeParse({ ...validEvent, description: 'a'.repeat(501) });
+    expect(r.success).toBe(false);
+  });
+
+  it('accepts a description exactly 500 characters long', () => {
+    const r = clubHistoryEventSchema.safeParse({ ...validEvent, description: 'a'.repeat(500) });
+    expect(r.success).toBe(true);
   });
 });
