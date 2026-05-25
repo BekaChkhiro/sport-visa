@@ -8,12 +8,22 @@ vi.mock('@/lib/auth', () => ({ auth: mockAuth }));
 const mockCpUpdate = vi.hoisted(() => vi.fn());
 const mockCpFindUnique = vi.hoisted(() => vi.fn());
 const mockDeleteObject = vi.hoisted(() => vi.fn());
+const mockRosterCreate = vi.hoisted(() => vi.fn());
+const mockRosterUpdate = vi.hoisted(() => vi.fn());
+const mockRosterDelete = vi.hoisted(() => vi.fn());
+const mockRosterFindFirst = vi.hoisted(() => vi.fn());
 
 vi.mock('@/lib/db', () => ({
   db: {
     clubProfile: {
       update: mockCpUpdate,
       findUnique: mockCpFindUnique,
+    },
+    clubRosterEntry: {
+      create: mockRosterCreate,
+      update: mockRosterUpdate,
+      delete: mockRosterDelete,
+      findFirst: mockRosterFindFirst,
     },
   },
 }));
@@ -25,6 +35,9 @@ import {
   updateClubLogo,
   updateClubCover,
   updateClubVisibility,
+  addClubRosterEntry,
+  updateClubRosterEntry,
+  deleteClubRosterEntry,
 } from '@/lib/club-profile/actions';
 
 const clubSession = { user: { id: 'u1', role: 'CLUB' } };
@@ -37,6 +50,10 @@ beforeEach(() => {
   mockCpUpdate.mockReset();
   mockCpFindUnique.mockReset();
   mockDeleteObject.mockReset();
+  mockRosterCreate.mockReset();
+  mockRosterUpdate.mockReset();
+  mockRosterDelete.mockReset();
+  mockRosterFindFirst.mockReset();
 });
 
 // ── updateClubIdentity ────────────────────────────────────────────────────────
@@ -219,5 +236,201 @@ describe('updateClubVisibility', () => {
     expect(mockCpUpdate).toHaveBeenCalledWith(
       expect.objectContaining({ data: { isVisible: true } }),
     );
+  });
+});
+
+// ── addClubRosterEntry ────────────────────────────────────────────────────────
+
+const validRosterPayload = { playerName: 'ი. ბაბუნაშვილი', position: 'CM', jerseyNumber: 8 };
+
+describe('addClubRosterEntry — auth & role guards', () => {
+  it('rejects unauthenticated caller', async () => {
+    mockAuth.mockResolvedValueOnce(null);
+    const r = await addClubRosterEntry(validRosterPayload);
+    expect(r.status).toBe('error');
+    expect(mockRosterCreate).not.toHaveBeenCalled();
+  });
+
+  it('rejects FOOTBALLER users', async () => {
+    mockAuth.mockResolvedValueOnce(footballerSession);
+    const r = await addClubRosterEntry(validRosterPayload);
+    expect(r.status).toBe('error');
+    expect(mockRosterCreate).not.toHaveBeenCalled();
+  });
+});
+
+describe('addClubRosterEntry — validation', () => {
+  it('returns fieldErrors on empty playerName', async () => {
+    mockAuth.mockResolvedValueOnce(clubSession);
+    const r = await addClubRosterEntry({ playerName: '' });
+    expect(r.status).toBe('error');
+    if (r.status === 'error') expect(r.fieldErrors?.playerName).toBeTruthy();
+    expect(mockRosterCreate).not.toHaveBeenCalled();
+  });
+
+  it('rejects an invalid position code', async () => {
+    mockAuth.mockResolvedValueOnce(clubSession);
+    const r = await addClubRosterEntry({ playerName: 'X', position: 'XX' });
+    expect(r.status).toBe('error');
+    if (r.status === 'error') expect(r.fieldErrors?.position).toBeTruthy();
+  });
+});
+
+describe('addClubRosterEntry — happy path', () => {
+  it('creates an entry with orderIndex 0 when none exist', async () => {
+    mockAuth.mockResolvedValueOnce(clubSession);
+    mockCpFindUnique.mockResolvedValueOnce({ id: 'club1' });
+    mockRosterFindFirst.mockResolvedValueOnce(null);
+    mockRosterCreate.mockResolvedValueOnce({ id: 'roster1' });
+
+    const r = await addClubRosterEntry(validRosterPayload);
+
+    expect(r.status).toBe('success');
+    if (r.status === 'success') expect(r.entryId).toBe('roster1');
+    expect(mockRosterCreate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          clubId: 'club1',
+          playerName: 'ი. ბაბუნაშვილი',
+          position: 'CM',
+          jerseyNumber: 8,
+          orderIndex: 0,
+        }),
+      }),
+    );
+  });
+
+  it('appends to the end via incremented orderIndex', async () => {
+    mockAuth.mockResolvedValueOnce(clubSession);
+    mockCpFindUnique.mockResolvedValueOnce({ id: 'club1' });
+    mockRosterFindFirst.mockResolvedValueOnce({ orderIndex: 4 });
+    mockRosterCreate.mockResolvedValueOnce({ id: 'roster2' });
+
+    await addClubRosterEntry(validRosterPayload);
+
+    expect(mockRosterCreate).toHaveBeenCalledWith(
+      expect.objectContaining({ data: expect.objectContaining({ orderIndex: 5 }) }),
+    );
+  });
+
+  it('stores null for omitted position and jerseyNumber', async () => {
+    mockAuth.mockResolvedValueOnce(clubSession);
+    mockCpFindUnique.mockResolvedValueOnce({ id: 'club1' });
+    mockRosterFindFirst.mockResolvedValueOnce(null);
+    mockRosterCreate.mockResolvedValueOnce({ id: 'roster3' });
+
+    await addClubRosterEntry({ playerName: 'ნ. კ.' });
+
+    expect(mockRosterCreate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ position: null, jerseyNumber: null }),
+      }),
+    );
+  });
+
+  it('returns error when club profile missing', async () => {
+    mockAuth.mockResolvedValueOnce(clubSession);
+    mockCpFindUnique.mockResolvedValueOnce(null);
+
+    const r = await addClubRosterEntry(validRosterPayload);
+
+    expect(r.status).toBe('error');
+    expect(mockRosterCreate).not.toHaveBeenCalled();
+  });
+});
+
+// ── updateClubRosterEntry ─────────────────────────────────────────────────────
+
+describe('updateClubRosterEntry', () => {
+  it('rejects unauthenticated caller', async () => {
+    mockAuth.mockResolvedValueOnce(null);
+    const r = await updateClubRosterEntry('r1', validRosterPayload);
+    expect(r.status).toBe('error');
+    expect(mockRosterUpdate).not.toHaveBeenCalled();
+  });
+
+  it('rejects FOOTBALLER users', async () => {
+    mockAuth.mockResolvedValueOnce(footballerSession);
+    const r = await updateClubRosterEntry('r1', validRosterPayload);
+    expect(r.status).toBe('error');
+  });
+
+  it('returns fieldErrors on invalid payload', async () => {
+    mockAuth.mockResolvedValueOnce(clubSession);
+    const r = await updateClubRosterEntry('r1', { playerName: '' });
+    expect(r.status).toBe('error');
+    if (r.status === 'error') expect(r.fieldErrors?.playerName).toBeTruthy();
+  });
+
+  it('returns error when entry does not belong to the club', async () => {
+    mockAuth.mockResolvedValueOnce(clubSession);
+    mockCpFindUnique.mockResolvedValueOnce({ id: 'club1' });
+    mockRosterFindFirst.mockResolvedValueOnce(null);
+
+    const r = await updateClubRosterEntry('r-other', validRosterPayload);
+
+    expect(r.status).toBe('error');
+    expect(mockRosterUpdate).not.toHaveBeenCalled();
+  });
+
+  it('updates the entry on happy path', async () => {
+    mockAuth.mockResolvedValueOnce(clubSession);
+    mockCpFindUnique.mockResolvedValueOnce({ id: 'club1' });
+    mockRosterFindFirst.mockResolvedValueOnce({ id: 'r1' });
+    mockRosterUpdate.mockResolvedValueOnce({});
+
+    const r = await updateClubRosterEntry('r1', validRosterPayload);
+
+    expect(r.status).toBe('success');
+    expect(mockRosterUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: 'r1' },
+        data: expect.objectContaining({
+          playerName: 'ი. ბაბუნაშვილი',
+          position: 'CM',
+          jerseyNumber: 8,
+        }),
+      }),
+    );
+  });
+});
+
+// ── deleteClubRosterEntry ─────────────────────────────────────────────────────
+
+describe('deleteClubRosterEntry', () => {
+  it('rejects unauthenticated caller', async () => {
+    mockAuth.mockResolvedValueOnce(null);
+    const r = await deleteClubRosterEntry('r1');
+    expect(r.status).toBe('error');
+    expect(mockRosterDelete).not.toHaveBeenCalled();
+  });
+
+  it('rejects FOOTBALLER users', async () => {
+    mockAuth.mockResolvedValueOnce(footballerSession);
+    const r = await deleteClubRosterEntry('r1');
+    expect(r.status).toBe('error');
+  });
+
+  it('returns error when entry does not belong to the club', async () => {
+    mockAuth.mockResolvedValueOnce(clubSession);
+    mockCpFindUnique.mockResolvedValueOnce({ id: 'club1' });
+    mockRosterFindFirst.mockResolvedValueOnce(null);
+
+    const r = await deleteClubRosterEntry('r-other');
+
+    expect(r.status).toBe('error');
+    expect(mockRosterDelete).not.toHaveBeenCalled();
+  });
+
+  it('deletes the entry on happy path', async () => {
+    mockAuth.mockResolvedValueOnce(clubSession);
+    mockCpFindUnique.mockResolvedValueOnce({ id: 'club1' });
+    mockRosterFindFirst.mockResolvedValueOnce({ id: 'r1' });
+    mockRosterDelete.mockResolvedValueOnce({});
+
+    const r = await deleteClubRosterEntry('r1');
+
+    expect(r.status).toBe('success');
+    expect(mockRosterDelete).toHaveBeenCalledWith({ where: { id: 'r1' } });
   });
 });

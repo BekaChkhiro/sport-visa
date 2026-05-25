@@ -27,7 +27,11 @@ import {
   addClubHistoryEvent,
   updateClubHistoryEvent,
   deleteClubHistoryEvent,
+  addClubRosterEntry,
+  updateClubRosterEntry,
+  deleteClubRosterEntry,
 } from '@/lib/club-profile/actions';
+import { ROSTER_POSITIONS } from '@/lib/club-profile/schemas';
 import { cn } from '@/lib/utils';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -65,6 +69,21 @@ type EventDraft = {
 
 const EMPTY_DRAFT: EventDraft = { year: '', title: '', description: '' };
 
+type RosterEntry = {
+  id: string;
+  playerName: string;
+  position: string | null;
+  jerseyNumber: number | null;
+};
+
+type RosterDraft = {
+  playerName: string;
+  position: string;
+  jerseyNumber: string;
+};
+
+const EMPTY_ROSTER_DRAFT: RosterDraft = { playerName: '', position: '', jerseyNumber: '' };
+
 type ClubProfileEditClientProps = {
   currentPath: string;
   user: {
@@ -79,6 +98,7 @@ type ClubProfileEditClientProps = {
   initialMedia: MediaState;
   initialBio: string;
   initialHistoryEvents: HistoryEvent[];
+  initialRosterEntries: RosterEntry[];
   isVisible: boolean;
 };
 
@@ -94,6 +114,7 @@ export function ClubProfileEditClient({
   initialMedia,
   initialBio,
   initialHistoryEvents,
+  initialRosterEntries,
   isVisible,
 }: ClubProfileEditClientProps) {
   const router = useRouter();
@@ -116,6 +137,7 @@ export function ClubProfileEditClient({
 
         <IdentitySection initialData={initialIdentity} />
         <MediaSection initialData={initialMedia} />
+        <RosterSection initialEntries={initialRosterEntries} />
         <BioSection initialBio={initialBio} />
         <HistoryTimelineSection initialEvents={initialHistoryEvents} />
         <VisibilitySection initialVisible={isVisible} />
@@ -929,6 +951,325 @@ function EventForm({
           className="flex min-h-[60px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 resize-none"
         />
       </Field>
+      {errorMessage ? (
+        <p role="alert" className="text-sm text-destructive">
+          {errorMessage}
+        </p>
+      ) : null}
+      <div className="flex justify-end gap-2">
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={onCancel}
+          disabled={status === 'saving'}
+        >
+          გაუქ.
+        </Button>
+        <Button type="button" size="sm" onClick={onSave} disabled={status === 'saving'}>
+          {status === 'saving' ? 'შენახვა...' : 'შენახვა'}
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+// ── Roster section ────────────────────────────────────────────────────────────
+
+function RosterSection({ initialEntries }: { initialEntries: RosterEntry[] }) {
+  const [entries, setEntries] = React.useState<RosterEntry[]>(initialEntries);
+  const [addingNew, setAddingNew] = React.useState(false);
+  const [editingId, setEditingId] = React.useState<string | null>(null);
+  const [draft, setDraft] = React.useState<RosterDraft>(EMPTY_ROSTER_DRAFT);
+  const [draftErrors, setDraftErrors] = React.useState<Record<string, string>>({});
+  const [formStatus, setFormStatus] = React.useState<SectionStatus>('idle');
+  const [formError, setFormError] = React.useState('');
+  const [deletingId, setDeletingId] = React.useState<string | null>(null);
+  const [savedMessage, setSavedMessage] = React.useState(false);
+
+  function openAdd() {
+    setEditingId(null);
+    setDraft(EMPTY_ROSTER_DRAFT);
+    setDraftErrors({});
+    setFormStatus('idle');
+    setFormError('');
+    setAddingNew(true);
+  }
+
+  function openEdit(entry: RosterEntry) {
+    setAddingNew(false);
+    setDraft({
+      playerName: entry.playerName,
+      position: entry.position ?? '',
+      jerseyNumber: entry.jerseyNumber != null ? String(entry.jerseyNumber) : '',
+    });
+    setDraftErrors({});
+    setFormStatus('idle');
+    setFormError('');
+    setEditingId(entry.id);
+  }
+
+  function cancelForm() {
+    setAddingNew(false);
+    setEditingId(null);
+    setDraft(EMPTY_ROSTER_DRAFT);
+    setDraftErrors({});
+    setFormStatus('idle');
+    setFormError('');
+  }
+
+  function setField(field: keyof RosterDraft, value: string) {
+    setDraft((prev) => ({ ...prev, [field]: value }));
+    setDraftErrors((prev) => ({ ...prev, [field]: '' }));
+  }
+
+  function flashSaved() {
+    setSavedMessage(true);
+    setTimeout(() => setSavedMessage(false), 3000);
+  }
+
+  async function handleAdd() {
+    setFormStatus('saving');
+    setFormError('');
+    setDraftErrors({});
+    const result = await addClubRosterEntry({
+      playerName: draft.playerName,
+      position: draft.position || undefined,
+      jerseyNumber: draft.jerseyNumber || undefined,
+    });
+    if (result.status === 'success') {
+      const newEntry: RosterEntry = {
+        id: result.entryId,
+        playerName: draft.playerName,
+        position: draft.position || null,
+        jerseyNumber: draft.jerseyNumber ? Number(draft.jerseyNumber) : null,
+      };
+      setEntries((prev) => [...prev, newEntry]);
+      setAddingNew(false);
+      setDraft(EMPTY_ROSTER_DRAFT);
+      setFormStatus('idle');
+      flashSaved();
+    } else {
+      setFormStatus('error');
+      setFormError(result.message);
+      if (result.fieldErrors) {
+        const flat: Record<string, string> = {};
+        for (const [k, msgs] of Object.entries(result.fieldErrors)) {
+          if (msgs?.[0]) flat[k] = msgs[0];
+        }
+        setDraftErrors(flat);
+      }
+    }
+  }
+
+  async function handleEdit() {
+    if (!editingId) return;
+    setFormStatus('saving');
+    setFormError('');
+    setDraftErrors({});
+    const result = await updateClubRosterEntry(editingId, {
+      playerName: draft.playerName,
+      position: draft.position || undefined,
+      jerseyNumber: draft.jerseyNumber || undefined,
+    });
+    if (result.status === 'success') {
+      setEntries((prev) =>
+        prev.map((e) =>
+          e.id === editingId
+            ? {
+                ...e,
+                playerName: draft.playerName,
+                position: draft.position || null,
+                jerseyNumber: draft.jerseyNumber ? Number(draft.jerseyNumber) : null,
+              }
+            : e,
+        ),
+      );
+      setEditingId(null);
+      setDraft(EMPTY_ROSTER_DRAFT);
+      setFormStatus('idle');
+      flashSaved();
+    } else {
+      setFormStatus('error');
+      setFormError(result.message);
+      if (result.fieldErrors) {
+        const flat: Record<string, string> = {};
+        for (const [k, msgs] of Object.entries(result.fieldErrors)) {
+          if (msgs?.[0]) flat[k] = msgs[0];
+        }
+        setDraftErrors(flat);
+      }
+    }
+  }
+
+  async function handleDelete(id: string) {
+    setDeletingId(id);
+    const result = await deleteClubRosterEntry(id);
+    setDeletingId(null);
+    if (result.status === 'success') {
+      setEntries((prev) => prev.filter((e) => e.id !== id));
+      flashSaved();
+    }
+  }
+
+  return (
+    <section aria-labelledby="roster-heading">
+      <div className="mb-4 flex items-center justify-between">
+        <h2
+          id="roster-heading"
+          className="text-xs font-semibold uppercase tracking-widest text-muted-foreground"
+        >
+          მიმდინარე შემადგენლობა
+        </h2>
+        {!addingNew && !editingId ? (
+          <Button type="button" variant="outline" size="sm" onClick={openAdd}>
+            + მოთამაშის დამატება
+          </Button>
+        ) : null}
+      </div>
+
+      <div className="rounded-xl border border-border bg-card p-6 space-y-3">
+        {addingNew ? (
+          <RosterEntryForm
+            draft={draft}
+            errors={draftErrors}
+            status={formStatus}
+            errorMessage={formError}
+            onChange={setField}
+            onSave={handleAdd}
+            onCancel={cancelForm}
+          />
+        ) : null}
+
+        {entries.length === 0 && !addingNew ? (
+          <p className="text-sm text-muted-foreground text-center py-4">
+            ჯერ არ არის მოთამაშეები. დაამატე პირველი.
+          </p>
+        ) : null}
+
+        {entries.map((entry) =>
+          editingId === entry.id ? (
+            <RosterEntryForm
+              key={entry.id}
+              draft={draft}
+              errors={draftErrors}
+              status={formStatus}
+              errorMessage={formError}
+              onChange={setField}
+              onSave={handleEdit}
+              onCancel={cancelForm}
+            />
+          ) : (
+            <div
+              key={entry.id}
+              className="flex items-center justify-between gap-2 rounded-lg border border-border px-4 py-3"
+            >
+              <div className="flex items-center gap-3 min-w-0">
+                {entry.jerseyNumber != null ? (
+                  <span className="inline-flex size-7 shrink-0 items-center justify-center rounded-full border border-border bg-muted text-xs font-semibold tabular-nums">
+                    {entry.jerseyNumber}
+                  </span>
+                ) : (
+                  <span className="inline-flex size-7 shrink-0 items-center justify-center rounded-full border border-dashed border-border text-xs text-muted-foreground/50">
+                    —
+                  </span>
+                )}
+                <p className="text-sm font-medium truncate">{entry.playerName}</p>
+                {entry.position ? (
+                  <span className="inline-flex items-center rounded-full border border-transparent bg-secondary px-2 py-0.5 text-xs font-medium uppercase tracking-widest text-secondary-foreground">
+                    {entry.position}
+                  </span>
+                ) : null}
+              </div>
+              <div className="flex shrink-0 gap-1">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => openEdit(entry)}
+                  disabled={deletingId === entry.id}
+                >
+                  რედ.
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="text-destructive hover:text-destructive"
+                  onClick={() => handleDelete(entry.id)}
+                  disabled={deletingId === entry.id}
+                >
+                  {deletingId === entry.id ? '...' : 'წაშ.'}
+                </Button>
+              </div>
+            </div>
+          ),
+        )}
+
+        {savedMessage && !addingNew && !editingId ? (
+          <p className="text-sm text-emerald-600 dark:text-emerald-400 text-right">✓ შენახულია</p>
+        ) : null}
+      </div>
+    </section>
+  );
+}
+
+// ── Roster entry form ─────────────────────────────────────────────────────────
+
+function RosterEntryForm({
+  draft,
+  errors,
+  status,
+  errorMessage,
+  onChange,
+  onSave,
+  onCancel,
+}: {
+  draft: RosterDraft;
+  errors: Record<string, string>;
+  status: SectionStatus;
+  errorMessage: string;
+  onChange: (field: keyof RosterDraft, value: string) => void;
+  onSave: () => void;
+  onCancel: () => void;
+}) {
+  return (
+    <div className="rounded-lg border border-border bg-muted/30 p-4 space-y-3">
+      <div className="grid grid-cols-6 gap-3">
+        <Field label="მოთამაშის სახელი ★" error={errors.playerName} className="col-span-3">
+          <Input
+            value={draft.playerName}
+            onChange={(e) => onChange('playerName', e.target.value)}
+            placeholder="ი. ბაბუნაშვილი"
+            aria-invalid={Boolean(errors.playerName)}
+          />
+        </Field>
+        <Field label="პოზიცია" error={errors.position} className="col-span-2">
+          <Select value={draft.position} onValueChange={(v) => onChange('position', v)}>
+            <SelectTrigger className="w-full" aria-invalid={Boolean(errors.position)}>
+              <SelectValue placeholder="აირჩიე..." />
+            </SelectTrigger>
+            <SelectContent>
+              {ROSTER_POSITIONS.map((p) => (
+                <SelectItem key={p} value={p}>
+                  {p}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </Field>
+        <Field label="№" error={errors.jerseyNumber}>
+          <Input
+            type="number"
+            value={draft.jerseyNumber}
+            onChange={(e) => onChange('jerseyNumber', e.target.value)}
+            placeholder="9"
+            min={1}
+            max={99}
+            aria-invalid={Boolean(errors.jerseyNumber)}
+          />
+        </Field>
+      </div>
       {errorMessage ? (
         <p role="alert" className="text-sm text-destructive">
           {errorMessage}
