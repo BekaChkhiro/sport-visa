@@ -222,6 +222,12 @@ function ClubSidebar({
             {user.city ? <p className="text-xs text-muted-foreground">{user.city}</p> : null}
           </div>
         </div>
+        <Button variant="default" size="sm" asChild className="w-full">
+          <Link href="/profile/club/edit">
+            <EditIcon className="size-3.5" />
+            პროფ. რედ.
+          </Link>
+        </Button>
       </div>
 
       <hr className="my-4 border-border" />
