@@ -19,23 +19,15 @@ import {
 import { Slider } from '@/components/ui/slider';
 import { PositionChip, VALID_POSITIONS, type Position } from '@/components/position-chip';
 import { cn } from '@/lib/utils';
-
-type DominantFoot = 'left' | 'right' | 'both' | 'all';
-type Experience = 'professional' | 'semi' | 'amateur';
-
-type DirectoryFilters = {
-  positions: string[];
-  ageMin?: number;
-  ageMax?: number;
-  heightMin?: number;
-  heightMax?: number;
-  weightMin?: number;
-  weightMax?: number;
-  foot?: DominantFoot;
-  nationality?: string;
-  city?: string;
-  experience?: Experience[];
-};
+import {
+  AGE_BOUNDS,
+  HEIGHT_BOUNDS,
+  WEIGHT_BOUNDS,
+  hasActiveFilters,
+  type DirectoryFilters,
+  type DominantFoot,
+  type Experience,
+} from '@/lib/directory/filters';
 
 type DirectoryFilterBarProps = {
   filters: DirectoryFilters;
@@ -49,27 +41,11 @@ type DirectoryFilterBarProps = {
   className?: string;
 };
 
-const AGE_BOUNDS = { min: 14, max: 60 };
-const HEIGHT_BOUNDS = { min: 140, max: 220 };
-const WEIGHT_BOUNDS = { min: 40, max: 130 };
-
 const EXPERIENCE_LABELS: Record<Experience, string> = {
   professional: 'პროფ.',
   semi: 'ნახ.',
   amateur: 'სამოყვ.',
 };
-
-function hasActiveFilters(filters: DirectoryFilters): boolean {
-  if (filters.positions.length > 0) return true;
-  if (filters.ageMin !== undefined || filters.ageMax !== undefined) return true;
-  if (filters.heightMin !== undefined || filters.heightMax !== undefined) return true;
-  if (filters.weightMin !== undefined || filters.weightMax !== undefined) return true;
-  if (filters.foot && filters.foot !== 'all') return true;
-  if (filters.nationality) return true;
-  if (filters.city) return true;
-  if (filters.experience && filters.experience.length > 0) return true;
-  return false;
-}
 
 function FilterPanelBody({
   filters,

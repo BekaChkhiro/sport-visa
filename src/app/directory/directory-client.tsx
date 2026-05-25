@@ -7,7 +7,13 @@ import { signOut } from 'next-auth/react';
 import { AppShell } from '@/components/app-shell';
 import { Button } from '@/components/ui/button';
 import { FootballerCard } from '@/components/footballer-card';
-import { DirectoryFilterBar, type DirectoryFilters } from '@/components/directory-filter-bar';
+import { DirectoryFilterBar } from '@/components/directory-filter-bar';
+import {
+  DEFAULT_FILTERS,
+  filtersToParams,
+  countActiveFilters,
+  type DirectoryFilters,
+} from '@/lib/directory/filters';
 import { EmptyState } from '@/components/ui/empty-state';
 import {
   FiltersIcon,
@@ -53,12 +59,6 @@ const SORT_LABELS: Record<SortKey, string> = {
   'height-desc': 'სიმ. ↓',
 };
 
-const DEFAULT_FILTERS: DirectoryFilters = {
-  positions: [],
-  foot: 'all',
-  experience: [],
-};
-
 type DirectoryClientProps = {
   currentPath: string;
   user: DirectoryUser;
@@ -87,35 +87,6 @@ function buildUrl(base: string, overrides: Record<string, string | string[] | un
   }
   const qs = params.toString();
   return qs ? `${base}?${qs}` : base;
-}
-
-function filtersToParams(filters: DirectoryFilters): Record<string, string | string[] | undefined> {
-  const out: Record<string, string | string[] | undefined> = {};
-  if (filters.positions.length > 0) out['positions'] = filters.positions;
-  if (filters.ageMin !== undefined) out['ageMin'] = String(filters.ageMin);
-  if (filters.ageMax !== undefined) out['ageMax'] = String(filters.ageMax);
-  if (filters.heightMin !== undefined) out['heightMin'] = String(filters.heightMin);
-  if (filters.heightMax !== undefined) out['heightMax'] = String(filters.heightMax);
-  if (filters.weightMin !== undefined) out['weightMin'] = String(filters.weightMin);
-  if (filters.weightMax !== undefined) out['weightMax'] = String(filters.weightMax);
-  if (filters.foot && filters.foot !== 'all') out['foot'] = filters.foot;
-  if (filters.nationality) out['nationality'] = filters.nationality;
-  if (filters.city) out['city'] = filters.city;
-  if (filters.experience && filters.experience.length > 0) out['experience'] = filters.experience;
-  return out;
-}
-
-function countActiveFilters(filters: DirectoryFilters): number {
-  let n = 0;
-  if (filters.positions.length > 0) n++;
-  if (filters.ageMin !== undefined || filters.ageMax !== undefined) n++;
-  if (filters.heightMin !== undefined || filters.heightMax !== undefined) n++;
-  if (filters.weightMin !== undefined || filters.weightMax !== undefined) n++;
-  if (filters.foot && filters.foot !== 'all') n++;
-  if (filters.nationality) n++;
-  if (filters.city) n++;
-  if (filters.experience && filters.experience.length > 0) n++;
-  return n;
 }
 
 function Pagination({
