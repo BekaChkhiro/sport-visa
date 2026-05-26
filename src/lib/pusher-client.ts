@@ -2,6 +2,24 @@
 
 import PusherJs from 'pusher-js';
 
+// Channel-name helpers shared between the browser SDK and server-side trigger
+// calls. Defined here (client-safe module) so client hooks don't need to
+// import the server-only pusher.ts, which pulls in node:async_hooks.
+export const channels = {
+  chat: (userAId: string, userBId: string): string => {
+    const [a, b] = [userAId, userBId].sort();
+    return `private-chat.${a}.${b}`;
+  },
+  userNotifications: (userId: string): string => `private-user.${userId}.notifications`,
+  clubFeed: (clubId: string): string => `club-feed.${clubId}`,
+} as const;
+
+export const events = {
+  NEW_MESSAGE: 'new-message',
+  NOTIFICATION: 'notification',
+  POST_PUBLISHED: 'post-published',
+} as const;
+
 // Singleton Pusher client — one WebSocket connection for the entire browser
 // session. Re-creating it on every render would thrash the connection limit.
 let pusherClient: PusherJs | undefined;

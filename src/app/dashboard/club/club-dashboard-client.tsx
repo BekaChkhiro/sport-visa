@@ -55,6 +55,7 @@ type ClubDashboardUser = {
 
 type ClubDashboardClientProps = {
   currentPath: string;
+  userId: string;
   user: ClubDashboardUser;
   stats: AppSidebarStats;
   unreadNotifications: number;
@@ -220,6 +221,7 @@ function PostsList({ posts }: { posts: DashboardPost[] }) {
 
 export function ClubDashboardClient({
   currentPath,
+  userId,
   user,
   stats,
   unreadNotifications,
@@ -238,6 +240,7 @@ export function ClubDashboardClient({
     <AppShell
       role="club"
       currentPath={currentPath}
+      userId={userId}
       user={user}
       unreadNotifications={unreadNotifications}
       sidebarStats={stats}

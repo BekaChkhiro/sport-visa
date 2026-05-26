@@ -47,6 +47,7 @@ type FootballerDashboardUser = {
 
 type FootballerDashboardClientProps = {
   currentPath: string;
+  userId: string;
   user: FootballerDashboardUser;
   stats: AppSidebarStats;
   unreadNotifications: number;
@@ -57,6 +58,7 @@ type FootballerDashboardClientProps = {
 
 export function FootballerDashboardClient({
   currentPath,
+  userId,
   user,
   stats,
   unreadNotifications,
@@ -76,6 +78,7 @@ export function FootballerDashboardClient({
     <AppShell
       role="footballer"
       currentPath={currentPath}
+      userId={userId}
       user={user}
       unreadNotifications={unreadNotifications}
       sidebarStats={stats}

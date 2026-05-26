@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import Link from 'next/link';
 
 import { BellIcon, CheckCircleIcon, ClockIcon } from '@/components/icons';
 import { NotificationsBell } from '@/components/notifications-bell';
@@ -113,6 +114,16 @@ export function NotificationsPanel({
               ))}
             </div>
           )}
+        </div>
+
+        {/* Footer */}
+        <div className="border-t px-4 py-2.5">
+          <Link
+            href="/notifications"
+            className="block text-center text-xs text-muted-foreground hover:text-foreground transition-colors"
+          >
+            ყველა შეტყობინება →
+          </Link>
         </div>
       </PopoverContent>
     </Popover>

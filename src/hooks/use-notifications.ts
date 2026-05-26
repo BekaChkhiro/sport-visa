@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 
 import { usePusherChannel, usePusherEvent } from '@/hooks/use-pusher-channel';
-import { channels, events } from '@/lib/pusher';
+import { channels, events } from '@/lib/pusher-client';
 
 export type NotificationItem = {
   id: string;
@@ -21,9 +21,11 @@ type PusherNotificationPayload = Omit<NotificationItem, 'read'>;
  * Pusher. Provides helpers to mark individual or all notifications as read.
  *
  * Pass `null` to skip fetching (e.g. when the user is not yet authenticated).
+ * Pass `initialData` to hydrate from server-fetched notifications and skip
+ * the initial network fetch.
  */
-export function useNotifications(userId: string | null) {
-  const [notifications, setNotifications] = useState<NotificationItem[]>([]);
+export function useNotifications(userId: string | null, initialData?: NotificationItem[]) {
+  const [notifications, setNotifications] = useState<NotificationItem[]>(initialData ?? []);
   const [loading, setLoading] = useState(false);
 
   const fetchNotifications = useCallback(async () => {
@@ -42,9 +44,12 @@ export function useNotifications(userId: string | null) {
     }
   }, [userId]);
 
+  const hasInitialData = initialData !== undefined && initialData.length > 0;
+
   useEffect(() => {
+    if (hasInitialData) return;
     void fetchNotifications();
-  }, [fetchNotifications]);
+  }, [fetchNotifications, hasInitialData]);
 
   // Subscribe to the user's private Pusher channel for real-time delivery.
   const channelName = userId ? channels.userNotifications(userId) : null;
