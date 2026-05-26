@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { UserCircle, Search, MessageCircle } from 'lucide-react';
+import { UserCircle, Search, MessageCircle, Building2, FileText, Bookmark } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { StatStrip } from '@/components/stat-strip';
@@ -43,6 +43,39 @@ const CLUB_FEATURES = [
   'ფეხბურთელების directory',
   'ფილტრები + real-time ჩატი',
 ];
+
+const FEATURES = [
+  {
+    icon: UserCircle,
+    title: 'ფეხბურთელის პროფილი',
+    description: 'შექმენი სრული პროფილი: პოზიცია, ასაკი, ფიზიკური მახასიათებლები და ფოტო გალერეა.',
+  },
+  {
+    icon: Building2,
+    title: 'კლუბების დირექტორია',
+    description: 'დაათვალიერე კლუბები ქალაქის, ლიგის და სხვა პარამეტრების მიხედვით.',
+  },
+  {
+    icon: Search,
+    title: 'გაფართოებული ფილტრები',
+    description: 'იპოვე სწორი კლუბი ან მოთამაშე — ფილტრაცია პოზიციით, ასაკით, ბიუჯეტით.',
+  },
+  {
+    icon: MessageCircle,
+    title: 'Real-time ჩატი',
+    description: 'დაუკავშირდი კლუბს ან მოთამაშეს პირდაპირ — სწრაფი და მარტივი.',
+  },
+  {
+    icon: FileText,
+    title: 'სერვისის მოთხოვნა',
+    description: 'მოითხოვე სკაუტი, გამოცდა ან სხვა სერვისი — ყველაფერი ერთ ფორმაში.',
+  },
+  {
+    icon: Bookmark,
+    title: 'შენი სიმოკლე',
+    description: 'შეინახე და შეადარე საუკეთესო კლუბები ან მოთამაშეები მოგვიანებისთვის.',
+  },
+] as const;
 
 const STATS = [
   { value: '500+', label: 'ფეხბურთელი' },
@@ -119,6 +152,36 @@ export default function HomePage() {
                     {step}
                   </span>
                   <h3 className="text-lg font-semibold">{title}</h3>
+                  <p className="text-sm leading-relaxed text-muted-foreground">{description}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── FEATURES GRID ────────────────────────────────────────── */}
+      <section className="bg-secondary/30 px-4 py-16 sm:py-20">
+        <div className="container mx-auto">
+          <div className="mb-12 text-center">
+            <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">
+              ძირითადი ფუნქციები
+            </h2>
+            <p className="mt-3 text-sm text-muted-foreground sm:text-base">
+              ყველაფერი, რაც გჭირდება — ერთ პლატფორმაზე.
+            </p>
+          </div>
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {FEATURES.map(({ icon: Icon, title, description }) => (
+              <div
+                key={title}
+                className="flex flex-col gap-4 rounded-xl border border-border bg-background p-6 transition-shadow hover:shadow-md"
+              >
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                  <Icon className="h-5 w-5" aria-hidden />
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <h3 className="font-semibold leading-snug">{title}</h3>
                   <p className="text-sm leading-relaxed text-muted-foreground">{description}</p>
                 </div>
               </div>
