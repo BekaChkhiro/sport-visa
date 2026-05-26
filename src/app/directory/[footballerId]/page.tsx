@@ -12,10 +12,31 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { footballerId } = await params;
   const profile = await db.footballerProfile.findUnique({
     where: { id: footballerId },
-    select: { firstName: true, lastName: true },
+    select: { firstName: true, lastName: true, positions: true, avatarKey: true },
   });
   if (!profile) return { title: 'ფეხბ. ვერ მოიძებნა' };
-  return { title: `${profile.firstName} ${profile.lastName}` };
+  const name = `${profile.firstName} ${profile.lastName}`;
+  const pos = profile.positions[0] ?? null;
+  const description = pos ? `${name} — ${pos}` : name;
+  const r2BaseUrl = process.env.R2_PUBLIC_BASE_URL ?? '';
+  const avatarUrl = profile.avatarKey ? `${r2BaseUrl}/${profile.avatarKey}` : undefined;
+  const ogImage = avatarUrl ? [{ url: avatarUrl, alt: name }] : undefined;
+  return {
+    title: name,
+    description,
+    openGraph: {
+      title: name,
+      description,
+      type: 'profile',
+      images: ogImage,
+    },
+    twitter: {
+      card: 'summary',
+      title: name,
+      description,
+      images: avatarUrl ? [avatarUrl] : undefined,
+    },
+  };
 }
 
 function toUiVerificationStatus(status: string): VerificationStatus {

@@ -15,10 +15,30 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { clubId } = await params;
   const club = await db.clubProfile.findUnique({
     where: { id: clubId },
-    select: { name: true },
+    select: { name: true, city: true, logoKey: true },
   });
   if (!club) return { title: 'კლუბი ვერ მოიძებნა' };
-  return { title: club.name };
+  const title = club.name;
+  const description = club.city ? `${club.name} — ${club.city}` : club.name;
+  const r2BaseUrl = process.env.R2_PUBLIC_BASE_URL ?? '';
+  const logoUrl = club.logoKey ? `${r2BaseUrl}/${club.logoKey}` : undefined;
+  const ogImage = logoUrl ? [{ url: logoUrl, alt: club.name }] : undefined;
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      type: 'website',
+      images: ogImage,
+    },
+    twitter: {
+      card: 'summary',
+      title,
+      description,
+      images: logoUrl ? [logoUrl] : undefined,
+    },
+  };
 }
 
 function toUiVerificationStatus(status: string): VerificationStatus {
