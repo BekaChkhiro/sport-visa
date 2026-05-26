@@ -64,6 +64,7 @@ type FootballerData = {
   verificationStatus: VerificationStatus;
   profileViewCount: number;
   shortlistCount: number;
+  phone?: string;
   agentName?: string;
   agentPhone?: string;
   agentEmail?: string;
@@ -117,6 +118,16 @@ export function FootballerDetailClient({
   const [isShortlisted, setIsShortlisted] = React.useState(footballer.isShortlisted);
   const [shortlistPending, setShortlistPending] = React.useState(false);
   const [galleryIndex, setGalleryIndex] = React.useState(0);
+  const [toast, setToast] = React.useState<{ message: string; type: 'success' | 'error' } | null>(
+    null,
+  );
+  const toastTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  function showToast(message: string, type: 'success' | 'error' = 'success') {
+    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+    setToast({ message, type });
+    toastTimerRef.current = setTimeout(() => setToast(null), 3000);
+  }
 
   async function handleSignOut() {
     await signOut({ redirect: false });
@@ -132,8 +143,10 @@ export function FootballerDetailClient({
     const result = await toggleShortlist(footballer.id);
     if (result.status === 'error') {
       setIsShortlisted(!next); // revert
+      showToast(result.message, 'error');
     } else {
       setIsShortlisted(result.shortlisted);
+      showToast(result.shortlisted ? 'შ. სიაში დაემატა' : 'შ. სიადან წაიშალა');
     }
     setShortlistPending(false);
   }
@@ -176,6 +189,21 @@ export function FootballerDetailClient({
       sidebarStats={sidebarStats}
       onSignOut={handleSignOut}
     >
+      {toast ? (
+        <div
+          role="status"
+          aria-live="polite"
+          className={cn(
+            'fixed bottom-20 left-1/2 z-50 -translate-x-1/2 rounded-lg px-4 py-2.5 text-sm font-medium shadow-lg transition-all sm:bottom-6',
+            toast.type === 'error'
+              ? 'bg-destructive text-destructive-foreground'
+              : 'bg-foreground text-background',
+          )}
+        >
+          {toast.message}
+        </div>
+      ) : null}
+
       <div className="mx-auto max-w-3xl space-y-6">
         <div>
           <Button variant="ghost" size="sm" asChild>
@@ -448,6 +476,29 @@ export function FootballerDetailClient({
                 ) : null;
               })}
             </div>
+          </section>
+        ) : null}
+
+        {/* Contact info — gated: only visible when footballer is in shortlist */}
+        {footballer.phone ? (
+          <section
+            aria-labelledby="contact-heading"
+            className="rounded-xl border border-border bg-card p-4 sm:p-5"
+          >
+            <h2
+              id="contact-heading"
+              className="mb-3 text-xs font-semibold uppercase tracking-widest text-muted-foreground"
+            >
+              კონტაქტი
+            </h2>
+            <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-sm">
+              <dt className="font-medium text-muted-foreground">ტელ.</dt>
+              <dd>
+                <a href={`tel:${footballer.phone}`} className="text-primary hover:underline">
+                  {footballer.phone}
+                </a>
+              </dd>
+            </dl>
           </section>
         ) : null}
 
