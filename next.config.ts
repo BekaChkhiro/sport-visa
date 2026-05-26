@@ -1,9 +1,29 @@
 import { withSentryConfig } from '@sentry/nextjs';
 import type { NextConfig } from 'next';
 
+// Derive the R2 public hostname from the existing env var at build time.
+const r2Hostname = (() => {
+  try {
+    return process.env.R2_PUBLIC_BASE_URL
+      ? new URL(process.env.R2_PUBLIC_BASE_URL).hostname
+      : undefined;
+  } catch {
+    return undefined;
+  }
+})();
+
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   typedRoutes: true,
+  images: {
+    remotePatterns: [
+      // Cloudflare R2 standard endpoints
+      { protocol: 'https', hostname: '*.r2.cloudflarestorage.com' },
+      { protocol: 'https', hostname: '*.r2.dev' },
+      // Custom R2 public domain derived from R2_PUBLIC_BASE_URL
+      ...(r2Hostname ? [{ protocol: 'https' as const, hostname: r2Hostname }] : []),
+    ],
+  },
 };
 
 // Sentry's Next.js plugin uploads source maps and wires the SDK at build time.

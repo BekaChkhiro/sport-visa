@@ -1,6 +1,8 @@
 'use client';
 
 import * as React from 'react';
+import Image from 'next/image';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { signOut } from 'next-auth/react';
 
@@ -422,12 +424,17 @@ function ListRow({
   return (
     <div className="flex items-center gap-3 px-4 py-3">
       <div
-        className="size-10 shrink-0 rounded-full bg-muted flex items-center justify-center overflow-hidden"
+        className="relative size-10 shrink-0 rounded-full bg-muted flex items-center justify-center overflow-hidden"
         aria-hidden="true"
       >
         {footballer.photoUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={footballer.photoUrl} alt={footballer.name} className="size-full object-cover" />
+          <Image
+            src={footballer.photoUrl}
+            alt={footballer.name}
+            fill
+            sizes="40px"
+            className="object-cover"
+          />
         ) : (
           <span className="text-xs font-medium text-muted-foreground">
             {footballer.name
@@ -464,7 +471,7 @@ function ListRow({
           />
         </Button>
         <Button variant="outline" size="sm" asChild>
-          <a href={`/directory/${footballer.id}`}>პროფ.</a>
+          <Link href={`/directory/${footballer.id}`}>პროფ.</Link>
         </Button>
       </div>
     </div>
