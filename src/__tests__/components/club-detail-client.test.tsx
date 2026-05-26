@@ -43,6 +43,13 @@ const baseClub = {
     title: string;
     description?: string;
   }[],
+  posts: [] as {
+    id: string;
+    title: string;
+    body: string;
+    likeCount: number;
+    createdAt: string;
+  }[],
 };
 
 function renderDetail(
@@ -287,8 +294,26 @@ describe('ClubDetailClient — stadium tab', () => {
 });
 
 describe('ClubDetailClient — news tab', () => {
-  it('renders phase 7 placeholder text', () => {
-    renderDetail({}, { activeTab: 'news' });
-    expect(screen.getByText(/სიახლეები მალე გამოჩნდება/)).toBeDefined();
+  it('renders empty state when there are no posts', () => {
+    renderDetail({ posts: [] }, { activeTab: 'news' });
+    expect(screen.getByText('სიახლეები ჯერ არ არის დამატებული.')).toBeDefined();
+  });
+
+  it('renders post titles when posts are provided', () => {
+    renderDetail(
+      {
+        posts: [
+          {
+            id: 'p1',
+            title: 'ახალი სეზონი',
+            body: 'ტექსტი',
+            likeCount: 3,
+            createdAt: new Date().toISOString(),
+          },
+        ],
+      },
+      { activeTab: 'news' },
+    );
+    expect(screen.getByText('ახალი სეზონი')).toBeDefined();
   });
 });

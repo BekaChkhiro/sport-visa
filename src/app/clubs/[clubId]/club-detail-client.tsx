@@ -15,6 +15,7 @@ import {
   MapPinIcon,
   ArrowLeftIcon,
   ExternalLinkIcon,
+  HeartIcon,
 } from '@/components/icons';
 import { toggleSubscription } from '@/lib/clubs/actions';
 import { cn } from '@/lib/utils';
@@ -31,6 +32,14 @@ type HistoryEvent = {
   year: number;
   title: string;
   description?: string;
+};
+
+type Post = {
+  id: string;
+  title: string;
+  body: string;
+  likeCount: number;
+  createdAt: string;
 };
 
 type ClubData = {
@@ -53,6 +62,7 @@ type ClubData = {
   subscriberCount: number;
   rosterEntries: RosterEntry[];
   historyEvents: HistoryEvent[];
+  posts: Post[];
 };
 
 type Tab = 'history' | 'roster' | 'stadium' | 'news';
@@ -314,7 +324,7 @@ export function ClubDetailClient({
           embedUrl={embedUrl}
         />
       )}
-      {activeTab === 'news' && <NewsTab />}
+      {activeTab === 'news' && <NewsTab clubId={club.id} posts={club.posts} />}
     </div>
   );
 }
@@ -501,12 +511,38 @@ function StadiumTab({
   );
 }
 
-function NewsTab() {
+function NewsTab({ clubId, posts }: { clubId: string; posts: Post[] }) {
+  if (posts.length === 0) {
+    return (
+      <div className="rounded-xl border border-border bg-card p-8 text-center text-sm text-muted-foreground">
+        სიახლეები ჯერ არ არის დამატებული.
+      </div>
+    );
+  }
+
   return (
-    <div className="rounded-xl border border-border bg-card p-8 text-center">
-      <p className="text-sm text-muted-foreground">
-        სიახლეები მალე გამოჩნდება. <span className="text-xs">(Phase 7)</span>
-      </p>
-    </div>
+    <section aria-labelledby="news-heading" className="space-y-3">
+      <h2 id="news-heading" className="sr-only">
+        სიახლეები
+      </h2>
+      {posts.map((post) => (
+        <Link key={post.id} href={`/clubs/${clubId}/posts/${post.id}`} className="block">
+          <article className="rounded-xl border border-border bg-card p-4 transition-colors hover:bg-muted/30 sm:p-5">
+            <h3 className="text-sm font-semibold leading-snug">{post.title}</h3>
+            <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{post.body}</p>
+            <div className="mt-3 flex items-center gap-3 text-xs text-muted-foreground">
+              <span className="flex items-center gap-0.5">
+                <HeartIcon className="size-3" aria-hidden="true" />
+                {post.likeCount}
+              </span>
+              <span>·</span>
+              <time dateTime={post.createdAt}>
+                {new Date(post.createdAt).toLocaleDateString('ka-GE')}
+              </time>
+            </div>
+          </article>
+        </Link>
+      ))}
+    </section>
   );
 }
