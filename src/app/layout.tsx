@@ -14,12 +14,48 @@ const notoSansGeorgian = Noto_Sans_Georgian({
   weight: ['400', '500', '600', '700'],
 });
 
+const siteUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
+
 export const metadata: Metadata = {
+  metadataBase: new URL(siteUrl),
   title: {
     default: 'Sport Visa',
     template: '%s · Sport Visa',
   },
-  description: 'პლატფორმა, რომელიც აერთიანებს ფეხბურთელებსა და კლუბებს.',
+  description:
+    'Sport Visa — პლატფორმა, სადაც ფეხბურთელები კლუბებს პოულობენ და კლუბები — ფეხბურთელებს.',
+  keywords: ['ფეხბურთი', 'სპორტი', 'კლუბი', 'ფეხბურთელი', 'sport visa', 'football', 'georgia'],
+  authors: [{ name: 'Sport Visa' }],
+  creator: 'Sport Visa',
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: { index: true, follow: true },
+  },
+  openGraph: {
+    type: 'website',
+    locale: 'ka_GE',
+    url: siteUrl,
+    siteName: 'Sport Visa',
+    title: 'Sport Visa — ფეხბურთელები კლუბებს ენახებიან',
+    description:
+      'Sport Visa — პლატფორმა, სადაც ფეხბურთელები კლუბებს პოულობენ და კლუბები — ფეხბურთელებს.',
+    images: [
+      {
+        url: '/og.png',
+        width: 1200,
+        height: 630,
+        alt: 'Sport Visa',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Sport Visa — ფეხბურთელები კლუბებს ენახებიან',
+    description:
+      'Sport Visa — პლატფორმა, სადაც ფეხბურთელები კლუბებს პოულობენ და კლუბები — ფეხბურთელებს.',
+    images: ['/og.png'],
+  },
 };
 
 export const viewport: Viewport = {
