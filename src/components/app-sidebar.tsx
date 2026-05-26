@@ -13,6 +13,7 @@ import {
   EditIcon,
   EyeIcon,
   FileTextIcon,
+  FlagIcon,
   GridViewIcon,
   ListViewIcon,
   MessageCircleIcon,
@@ -305,6 +306,7 @@ function AdminSidebar({
       badgeCount: adminBadges?.pendingServiceRequests,
     },
     { href: '/admin/users', label: 'მომხ. მართვა', icon: UsersIcon },
+    { href: '/admin/moderation', label: 'მოდ. ინსტ.', icon: FlagIcon },
     { href: '/admin/ref-data', label: 'სცნობ. მონ.', icon: SettingsIcon },
   ];
 
