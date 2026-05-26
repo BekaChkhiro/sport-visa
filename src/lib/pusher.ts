@@ -100,23 +100,6 @@ export function isChannelAllowedForUser(channelName: string, userId: string): bo
   return false;
 }
 
-// Channel naming conventions used across the app.
-// Centralised here so feature code never hard-codes channel strings.
-export const channels = {
-  /** Private channel for direct messages between two users (sorted IDs). */
-  chat: (userAId: string, userBId: string): string => {
-    const [a, b] = [userAId, userBId].sort();
-    return `private-chat.${a}.${b}`;
-  },
-  /** Private channel for a single user's notifications feed. */
-  userNotifications: (userId: string): string => `private-user.${userId}.notifications`,
-  /** Public channel for a club's newsfeed updates (no auth required to read). */
-  clubFeed: (clubId: string): string => `club-feed.${clubId}`,
-} as const;
-
-// Canonical event names. Feature code imports these instead of bare strings.
-export const events = {
-  NEW_MESSAGE: 'new-message',
-  NOTIFICATION: 'notification',
-  POST_PUBLISHED: 'post-published',
-} as const;
+// Re-export channel helpers and event names from the client-safe module so
+// server code can import them from here without a second source of truth.
+export { channels, events } from './pusher-client';

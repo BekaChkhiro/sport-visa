@@ -13,8 +13,10 @@ import {
 } from '@/components/app-sidebar';
 import { MobileNavDrawer } from '@/components/mobile-nav-drawer';
 import { NotificationsBell } from '@/components/notifications-bell';
+import { NotificationsPanel } from '@/components/notifications-panel';
 import { UserMenu } from '@/components/user-menu';
 import { MenuIcon } from '@/components/icons';
+import { useNotifications } from '@/hooks/use-notifications';
 import { cn } from '@/lib/utils';
 
 type AppShellRole = AppSidebarRole | 'admin';
@@ -27,6 +29,7 @@ type AppShellProps = {
   role: AppShellRole;
   currentPath: string;
   user: AppShellUser;
+  userId?: string | null;
   unreadNotifications?: number;
   sidebarStats?: AppSidebarStats;
   onSignOut: () => void;
@@ -37,6 +40,7 @@ function AppShell({
   role,
   currentPath,
   user,
+  userId = null,
   unreadNotifications = 0,
   sidebarStats,
   onSignOut,
@@ -44,6 +48,16 @@ function AppShell({
 }: AppShellProps) {
   const [drawerOpen, setDrawerOpen] = React.useState(false);
   const sidebarRole: AppSidebarRole = role === 'admin' ? 'footballer' : role;
+
+  const {
+    notifications,
+    unreadCount: liveUnreadCount,
+    loading,
+    markRead,
+    markAllRead,
+  } = useNotifications(userId);
+
+  const unreadCount = userId ? liveUnreadCount : unreadNotifications;
 
   return (
     <div data-slot="app-shell" className="flex min-h-screen flex-col">
@@ -64,7 +78,17 @@ function AppShell({
           </Link>
         </div>
         <div className="flex items-center gap-2">
-          <NotificationsBell unreadCount={unreadNotifications} />
+          {userId ? (
+            <NotificationsPanel
+              notifications={notifications}
+              unreadCount={unreadCount}
+              loading={loading}
+              onMarkRead={markRead}
+              onMarkAllRead={markAllRead}
+            />
+          ) : (
+            <NotificationsBell unreadCount={unreadCount} />
+          )}
           <UserMenu
             user={{ name: user.name, initials: user.initials, image: user.image }}
             onSignOut={onSignOut}

@@ -154,6 +154,7 @@ export default async function FootballerDashboardPage() {
   return (
     <FootballerDashboardClient
       currentPath="/dashboard/footballer"
+      userId={userId}
       user={{
         name,
         initials,

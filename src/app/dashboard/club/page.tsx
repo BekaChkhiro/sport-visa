@@ -110,6 +110,7 @@ export default async function ClubDashboardPage() {
   return (
     <ClubDashboardClient
       currentPath="/dashboard/club"
+      userId={userId}
       user={{
         name: profile.name,
         initials,
