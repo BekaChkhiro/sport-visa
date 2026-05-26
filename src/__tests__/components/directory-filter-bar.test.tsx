@@ -253,3 +253,272 @@ describe('DirectoryFilterBar — apply and reset', () => {
     expect(onReset).toHaveBeenCalledOnce();
   });
 });
+
+describe('DirectoryFilterBar — height range', () => {
+  it('renders HEIGHT section label', () => {
+    renderFilterBar();
+    expect(screen.getByText('HEIGHT (სმ)')).toBeDefined();
+  });
+
+  it('calls onFiltersChange with heightMin when height min input changes', () => {
+    const onFiltersChange = vi.fn();
+    const { container } = renderFilterBar({}, { onFiltersChange });
+    // number inputs: [0,1]=age, [2,3]=height, [4,5]=weight
+    const inputs = container.querySelectorAll<HTMLInputElement>('input[type="number"]');
+    fireEvent.change(inputs[2]!, { target: { value: '175' } });
+    fireEvent.blur(inputs[2]!);
+    expect(onFiltersChange).toHaveBeenCalled();
+    expect(onFiltersChange).toHaveBeenCalledWith(expect.objectContaining({ heightMin: 175 }));
+  });
+
+  it('calls onFiltersChange with heightMax when height max input changes', () => {
+    const onFiltersChange = vi.fn();
+    const { container } = renderFilterBar({}, { onFiltersChange });
+    const inputs = container.querySelectorAll<HTMLInputElement>('input[type="number"]');
+    fireEvent.change(inputs[3]!, { target: { value: '195' } });
+    fireEvent.blur(inputs[3]!);
+    expect(onFiltersChange).toHaveBeenCalled();
+    expect(onFiltersChange).toHaveBeenCalledWith(expect.objectContaining({ heightMax: 195 }));
+  });
+
+  it('displays existing heightMin value', () => {
+    const { container } = renderFilterBar({ heightMin: 170 });
+    const inputs = container.querySelectorAll<HTMLInputElement>('input[type="number"]');
+    expect(inputs[2]!.value).toBe('170');
+  });
+
+  it('displays existing heightMax value', () => {
+    const { container } = renderFilterBar({ heightMax: 190 });
+    const inputs = container.querySelectorAll<HTMLInputElement>('input[type="number"]');
+    expect(inputs[3]!.value).toBe('190');
+  });
+});
+
+describe('DirectoryFilterBar — weight range', () => {
+  it('renders WEIGHT section label', () => {
+    renderFilterBar();
+    expect(screen.getByText('WEIGHT (კგ)')).toBeDefined();
+  });
+
+  it('calls onFiltersChange with weightMin when weight min input changes', () => {
+    const onFiltersChange = vi.fn();
+    const { container } = renderFilterBar({}, { onFiltersChange });
+    const inputs = container.querySelectorAll<HTMLInputElement>('input[type="number"]');
+    fireEvent.change(inputs[4]!, { target: { value: '65' } });
+    fireEvent.blur(inputs[4]!);
+    expect(onFiltersChange).toHaveBeenCalled();
+    expect(onFiltersChange).toHaveBeenCalledWith(expect.objectContaining({ weightMin: 65 }));
+  });
+
+  it('calls onFiltersChange with weightMax when weight max input changes', () => {
+    const onFiltersChange = vi.fn();
+    const { container } = renderFilterBar({}, { onFiltersChange });
+    const inputs = container.querySelectorAll<HTMLInputElement>('input[type="number"]');
+    fireEvent.change(inputs[5]!, { target: { value: '90' } });
+    fireEvent.blur(inputs[5]!);
+    expect(onFiltersChange).toHaveBeenCalled();
+    expect(onFiltersChange).toHaveBeenCalledWith(expect.objectContaining({ weightMax: 90 }));
+  });
+
+  it('displays existing weightMin value', () => {
+    const { container } = renderFilterBar({ weightMin: 60 });
+    const inputs = container.querySelectorAll<HTMLInputElement>('input[type="number"]');
+    expect(inputs[4]!.value).toBe('60');
+  });
+
+  it('displays existing weightMax value', () => {
+    const { container } = renderFilterBar({ weightMax: 85 });
+    const inputs = container.querySelectorAll<HTMLInputElement>('input[type="number"]');
+    expect(inputs[5]!.value).toBe('85');
+  });
+});
+
+describe('DirectoryFilterBar — nationality', () => {
+  const nationalityOptions = [
+    { value: 'GEO', label: 'Georgia' },
+    { value: 'ARM', label: 'Armenia' },
+  ];
+
+  it('nationality section is absent when nationalityOptions not provided', () => {
+    renderFilterBar();
+    expect(screen.queryByText('NATIONALITY')).toBeNull();
+  });
+
+  it('renders NATIONALITY section label when nationalityOptions provided', () => {
+    render(
+      <DirectoryFilterBar
+        filters={DEFAULT_FILTERS}
+        onFiltersChange={noop}
+        onApply={noop}
+        onReset={noop}
+        nationalityOptions={nationalityOptions}
+      />,
+    );
+    expect(screen.getByText('NATIONALITY')).toBeDefined();
+  });
+
+  it('nationality combobox shows placeholder when no nationality selected', () => {
+    render(
+      <DirectoryFilterBar
+        filters={DEFAULT_FILTERS}
+        onFiltersChange={noop}
+        onApply={noop}
+        onReset={noop}
+        nationalityOptions={nationalityOptions}
+      />,
+    );
+    const trigger = screen.getAllByRole('combobox')[0]!;
+    expect(trigger.textContent).toContain('ქვეყანა');
+  });
+
+  it('nationality combobox shows selected nationality label', () => {
+    render(
+      <DirectoryFilterBar
+        filters={{ ...DEFAULT_FILTERS, nationality: 'GEO' }}
+        onFiltersChange={noop}
+        onApply={noop}
+        onReset={noop}
+        nationalityOptions={nationalityOptions}
+      />,
+    );
+    const trigger = screen.getAllByRole('combobox')[0]!;
+    expect(trigger.textContent).toContain('Georgia');
+  });
+
+  it('clicking the clear button calls onFiltersChange with nationality undefined', () => {
+    const onFiltersChange = vi.fn();
+    render(
+      <DirectoryFilterBar
+        filters={{ ...DEFAULT_FILTERS, nationality: 'GEO' }}
+        onFiltersChange={onFiltersChange}
+        onApply={noop}
+        onReset={noop}
+        nationalityOptions={nationalityOptions}
+      />,
+    );
+    const clearBtn = screen.getAllByLabelText('გასუფთავება')[0]!;
+    fireEvent.click(clearBtn);
+    expect(onFiltersChange).toHaveBeenCalledWith(
+      expect.objectContaining({ nationality: undefined }),
+    );
+  });
+});
+
+describe('DirectoryFilterBar — city', () => {
+  const cityOptions = [
+    { value: 'Tbilisi', label: 'Tbilisi' },
+    { value: 'Batumi', label: 'Batumi' },
+  ];
+
+  it('city section is absent when cityOptions not provided', () => {
+    renderFilterBar();
+    expect(screen.queryByText('CITY')).toBeNull();
+  });
+
+  it('renders CITY section label when cityOptions provided', () => {
+    render(
+      <DirectoryFilterBar
+        filters={DEFAULT_FILTERS}
+        onFiltersChange={noop}
+        onApply={noop}
+        onReset={noop}
+        cityOptions={cityOptions}
+      />,
+    );
+    expect(screen.getByText('CITY')).toBeDefined();
+  });
+
+  it('city combobox shows placeholder when no city selected', () => {
+    render(
+      <DirectoryFilterBar
+        filters={DEFAULT_FILTERS}
+        onFiltersChange={noop}
+        onApply={noop}
+        onReset={noop}
+        cityOptions={cityOptions}
+      />,
+    );
+    const trigger = screen.getAllByRole('combobox')[0]!;
+    expect(trigger.textContent).toContain('ქალაქი');
+  });
+
+  it('city combobox shows selected city label', () => {
+    render(
+      <DirectoryFilterBar
+        filters={{ ...DEFAULT_FILTERS, city: 'Tbilisi' }}
+        onFiltersChange={noop}
+        onApply={noop}
+        onReset={noop}
+        cityOptions={cityOptions}
+      />,
+    );
+    const trigger = screen.getAllByRole('combobox')[0]!;
+    expect(trigger.textContent).toContain('Tbilisi');
+  });
+
+  it('clicking the clear button calls onFiltersChange with city undefined', () => {
+    const onFiltersChange = vi.fn();
+    render(
+      <DirectoryFilterBar
+        filters={{ ...DEFAULT_FILTERS, city: 'Tbilisi' }}
+        onFiltersChange={onFiltersChange}
+        onApply={noop}
+        onReset={noop}
+        cityOptions={cityOptions}
+      />,
+    );
+    const clearBtn = screen.getAllByLabelText('გასუფთავება')[0]!;
+    fireEvent.click(clearBtn);
+    expect(onFiltersChange).toHaveBeenCalledWith(expect.objectContaining({ city: undefined }));
+  });
+});
+
+describe('DirectoryFilterBar — experience', () => {
+  it('renders EXPERIENCE section label', () => {
+    renderFilterBar();
+    expect(screen.getByText('EXPERIENCE')).toBeDefined();
+  });
+
+  it('renders all three experience option labels', () => {
+    renderFilterBar();
+    expect(screen.getByText('პროფ.')).toBeDefined();
+    expect(screen.getByText('ნახ.')).toBeDefined();
+    expect(screen.getByText('სამოყვ.')).toBeDefined();
+  });
+
+  it('calls onFiltersChange with experience added when unchecked box is clicked', () => {
+    const onFiltersChange = vi.fn();
+    const { container } = renderFilterBar({}, { onFiltersChange });
+    const checkbox = container.querySelector<HTMLElement>('#exp-professional')!;
+    fireEvent.click(checkbox);
+    expect(onFiltersChange).toHaveBeenCalled();
+    expect(onFiltersChange).toHaveBeenCalledWith(
+      expect.objectContaining({ experience: expect.arrayContaining(['professional']) }),
+    );
+  });
+
+  it('calls onFiltersChange with experience removed when checked box is clicked', () => {
+    const onFiltersChange = vi.fn();
+    const { container } = renderFilterBar({ experience: ['semi'] }, { onFiltersChange });
+    const checkbox = container.querySelector<HTMLElement>('#exp-semi')!;
+    fireEvent.click(checkbox);
+    expect(onFiltersChange).toHaveBeenCalled();
+    expect(onFiltersChange).toHaveBeenCalledWith(
+      expect.objectContaining({
+        experience: expect.not.arrayContaining(['semi']),
+      }),
+    );
+  });
+
+  it('checked experience checkbox has data-state="checked"', () => {
+    const { container } = renderFilterBar({ experience: ['amateur'] });
+    const checkbox = container.querySelector<HTMLElement>('#exp-amateur')!;
+    expect(checkbox.getAttribute('data-state')).toBe('checked');
+  });
+
+  it('unchecked experience checkbox has data-state="unchecked"', () => {
+    const { container } = renderFilterBar({ experience: [] });
+    const checkbox = container.querySelector<HTMLElement>('#exp-professional')!;
+    expect(checkbox.getAttribute('data-state')).toBe('unchecked');
+  });
+});
