@@ -203,6 +203,12 @@ function ClubSidebar({
   const navItems: NavItem[] = [
     { href: '/posts/new', label: '+ გამოქვ.', icon: PlusIcon },
     { href: '/directory', label: 'Directory', icon: SearchIcon },
+    {
+      href: '/shortlist',
+      label: 'შ. სია',
+      icon: StarIcon,
+      badgeCount: stats?.shortlistCount,
+    },
     { href: '/chats', label: 'ჩატები', icon: MessageCircleIcon, badgeCount: stats?.unreadMessages },
   ];
 

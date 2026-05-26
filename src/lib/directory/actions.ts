@@ -33,7 +33,9 @@ export async function toggleShortlist(footballerProfileId: string): Promise<Shor
   if (existing) {
     await db.clubShortlist.delete({ where: { id: existing.id } });
     revalidatePath('/directory');
+    revalidatePath(`/directory/${footballerProfileId}`);
     revalidatePath('/dashboard/club');
+    revalidatePath('/shortlist');
     return { status: 'success', shortlisted: false };
   }
 
@@ -41,6 +43,8 @@ export async function toggleShortlist(footballerProfileId: string): Promise<Shor
     data: { clubProfileId: club.id, footballerProfileId },
   });
   revalidatePath('/directory');
+  revalidatePath(`/directory/${footballerProfileId}`);
   revalidatePath('/dashboard/club');
+  revalidatePath('/shortlist');
   return { status: 'success', shortlisted: true };
 }
