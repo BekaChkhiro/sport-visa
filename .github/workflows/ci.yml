@@ -17,6 +17,9 @@ env:
   # be defined at construction time. The tests mock the actual queries, so a
   # dummy connection string is enough — CI never connects to a real database.
   DATABASE_URL: 'postgresql://postgres:postgres@localhost:5432/sportvisa_test'
+  # src/lib/env.ts validates NEXT_PUBLIC_APP_URL as a required string at import
+  # time; tests that indirectly import logger.ts → env.ts fail without it.
+  NEXT_PUBLIC_APP_URL: 'http://localhost:3000'
 
 jobs:
   lint_type:
