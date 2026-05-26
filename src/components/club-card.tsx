@@ -123,7 +123,7 @@ function ClubCard({
               className={cn('size-3.5', isSubscribed ? 'fill-primary' : '')}
               aria-hidden="true"
             />
-            {isSubscribed ? 'გამოწ.' : 'გამოწ. გაუქ.'}
+            {isSubscribed ? 'გამოწ. გაუქ.' : 'გამოწ.'}
           </Button>
         ) : (
           <span />
