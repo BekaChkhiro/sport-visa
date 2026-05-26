@@ -16,6 +16,7 @@ export const channels = {
 
 export const events = {
   NEW_MESSAGE: 'new-message',
+  MESSAGES_READ: 'messages-read',
   NOTIFICATION: 'notification',
   POST_PUBLISHED: 'post-published',
 } as const;

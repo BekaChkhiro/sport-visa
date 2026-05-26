@@ -13,6 +13,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { ArrowLeftIcon, ExternalLinkIcon, SendIcon, SpinnerIcon } from '@/components/icons';
 import { usePusherChannel, usePusherEvent } from '@/hooks/use-pusher-channel';
 import { channels, events } from '@/lib/pusher-client';
+import type { AppSidebarStats } from '@/components/app-sidebar';
 import { cn } from '@/lib/utils';
 
 export type ChatThreadMessage = {
@@ -40,6 +41,7 @@ type ChatThreadClientProps = {
   user: { name: string; initials: string; image?: string };
   conversation: ChatThreadConversation;
   initialMessages: ChatThreadMessage[];
+  sidebarStats?: AppSidebarStats;
 };
 
 const MESSAGE_BODY_MAX = 2000;
@@ -52,6 +54,10 @@ type PusherNewMessagePayload = {
   createdAt: string;
 };
 
+type PusherMessagesReadPayload = {
+  conversationId: string;
+};
+
 export function ChatThreadClient({
   currentPath,
   userId,
@@ -59,6 +65,7 @@ export function ChatThreadClient({
   user,
   conversation,
   initialMessages,
+  sidebarStats,
 }: ChatThreadClientProps) {
   const router = useRouter();
   const [messages, setMessages] = React.useState<ChatThreadMessage[]>(initialMessages);
@@ -81,6 +88,7 @@ export function ChatThreadClient({
   const channel = usePusherChannel(channelName);
   usePusherEvent<PusherNewMessagePayload>(channel, events.NEW_MESSAGE, (payload) => {
     if (payload.conversationId !== conversation.id) return;
+    const isIncoming = payload.senderUserId !== userId;
     setMessages((prev) => {
       if (prev.some((m) => m.id === payload.id)) return prev;
       return [
@@ -94,6 +102,20 @@ export function ChatThreadClient({
         },
       ];
     });
+    // When an incoming message arrives while the user is viewing the thread,
+    // immediately mark it as read in the DB so the sender sees a read receipt.
+    if (isIncoming) {
+      fetch(`/api/conversations/${encodeURIComponent(conversation.id)}/read`, {
+        method: 'POST',
+      }).catch(() => undefined);
+    }
+  });
+
+  // When the other party opens the thread their client calls the read API which
+  // triggers MESSAGES_READ. Update our outgoing messages to show as read.
+  usePusherEvent<PusherMessagesReadPayload>(channel, events.MESSAGES_READ, (payload) => {
+    if (payload.conversationId !== conversation.id) return;
+    setMessages((prev) => prev.map((m) => (m.senderUserId === userId ? { ...m, read: true } : m)));
   });
 
   async function handleSignOut() {
@@ -161,6 +183,7 @@ export function ChatThreadClient({
       currentPath={currentPath}
       userId={userId}
       user={user}
+      sidebarStats={sidebarStats}
       onSignOut={handleSignOut}
     >
       <div className="mx-auto flex h-[calc(100vh-8rem)] max-w-3xl flex-col rounded-xl border border-border bg-card">

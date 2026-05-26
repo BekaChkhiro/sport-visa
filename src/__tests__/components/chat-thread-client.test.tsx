@@ -14,6 +14,10 @@ vi.mock('@/components/app-shell', () => ({
   ),
 }));
 
+vi.mock('@/components/app-sidebar', () => ({
+  AppSidebar: () => <div data-testid="app-sidebar" />,
+}));
+
 vi.mock('@/components/icons', () => ({
   ArrowLeftIcon: () => <svg data-testid="back-icon" />,
   ExternalLinkIcon: () => <svg data-testid="ext-icon" />,
@@ -75,7 +79,7 @@ vi.mock('@/lib/pusher-client', () => ({
   channels: {
     chat: (a: string, b: string) => `private-chat.${[a, b].sort().join('.')}`,
   },
-  events: { NEW_MESSAGE: 'new-message' },
+  events: { NEW_MESSAGE: 'new-message', MESSAGES_READ: 'messages-read' },
 }));
 
 vi.mock('@/lib/utils', () => ({ cn: (...c: unknown[]) => c.filter(Boolean).join(' ') }));

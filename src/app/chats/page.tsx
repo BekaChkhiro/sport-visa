@@ -170,6 +170,7 @@ export default async function ChatsPage() {
       role={currentUser.role}
       user={currentUser}
       unreadNotifications={unreadTotal}
+      sidebarStats={{ unreadMessages: unreadTotal }}
       conversations={conversations}
     />
   );
