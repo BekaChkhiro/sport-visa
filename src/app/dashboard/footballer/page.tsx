@@ -66,7 +66,7 @@ export default async function FootballerDashboardPage() {
 
   const userId = session.user.id;
 
-  const [profile, unreadNotifications, newsfeedPosts] = await Promise.all([
+  const [profile, unreadNotifications, newsfeedPosts, rawServiceRequests] = await Promise.all([
     db.footballerProfile.findUnique({
       where: { userId },
       select: {
@@ -118,6 +118,18 @@ export default async function FootballerDashboardPage() {
         _count: { select: { likes: true } },
       },
     }),
+    db.serviceRequest.findMany({
+      where: { userId },
+      orderBy: { createdAt: 'desc' },
+      take: 5,
+      select: {
+        id: true,
+        requestCode: true,
+        status: true,
+        createdAt: true,
+        category: { select: { name: true } },
+      },
+    }),
   ]);
 
   if (!profile) {
@@ -151,6 +163,14 @@ export default async function FootballerDashboardPage() {
     },
   }));
 
+  const serviceRequests = rawServiceRequests.map((r) => ({
+    id: r.id,
+    requestCode: r.requestCode,
+    status: r.status as 'PENDING' | 'RESOLVED' | 'REJECTED',
+    createdAt: r.createdAt.toISOString(),
+    categoryName: r.category.name,
+  }));
+
   return (
     <FootballerDashboardClient
       currentPath="/dashboard/footballer"
@@ -173,6 +193,7 @@ export default async function FootballerDashboardPage() {
       subscribedClubs={subscribedClubs}
       newsfeedPosts={newsfeed}
       profileMissingFields={completion.missingFields}
+      serviceRequests={serviceRequests}
     />
   );
 }

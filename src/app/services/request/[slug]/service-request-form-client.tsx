@@ -196,6 +196,9 @@ export function ServiceRequestFormClient({
               <Link href="/dashboard">Dashboard-ზე დაბრუნება</Link>
             </Button>
             <Button variant="outline" asChild className="w-full">
+              <Link href="/services/my-requests">ჩემი მოთხოვნები</Link>
+            </Button>
+            <Button variant="ghost" asChild className="w-full">
               <Link href="/services/request">სხვა სერვისის მოთხოვნა</Link>
             </Button>
           </div>

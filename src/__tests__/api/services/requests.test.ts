@@ -41,6 +41,7 @@ vi.mock('@/lib/resend', () => ({
 const mockFindUniqueCategory = vi.hoisted(() => vi.fn());
 const mockCountRequests = vi.hoisted(() => vi.fn());
 const mockCreateRequest = vi.hoisted(() => vi.fn());
+const mockFindManyRequests = vi.hoisted(() => vi.fn());
 const mockTransaction = vi.hoisted(() => vi.fn());
 const mockFindUniqueProfile = vi.hoisted(() => vi.fn());
 const mockFindManyAdmins = vi.hoisted(() => vi.fn());
@@ -53,6 +54,7 @@ vi.mock('@/lib/db', () => ({
     serviceRequest: {
       count: mockCountRequests,
       create: mockCreateRequest,
+      findMany: mockFindManyRequests,
     },
     footballerProfile: {
       findUnique: mockFindUniqueProfile,
@@ -64,7 +66,7 @@ vi.mock('@/lib/db', () => ({
   },
 }));
 
-import { POST } from '@/app/api/services/requests/route';
+import { GET, POST } from '@/app/api/services/requests/route';
 
 const FOOTBALLER_USER = {
   id: 'user-1',
@@ -249,5 +251,68 @@ describe('POST /api/services/requests', () => {
       const res = await POST(makeReq({ categoryId: 'cat-1', contactPref: pref }));
       expect(res.status).toBe(201);
     }
+  });
+});
+
+const GET_REQUEST = new Request('http://localhost/api/services/requests', { method: 'GET' });
+
+const SAMPLE_REQUESTS = [
+  {
+    id: 'req-1',
+    requestCode: 'SR-2026-0001',
+    status: 'PENDING',
+    createdAt: new Date('2026-05-18T10:00:00Z'),
+    startDate: new Date('2026-06-01T00:00:00Z'),
+    endDate: new Date('2026-06-30T00:00:00Z'),
+    notes: 'სატესტო შენიშვნა',
+    adminNote: null,
+    contactPref: 'EMAIL',
+    category: { id: 'cat-1', name: 'კვება', slug: 'meal-plan', icon: null },
+  },
+];
+
+describe('GET /api/services/requests', () => {
+  it('returns the footballer list of service requests', async () => {
+    mockRequireUser.mockResolvedValueOnce(FOOTBALLER_USER);
+    mockFindManyRequests.mockResolvedValueOnce(SAMPLE_REQUESTS);
+
+    const res = await GET(GET_REQUEST);
+    const body = await res.json();
+
+    expect(res.status).toBe(200);
+    expect(body.requests).toHaveLength(1);
+    expect(body.requests[0].requestCode).toBe('SR-2026-0001');
+    expect(body.requests[0].status).toBe('PENDING');
+    expect(body.requests[0].category.slug).toBe('meal-plan');
+  });
+
+  it('returns empty array when footballer has no requests', async () => {
+    mockRequireUser.mockResolvedValueOnce(FOOTBALLER_USER);
+    mockFindManyRequests.mockResolvedValueOnce([]);
+
+    const res = await GET(GET_REQUEST);
+    const body = await res.json();
+
+    expect(res.status).toBe(200);
+    expect(body.requests).toHaveLength(0);
+  });
+
+  it('returns 401 for unauthenticated callers', async () => {
+    mockRequireUser.mockRejectedValueOnce(new ApiError('UNAUTHORIZED', 'Authentication required'));
+
+    const res = await GET(GET_REQUEST);
+
+    expect(res.status).toBe(401);
+    expect((await res.json()).error.code).toBe('UNAUTHORIZED');
+  });
+
+  it('returns 403 for non-footballer users', async () => {
+    mockRequireUser.mockResolvedValueOnce(CLUB_USER);
+
+    const res = await GET(GET_REQUEST);
+
+    expect(res.status).toBe(403);
+    expect((await res.json()).error.code).toBe('FORBIDDEN');
+    expect(mockFindManyRequests).not.toHaveBeenCalled();
   });
 });
