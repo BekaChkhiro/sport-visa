@@ -117,6 +117,7 @@ export function FootballerDetailClient({
   const router = useRouter();
   const [isShortlisted, setIsShortlisted] = React.useState(footballer.isShortlisted);
   const [shortlistPending, setShortlistPending] = React.useState(false);
+  const [chatPending, setChatPending] = React.useState(false);
   const [galleryIndex, setGalleryIndex] = React.useState(0);
   const [toast, setToast] = React.useState<{ message: string; type: 'success' | 'error' } | null>(
     null,
@@ -132,6 +133,28 @@ export function FootballerDetailClient({
   async function handleSignOut() {
     await signOut({ redirect: false });
     router.push('/auth/signin');
+  }
+
+  async function handleStartChat() {
+    if (chatPending) return;
+    setChatPending(true);
+    try {
+      const res = await fetch('/api/conversations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ footballerProfileId: footballer.id }),
+      });
+      if (!res.ok) {
+        showToast('ჩატის გახსნა ვერ მოხერხდა', 'error');
+        return;
+      }
+      const data = (await res.json()) as { conversationId: string };
+      router.push(`/chat/${data.conversationId}`);
+    } catch {
+      showToast('ჩატის გახსნა ვერ მოხერხდა', 'error');
+    } finally {
+      setChatPending(false);
+    }
   }
 
   async function handleShortlistToggle() {
@@ -271,11 +294,15 @@ export function FootballerDetailClient({
                     <StarIcon className={cn('size-4', isShortlisted ? 'fill-current' : '')} />
                     {isShortlisted ? 'შ. სიაშია' : 'შ. სიაში'}
                   </Button>
-                  <Button variant="outline" size="sm" asChild>
-                    <Link href="/chats">
-                      <MessageCircleIcon className="size-4" />
-                      ჩატი
-                    </Link>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={handleStartChat}
+                    disabled={chatPending}
+                  >
+                    <MessageCircleIcon className="size-4" />
+                    {chatPending ? '...' : 'ჩატი'}
                   </Button>
                 </div>
               </div>
@@ -564,11 +591,15 @@ export function FootballerDetailClient({
             <StarIcon className={cn('size-4', isShortlisted ? 'fill-current' : '')} />
             {isShortlisted ? 'შ. სიაშია' : 'შ. სიაში დამ.'}
           </Button>
-          <Button variant="outline" className="flex-1" asChild>
-            <Link href="/chats">
-              <MessageCircleIcon className="size-4" />
-              ჩატის დაწ.
-            </Link>
+          <Button
+            type="button"
+            variant="outline"
+            className="flex-1"
+            onClick={handleStartChat}
+            disabled={chatPending}
+          >
+            <MessageCircleIcon className="size-4" />
+            {chatPending ? '...' : 'ჩატის დაწ.'}
           </Button>
         </div>
         <div className="sm:hidden h-16" aria-hidden="true" />
