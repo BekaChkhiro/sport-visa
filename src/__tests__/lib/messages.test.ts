@@ -132,6 +132,9 @@ describe('listMessages', () => {
 describe('markConversationRead', () => {
   it('marks unread messages from the OTHER participant as read', async () => {
     mockMessageUpdateMany.mockResolvedValueOnce({ count: 2 });
+    mockConversationFind.mockResolvedValueOnce(CONVERSATION);
+    mockTrigger.mockResolvedValueOnce(undefined);
+
     const count = await markConversationRead('conv-1', 'footballer-user');
     expect(count).toBe(2);
     expect(mockMessageUpdateMany).toHaveBeenCalledWith({
@@ -142,6 +145,27 @@ describe('markConversationRead', () => {
       },
       data: { read: true },
     });
+  });
+
+  it('broadcasts MESSAGES_READ on the chat channel when messages were updated', async () => {
+    mockMessageUpdateMany.mockResolvedValueOnce({ count: 3 });
+    mockConversationFind.mockResolvedValueOnce(CONVERSATION);
+    mockTrigger.mockResolvedValueOnce(undefined);
+
+    await markConversationRead('conv-1', 'footballer-user');
+    expect(mockTrigger).toHaveBeenCalledWith(
+      expect.stringContaining('private-chat.'),
+      'messages-read',
+      { conversationId: 'conv-1' },
+    );
+  });
+
+  it('does not broadcast when no messages were updated', async () => {
+    mockMessageUpdateMany.mockResolvedValueOnce({ count: 0 });
+
+    await markConversationRead('conv-1', 'footballer-user');
+    expect(mockConversationFind).not.toHaveBeenCalled();
+    expect(mockTrigger).not.toHaveBeenCalled();
   });
 });
 

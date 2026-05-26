@@ -56,6 +56,10 @@ export async function listMessages(conversationId: string, limit = 200): Promise
 /**
  * Mark every unread message in the conversation that was NOT sent by the
  * caller as read. Returns the count updated so callers can refresh UI counters.
+ *
+ * When at least one message is marked read, broadcasts a MESSAGES_READ event
+ * on the conversation's Pusher channel so the sender's client can update the
+ * read-receipt indicator in real time (fire-and-forget).
  */
 export async function markConversationRead(
   conversationId: string,
@@ -65,6 +69,19 @@ export async function markConversationRead(
     where: { conversationId, senderUserId: { not: userId }, read: false },
     data: { read: true },
   });
+
+  if (result.count > 0) {
+    const conv = await db.conversation.findUnique({
+      where: { id: conversationId },
+      select: { clubUserId: true, footballerUserId: true },
+    });
+    if (conv) {
+      triggerEvent(channels.chat(conv.clubUserId, conv.footballerUserId), events.MESSAGES_READ, {
+        conversationId,
+      }).catch(() => undefined);
+    }
+  }
+
   return result.count;
 }
 

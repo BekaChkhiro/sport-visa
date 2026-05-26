@@ -69,7 +69,7 @@ export default async function ChatThreadPage({ params }: PageProps) {
   // returned rows reflect post-read state for receipts UI.
   await markConversationRead(conversation.id, userId);
 
-  const [messages, userProfile] = await Promise.all([
+  const [messages, userProfile, totalUnread] = await Promise.all([
     listMessages(conversation.id),
     role === 'FOOTBALLER'
       ? db.footballerProfile.findUnique({
@@ -80,6 +80,15 @@ export default async function ChatThreadPage({ params }: PageProps) {
           where: { userId },
           select: { name: true, logoKey: true },
         }),
+    db.message.count({
+      where: {
+        conversation: {
+          OR: [{ clubUserId: userId }, { footballerUserId: userId }],
+        },
+        senderUserId: { not: userId },
+        read: false,
+      },
+    }),
   ]);
 
   if (!userProfile) redirect('/onboarding');
@@ -147,6 +156,7 @@ export default async function ChatThreadPage({ params }: PageProps) {
       userId={userId}
       role={isFootballer ? 'footballer' : 'club'}
       user={currentUser}
+      sidebarStats={{ unreadMessages: totalUnread }}
       conversation={{
         id: conversation.id,
         clubUserId: conversation.clubUserId,

@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { ProfileAvatar } from '@/components/profile-avatar';
 import { EmptyState } from '@/components/ui/empty-state';
 import { MessageCircleIcon, SearchIcon } from '@/components/icons';
+import type { AppSidebarStats } from '@/components/app-sidebar';
 import { formatRelativeTime } from '@/lib/format-relative-time';
 import { cn } from '@/lib/utils';
 
@@ -36,6 +37,7 @@ type ChatsClientProps = {
     city?: string;
   };
   unreadNotifications: number;
+  sidebarStats?: AppSidebarStats;
   conversations: ConversationItem[];
 };
 
@@ -91,6 +93,7 @@ export function ChatsClient({
   role,
   user,
   unreadNotifications,
+  sidebarStats,
   conversations,
 }: ChatsClientProps) {
   const router = useRouter();
@@ -112,6 +115,7 @@ export function ChatsClient({
       userId={userId}
       user={user}
       unreadNotifications={unreadNotifications}
+      sidebarStats={sidebarStats}
       onSignOut={handleSignOut}
     >
       <div className="mx-auto max-w-2xl space-y-6">
