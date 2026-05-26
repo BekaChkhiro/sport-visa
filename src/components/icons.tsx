@@ -78,6 +78,7 @@ export {
   Settings as SettingsIcon,
   Shield as ShieldIcon,
   Lock as LockIcon,
+  Unlock as UnlockIcon,
   // Misc
   Globe as GlobeIcon,
   Link as LinkIcon,
