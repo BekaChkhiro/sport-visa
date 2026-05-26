@@ -4,7 +4,10 @@ import { revalidatePath } from 'next/cache';
 
 import { auth } from '@/lib/auth';
 import { db } from '@/lib/db';
+import { env } from '@/lib/env';
+import { createNotification } from '@/lib/notifications';
 import { deleteObject } from '@/lib/r2';
+import { sendNotificationEmail } from '@/lib/resend';
 
 import {
   updateClubIdentitySchema,
@@ -373,7 +376,7 @@ export async function createClubPost(data: unknown): Promise<ClubPostCreateState
 
   const club = await db.clubProfile.findUnique({
     where: { userId: session.user.id },
-    select: { id: true },
+    select: { id: true, name: true },
   });
   if (!club) return { status: 'error', message: 'პროფილი ვერ მოიძებნა' };
 
@@ -385,8 +388,66 @@ export async function createClubPost(data: unknown): Promise<ClubPostCreateState
     },
   });
 
+  void fanOutNewPostNotifications(club.id, club.name, post.title).catch(() => undefined);
+
   revalidatePostPaths(club.id, post.id);
   return { status: 'success', postId: post.id };
+}
+
+async function fanOutNewPostNotifications(
+  clubProfileId: string,
+  clubName: string,
+  postTitle: string,
+): Promise<void> {
+  const subscribers = await db.clubSubscription.findMany({
+    where: { clubProfileId },
+    select: {
+      footballerProfile: {
+        select: {
+          userId: true,
+          firstName: true,
+          user: { select: { email: true } },
+        },
+      },
+    },
+  });
+
+  if (!subscribers.length) return;
+
+  const appUrl = env.NEXT_PUBLIC_APP_URL;
+  const notifTitle = `New post from ${clubName}`;
+
+  await Promise.allSettled(
+    subscribers.map(async (sub) => {
+      const fp = sub.footballerProfile;
+      if (!fp) return;
+
+      await createNotification({
+        userId: fp.userId,
+        type: 'NEW_CLUB_POST',
+        title: notifTitle,
+        body: postTitle,
+      });
+
+      await sendNotificationEmail(fp.user.email, {
+        recipientName: fp.firstName,
+        subject: notifTitle,
+        bodyHtml: `<p><strong>${htmlEscape(clubName)}</strong> published a new post: &ldquo;${htmlEscape(postTitle)}&rdquo;</p>`,
+        bodyText: `${clubName} published a new post: "${postTitle}"`,
+        ctaLabel: 'View newsfeed',
+        ctaUrl: `${appUrl}/dashboard/footballer`,
+        appUrl,
+      });
+    }),
+  );
+}
+
+function htmlEscape(value: string): string {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
 }
 
 export async function updateClubPost(postId: string, data: unknown): Promise<ClubPostActionState> {

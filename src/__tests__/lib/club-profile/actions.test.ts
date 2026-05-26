@@ -1,6 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }));
+vi.mock('@/lib/env', () => ({
+  env: { NEXT_PUBLIC_APP_URL: 'https://app.sportvisa.io' },
+}));
 
 const mockAuth = vi.hoisted(() => vi.fn());
 vi.mock('@/lib/auth', () => ({ auth: mockAuth }));
@@ -20,6 +23,7 @@ const mockPostCreate = vi.hoisted(() => vi.fn());
 const mockPostFindFirst = vi.hoisted(() => vi.fn());
 const mockPostUpdate = vi.hoisted(() => vi.fn());
 const mockPostDelete = vi.hoisted(() => vi.fn());
+const mockSubscriptionFindMany = vi.hoisted(() => vi.fn());
 
 vi.mock('@/lib/db', () => ({
   db: {
@@ -45,10 +49,23 @@ vi.mock('@/lib/db', () => ({
       update: mockPostUpdate,
       delete: mockPostDelete,
     },
+    clubSubscription: {
+      findMany: mockSubscriptionFindMany,
+    },
   },
 }));
 
 vi.mock('@/lib/r2', () => ({ deleteObject: mockDeleteObject }));
+
+const mockCreateNotification = vi.hoisted(() => vi.fn());
+vi.mock('@/lib/notifications', () => ({
+  createNotification: mockCreateNotification,
+}));
+
+const mockSendNotificationEmail = vi.hoisted(() => vi.fn());
+vi.mock('@/lib/resend', () => ({
+  sendNotificationEmail: mockSendNotificationEmail,
+}));
 
 import {
   updateClubIdentity,
@@ -89,6 +106,10 @@ beforeEach(() => {
   mockPostFindFirst.mockReset();
   mockPostUpdate.mockReset();
   mockPostDelete.mockReset();
+  mockSubscriptionFindMany.mockReset();
+  mockSubscriptionFindMany.mockResolvedValue([]); // default: no subscribers
+  mockCreateNotification.mockReset();
+  mockSendNotificationEmail.mockReset();
 });
 
 // ── updateClubIdentity ────────────────────────────────────────────────────────
@@ -809,8 +830,8 @@ describe('createClubPost — validation', () => {
 describe('createClubPost — happy path', () => {
   it('creates post and returns postId', async () => {
     mockAuth.mockResolvedValueOnce(clubSession);
-    mockCpFindUnique.mockResolvedValueOnce({ id: 'club1' });
-    mockPostCreate.mockResolvedValueOnce({ id: 'post1' });
+    mockCpFindUnique.mockResolvedValueOnce({ id: 'club1', name: 'FC Dinamo' });
+    mockPostCreate.mockResolvedValueOnce({ id: 'post1', title: validPost.title });
 
     const r = await createClubPost(validPost);
 
@@ -831,6 +852,67 @@ describe('createClubPost — happy path', () => {
 
     expect(r.status).toBe('error');
     expect(mockPostCreate).not.toHaveBeenCalled();
+  });
+
+  it('fans out NEW_CLUB_POST notifications to subscribers', async () => {
+    mockAuth.mockResolvedValueOnce(clubSession);
+    mockCpFindUnique.mockResolvedValueOnce({ id: 'club1', name: 'FC Dinamo' });
+    mockPostCreate.mockResolvedValueOnce({ id: 'post1', title: validPost.title });
+    mockSubscriptionFindMany.mockResolvedValueOnce([
+      {
+        footballerProfile: {
+          userId: 'fp-user-1',
+          firstName: 'Giorgi',
+          user: { email: 'giorgi@example.com' },
+        },
+      },
+    ]);
+    mockCreateNotification.mockResolvedValueOnce({ id: 'notif1' });
+    mockSendNotificationEmail.mockResolvedValueOnce({ id: 'email1' });
+
+    const r = await createClubPost(validPost);
+
+    expect(r.status).toBe('success');
+
+    // Allow fire-and-forget microtasks to settle.
+    await Promise.resolve();
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(mockSubscriptionFindMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { clubProfileId: 'club1' } }),
+    );
+    expect(mockCreateNotification).toHaveBeenCalledWith(
+      expect.objectContaining({
+        userId: 'fp-user-1',
+        type: 'NEW_CLUB_POST',
+        title: 'New post from FC Dinamo',
+        body: validPost.title,
+      }),
+    );
+    expect(mockSendNotificationEmail).toHaveBeenCalledWith(
+      'giorgi@example.com',
+      expect.objectContaining({
+        recipientName: 'Giorgi',
+        subject: 'New post from FC Dinamo',
+      }),
+    );
+  });
+
+  it('does not fan out when there are no subscribers', async () => {
+    mockAuth.mockResolvedValueOnce(clubSession);
+    mockCpFindUnique.mockResolvedValueOnce({ id: 'club1', name: 'FC Dinamo' });
+    mockPostCreate.mockResolvedValueOnce({ id: 'post1', title: validPost.title });
+    mockSubscriptionFindMany.mockResolvedValueOnce([]);
+
+    const r = await createClubPost(validPost);
+
+    expect(r.status).toBe('success');
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(mockCreateNotification).not.toHaveBeenCalled();
+    expect(mockSendNotificationEmail).not.toHaveBeenCalled();
   });
 });
 

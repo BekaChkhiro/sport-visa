@@ -6,6 +6,7 @@ import {
   accountVerificationEmailText,
   type AccountVerificationEmailProps,
 } from './email/templates/account-verification';
+import { digestEmailHtml, digestEmailText, type DigestEmailProps } from './email/templates/digest';
 import {
   applicationStatusEmailHtml,
   applicationStatusEmailText,
@@ -199,6 +200,26 @@ export async function sendVerifyEmailEmail(
     throw new ApiError(
       'INTERNAL',
       `Failed to send verification email: ${error?.message ?? 'unknown error'}`,
+    );
+  }
+  return { id: data.id };
+}
+
+/** Send a daily newsfeed digest email to a footballer subscriber. */
+export async function sendDigestEmail(to: string, props: DigestEmailProps): Promise<SendResult> {
+  const cfg = getResendConfig();
+  const count = props.posts.length;
+  const { data, error } = await getClient().emails.send({
+    from: cfg.from,
+    to,
+    subject: `Your daily digest — ${count} new ${count === 1 ? 'post' : 'posts'} from your clubs`,
+    html: digestEmailHtml(props),
+    text: digestEmailText(props),
+  });
+  if (error || !data) {
+    throw new ApiError(
+      'INTERNAL',
+      `Failed to send digest email: ${error?.message ?? 'unknown error'}`,
     );
   }
   return { id: data.id };
