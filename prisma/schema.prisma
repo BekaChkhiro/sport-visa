@@ -84,6 +84,18 @@ enum ExperienceLevel {
   AMATEUR
 }
 
+enum ServiceRequestStatus {
+  PENDING
+  RESOLVED
+  REJECTED
+}
+
+enum ContactPreference {
+  EMAIL
+  PHONE
+  CHAT
+}
+
 // ── Core models ───────────────────────────────────────────────────────────────
 
 model User {
@@ -109,6 +121,8 @@ model User {
   clubConversations       Conversation[]         @relation("ClubConversations")
   footballerConversations Conversation[]         @relation("FootballerConversations")
   sentMessages            Message[]              @relation("SentMessages")
+  submittedServiceRequests ServiceRequest[]      @relation("SubmittedServiceRequests")
+  resolvedServiceRequests  ServiceRequest[]      @relation("ResolvedServiceRequests")
 
   @@map("users")
 }
@@ -501,4 +515,54 @@ model Message {
   @@index([conversationId, createdAt])
   @@index([conversationId, read])
   @@map("messages")
+}
+
+// ── Services ──────────────────────────────────────────────────────────────────
+
+// Lookup table for available service types. Seeded at migration time.
+// isActive lets admin hide a category without breaking historical requests.
+model ServiceCategory {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  name        String
+  icon        String?
+  description String?
+  isActive    Boolean  @default(true)
+  orderIndex  Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  requests ServiceRequest[]
+
+  @@map("service_categories")
+}
+
+// A footballer's request for an additional service (meal plan, trainer, etc.).
+// requestCode is set by application code on creation (format: SR-YYYY-NNNN).
+// metadata stores category-specific fields as JSON (plan type, dietary flags, etc.).
+model ServiceRequest {
+  id          String               @id @default(cuid())
+  requestCode String               @unique
+  userId      String
+  categoryId  String
+  startDate   DateTime?
+  endDate     DateTime?
+  notes       String?              @db.VarChar(500)
+  contactPref ContactPreference    @default(EMAIL)
+  metadata    Json?
+  status      ServiceRequestStatus @default(PENDING)
+  adminNote   String?              @db.VarChar(1000)
+  resolvedAt  DateTime?
+  resolvedBy  String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user     User            @relation("SubmittedServiceRequests", fields: [userId], references: [id], onDelete: Cascade)
+  category ServiceCategory @relation(fields: [categoryId], references: [id])
+  resolver User?           @relation("ResolvedServiceRequests", fields: [resolvedBy], references: [id], onDelete: SetNull)
+
+  @@index([userId, createdAt])
+  @@index([status, createdAt])
+  @@map("service_requests")
 }
