@@ -52,8 +52,10 @@ const LINKS: Record<MobileNavRole, NavLink[]> = {
   ],
   admin: [
     { href: '/admin', label: 'პანელი' },
-    { href: '/admin/queue', label: 'ვერიფიკაცია' },
+    { href: '/admin/verification', label: 'ვერიფიკაცია' },
+    { href: '/admin/service-requests', label: 'სერვ. მოთხ.' },
     { href: '/admin/users', label: 'მომხმარებლები' },
+    { href: '/admin/ref-data', label: 'სცნ. მონ.' },
   ],
 };
 

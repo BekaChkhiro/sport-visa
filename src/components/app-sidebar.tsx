@@ -7,21 +7,26 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { ProfileAvatar } from '@/components/profile-avatar';
 import {
+  AlertCircleIcon,
   BarChartIcon,
   DownloadIcon,
   EditIcon,
   EyeIcon,
+  FileTextIcon,
+  GridViewIcon,
   ListViewIcon,
   MessageCircleIcon,
   PlusIcon,
   SearchIcon,
+  SettingsIcon,
+  ShieldIcon,
   StarIcon,
   UsersIcon,
 } from '@/components/icons';
 import { type VerificationStatus } from '@/components/verification-badge';
 import { cn } from '@/lib/utils';
 
-type AppSidebarRole = 'footballer' | 'club';
+type AppSidebarRole = 'footballer' | 'club' | 'admin';
 
 type AppSidebarUser = {
   name: string;
@@ -41,11 +46,17 @@ type AppSidebarStats = {
   shortlistCount?: number;
 };
 
+type AppSidebarAdminBadges = {
+  pendingVerifications?: number;
+  pendingServiceRequests?: number;
+};
+
 type AppSidebarProps = {
   role: AppSidebarRole;
   currentPath: string;
   user: AppSidebarUser;
   stats?: AppSidebarStats;
+  adminBadges?: AppSidebarAdminBadges;
   className?: string;
 };
 
@@ -270,7 +281,84 @@ function ClubSidebar({
   );
 }
 
-function AppSidebar({ role, currentPath, user, stats, className }: AppSidebarProps) {
+function AdminSidebar({
+  currentPath,
+  user,
+  adminBadges,
+}: {
+  currentPath: string;
+  user: AppSidebarUser;
+  adminBadges?: AppSidebarAdminBadges;
+}) {
+  const navItems: NavItem[] = [
+    { href: '/admin', label: 'Admin Panel', icon: GridViewIcon },
+    {
+      href: '/admin/verification',
+      label: 'ვერიფიკაციის რიგი',
+      icon: ShieldIcon,
+      badgeCount: adminBadges?.pendingVerifications,
+    },
+    {
+      href: '/admin/service-requests',
+      label: 'სერვ. მოთხოვნები',
+      icon: FileTextIcon,
+      badgeCount: adminBadges?.pendingServiceRequests,
+    },
+    { href: '/admin/users', label: 'მომხ. მართვა', icon: UsersIcon },
+    { href: '/admin/ref-data', label: 'სცნობ. მონ.', icon: SettingsIcon },
+  ];
+
+  return (
+    <>
+      <div className="flex flex-col items-center gap-2 px-3 py-2 text-center">
+        <ProfileAvatar src={user.image} fallback={user.initials} size="md" />
+        <div className="flex flex-col gap-0.5">
+          <h2 className="text-base font-semibold leading-snug">{user.name}</h2>
+          <p className="text-xs text-muted-foreground">Admin</p>
+        </div>
+      </div>
+
+      <hr className="my-4 border-border" />
+
+      <GroupHeading>ნავიგაცია</GroupHeading>
+      <nav className="flex flex-col gap-1 px-1">
+        {navItems.map((item) => {
+          const isActive =
+            item.href === '/admin'
+              ? currentPath === '/admin'
+              : currentPath === item.href || currentPath.startsWith(`${item.href}/`);
+          return <NavRow key={item.href} item={item} isActive={isActive} />;
+        })}
+      </nav>
+
+      {(adminBadges?.pendingVerifications ?? 0) + (adminBadges?.pendingServiceRequests ?? 0) >
+        0 && (
+        <>
+          <hr className="my-4 border-border" />
+          <GroupHeading>მოლოდინი</GroupHeading>
+          <ul className="flex flex-col gap-2 px-3">
+            {(adminBadges?.pendingVerifications ?? 0) > 0 && (
+              <li className="flex items-center gap-2 text-sm">
+                <ShieldIcon className="size-4 text-amber-500" />
+                <span className="font-semibold">{adminBadges?.pendingVerifications}</span>
+                <span className="text-xs text-muted-foreground">ვერიფ.</span>
+              </li>
+            )}
+            {(adminBadges?.pendingServiceRequests ?? 0) > 0 && (
+              <li className="flex items-center gap-2 text-sm">
+                <AlertCircleIcon className="size-4 text-amber-500" />
+                <span className="font-semibold">{adminBadges?.pendingServiceRequests}</span>
+                <span className="text-xs text-muted-foreground">სერვ. მოთხ.</span>
+              </li>
+            )}
+          </ul>
+        </>
+      )}
+    </>
+  );
+}
+
+function AppSidebar({ role, currentPath, user, stats, adminBadges, className }: AppSidebarProps) {
   return (
     <aside
       data-slot="app-sidebar"
@@ -279,7 +367,9 @@ function AppSidebar({ role, currentPath, user, stats, className }: AppSidebarPro
         className,
       )}
     >
-      {role === 'footballer' ? (
+      {role === 'admin' ? (
+        <AdminSidebar currentPath={currentPath} user={user} adminBadges={adminBadges} />
+      ) : role === 'footballer' ? (
         <FootballerSidebar currentPath={currentPath} user={user} stats={stats} />
       ) : (
         <ClubSidebar currentPath={currentPath} user={user} stats={stats} />
@@ -289,4 +379,4 @@ function AppSidebar({ role, currentPath, user, stats, className }: AppSidebarPro
 }
 
 export { AppSidebar };
-export type { AppSidebarRole, AppSidebarUser, AppSidebarStats };
+export type { AppSidebarRole, AppSidebarUser, AppSidebarStats, AppSidebarAdminBadges };
