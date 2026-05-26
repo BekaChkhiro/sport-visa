@@ -1,11 +1,12 @@
 // @vitest-environment happy-dom
 import * as React from 'react';
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 afterEach(cleanup);
 
-vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn() }) }));
+const mockRouterPush = vi.hoisted(() => vi.fn());
+vi.mock('next/navigation', () => ({ useRouter: () => ({ push: mockRouterPush }) }));
 vi.mock('next-auth/react', () => ({ signOut: vi.fn() }));
 vi.mock('@/components/app-shell', () => ({
   AppShell: ({ children }: { children: React.ReactNode }) => (
@@ -329,5 +330,102 @@ describe('FootballerDetailClient — mobile sticky actions', () => {
     const shortlistBtns = screen.getAllByRole('button', { name: /შ\. სია/i });
     // At least two: header + sticky footer
     expect(shortlistBtns.length).toBeGreaterThanOrEqual(2);
+  });
+});
+
+describe('FootballerDetailClient — start chat from profile (T8.5)', () => {
+  beforeEach(() => {
+    mockRouterPush.mockReset();
+    vi.stubGlobal('fetch', vi.fn());
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  function clickChatButton() {
+    const buttons = screen.getAllByRole('button', { name: /ჩატ/ });
+    // Header chat button is rendered first; clicking either triggers handleStartChat.
+    fireEvent.click(buttons[0]!);
+  }
+
+  it('POSTs to /api/conversations with the footballer profile id', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ conversationId: 'conv-new' }),
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    renderDetail();
+    clickChatButton();
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
+    expect(fetchMock).toHaveBeenCalledWith(
+      '/api/conversations',
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({ footballerProfileId: 'fb1' }),
+      }),
+    );
+  });
+
+  it('navigates to /chat/<id> on success', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ conversationId: 'conv-new' }),
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    renderDetail();
+    clickChatButton();
+
+    await waitFor(() => expect(mockRouterPush).toHaveBeenCalledWith('/chat/conv-new'));
+  });
+
+  it('shows an error toast when the request fails', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({ ok: false, json: async () => ({}) });
+    vi.stubGlobal('fetch', fetchMock);
+
+    renderDetail();
+    clickChatButton();
+
+    await waitFor(() => {
+      expect(screen.getByText(/ჩატის გახსნა ვერ მოხერხდა/)).toBeDefined();
+    });
+    expect(mockRouterPush).not.toHaveBeenCalled();
+  });
+
+  it('shows an error toast on network failure', async () => {
+    const fetchMock = vi.fn().mockRejectedValue(new Error('network down'));
+    vi.stubGlobal('fetch', fetchMock);
+
+    renderDetail();
+    clickChatButton();
+
+    await waitFor(() => {
+      expect(screen.getByText(/ჩატის გახსნა ვერ მოხერხდა/)).toBeDefined();
+    });
+    expect(mockRouterPush).not.toHaveBeenCalled();
+  });
+
+  it('disables the chat button while a request is pending', async () => {
+    let resolve: (v: unknown) => void = () => {};
+    const pending = new Promise<unknown>((r) => {
+      resolve = r;
+    });
+    const fetchMock = vi.fn().mockReturnValue(pending);
+    vi.stubGlobal('fetch', fetchMock);
+
+    renderDetail();
+    const before = screen.getAllByRole('button', { name: /ჩატ/ });
+    fireEvent.click(before[0]!);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+
+    // Re-clicking the SAME button reference while pending must not trigger another POST.
+    fireEvent.click(before[0]!);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+
+    resolve({ ok: true, json: async () => ({ conversationId: 'conv-x' }) });
+    await waitFor(() => expect(mockRouterPush).toHaveBeenCalled());
   });
 });
