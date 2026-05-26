@@ -361,7 +361,7 @@ export function AdminDashboardClient({
         {/* Quick actions */}
         <section aria-label="სწრაფი გადასვლები">
           <h2 className="text-sm font-semibold mb-3">სექციები</h2>
-          <div className="grid gap-3 sm:grid-cols-3">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             <QuickLink
               href="/admin/verification"
               title="ვერიფიკაციის რიგი"
@@ -378,6 +378,16 @@ export function AdminDashboardClient({
               href="/admin/users"
               title="მომხ. მართვა"
               description="ყველა მომხმარებელი, სტატუსი"
+            />
+            <QuickLink
+              href="/admin/moderation"
+              title="მოდ. ინსტრ."
+              description="პოსტებისა და ჩატების კონტ."
+            />
+            <QuickLink
+              href="/admin/ref-data"
+              title="სცნობ. მონ."
+              description="ლიგები, კატეგ., სხვ."
             />
           </div>
         </section>
