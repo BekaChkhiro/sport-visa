@@ -66,7 +66,7 @@ export default async function FootballerDashboardPage() {
 
   const userId = session.user.id;
 
-  const [profile, unreadNotifications] = await Promise.all([
+  const [profile, unreadNotifications, newsfeedPosts] = await Promise.all([
     db.footballerProfile.findUnique({
       where: { userId },
       select: {
@@ -97,6 +97,27 @@ export default async function FootballerDashboardPage() {
       },
     }),
     db.notification.count({ where: { userId, read: false } }),
+    db.clubPost.findMany({
+      where: {
+        club: {
+          subscribers: {
+            some: {
+              footballerProfile: { userId },
+            },
+          },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 10,
+      select: {
+        id: true,
+        title: true,
+        body: true,
+        createdAt: true,
+        club: { select: { id: true, name: true, logoKey: true } },
+        _count: { select: { likes: true } },
+      },
+    }),
   ]);
 
   if (!profile) {
@@ -115,6 +136,19 @@ export default async function FootballerDashboardPage() {
     id: s.clubProfile.id,
     name: s.clubProfile.name,
     logoUrl: s.clubProfile.logoKey ? `${r2BaseUrl}/${s.clubProfile.logoKey}` : undefined,
+  }));
+
+  const newsfeed = newsfeedPosts.map((p) => ({
+    id: p.id,
+    title: p.title,
+    body: p.body,
+    createdAt: p.createdAt.toISOString(),
+    likeCount: p._count.likes,
+    club: {
+      id: p.club.id,
+      name: p.club.name,
+      logoUrl: p.club.logoKey ? `${r2BaseUrl}/${p.club.logoKey}` : undefined,
+    },
   }));
 
   return (
@@ -136,6 +170,7 @@ export default async function FootballerDashboardPage() {
       }}
       unreadNotifications={unreadNotifications}
       subscribedClubs={subscribedClubs}
+      newsfeedPosts={newsfeed}
       profileMissingFields={completion.missingFields}
     />
   );

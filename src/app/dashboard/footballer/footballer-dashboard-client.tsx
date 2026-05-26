@@ -9,7 +9,9 @@ import { AppShell } from '@/components/app-shell';
 import { ProfileCompletionBanner } from '@/components/profile-completion-banner';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Button } from '@/components/ui/button';
-import { ArrowRightIcon, PlusIcon } from '@/components/icons';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { ArrowRightIcon, PlusIcon, HeartIcon } from '@/components/icons';
+import { formatRelativeTime } from '@/lib/format-relative-time';
 import type { AppSidebarStats } from '@/components/app-sidebar';
 import type { VerificationStatus } from '@/components/verification-badge';
 
@@ -17,6 +19,19 @@ type SubscribedClub = {
   id: string;
   name: string;
   logoUrl?: string;
+};
+
+type NewsfeedPost = {
+  id: string;
+  title: string;
+  body: string;
+  createdAt: string;
+  likeCount: number;
+  club: {
+    id: string;
+    name: string;
+    logoUrl?: string;
+  };
 };
 
 type FootballerDashboardUser = {
@@ -36,6 +51,7 @@ type FootballerDashboardClientProps = {
   stats: AppSidebarStats;
   unreadNotifications: number;
   subscribedClubs: SubscribedClub[];
+  newsfeedPosts: NewsfeedPost[];
   profileMissingFields: string[];
 };
 
@@ -45,6 +61,7 @@ export function FootballerDashboardClient({
   stats,
   unreadNotifications,
   subscribedClubs,
+  newsfeedPosts,
   profileMissingFields,
 }: FootballerDashboardClientProps) {
   const router = useRouter();
@@ -81,20 +98,67 @@ export function FootballerDashboardClient({
           >
             კლუბის სიახლეები
           </h2>
-          <div className="rounded-xl border border-border bg-card">
-            <EmptyState
-              title="სიახლეები არ არის"
-              description="გამოწერე კლუბი, რომ მათი სიახლეები გამოჩნდეს."
-              action={
-                <Button variant="default" size="sm" asChild>
-                  <Link href="/clubs">
-                    <PlusIcon className="size-4" />
-                    კლუბების ძიება
+          {newsfeedPosts.length === 0 ? (
+            <div className="rounded-xl border border-border bg-card">
+              <EmptyState
+                title="სიახლეები არ არის"
+                description="გამოწერე კლუბი, რომ მათი სიახლეები გამოჩნდეს."
+                action={
+                  <Button variant="default" size="sm" asChild>
+                    <Link href="/clubs">
+                      <PlusIcon className="size-4" />
+                      კლუბების ძიება
+                    </Link>
+                  </Button>
+                }
+              />
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {newsfeedPosts.map((post) => {
+                const initials = post.club.name
+                  .split(/\s+/)
+                  .map((w) => w[0])
+                  .join('')
+                  .slice(0, 2)
+                  .toUpperCase();
+                const excerpt =
+                  post.body.length > 150 ? post.body.slice(0, 150).trimEnd() + '…' : post.body;
+                return (
+                  <Link
+                    key={post.id}
+                    href={`/clubs/${post.club.id}/posts/${post.id}`}
+                    className="block rounded-xl border border-border bg-card p-4 transition-colors hover:bg-accent/50"
+                  >
+                    <div className="mb-2 flex items-center gap-2">
+                      <Avatar className="size-7 rounded-md">
+                        {post.club.logoUrl && (
+                          <AvatarImage
+                            src={post.club.logoUrl}
+                            alt={post.club.name}
+                            className="rounded-md object-contain"
+                          />
+                        )}
+                        <AvatarFallback className="rounded-md bg-muted text-[10px] font-semibold text-muted-foreground">
+                          {initials}
+                        </AvatarFallback>
+                      </Avatar>
+                      <span className="text-sm font-medium">{post.club.name}</span>
+                      <span className="text-xs text-muted-foreground">
+                        · {formatRelativeTime(post.createdAt)}
+                      </span>
+                    </div>
+                    <p className="mb-1 text-sm font-semibold leading-snug">{post.title}</p>
+                    <p className="mb-3 text-xs leading-relaxed text-muted-foreground">{excerpt}</p>
+                    <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                      <HeartIcon className="size-3.5" />
+                      <span>{post.likeCount}</span>
+                    </div>
                   </Link>
-                </Button>
-              }
-            />
-          </div>
+                );
+              })}
+            </div>
+          )}
         </section>
 
         <section aria-labelledby="service-requests-heading">
