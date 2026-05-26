@@ -33,6 +33,7 @@ export async function toggleSubscription(clubProfileId: string): Promise<Subscri
   if (existing) {
     await db.clubSubscription.delete({ where: { id: existing.id } });
     revalidatePath('/clubs');
+    revalidatePath(`/clubs/${clubProfileId}`);
     revalidatePath('/dashboard/footballer');
     return { status: 'success', subscribed: false };
   }
@@ -41,6 +42,7 @@ export async function toggleSubscription(clubProfileId: string): Promise<Subscri
     data: { footballerProfileId: footballer.id, clubProfileId },
   });
   revalidatePath('/clubs');
+  revalidatePath(`/clubs/${clubProfileId}`);
   revalidatePath('/dashboard/footballer');
   return { status: 'success', subscribed: true };
 }
