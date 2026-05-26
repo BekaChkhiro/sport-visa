@@ -1,35 +1,15 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { UserCircle, Search, MessageCircle, Building2, FileText, Bookmark } from 'lucide-react';
+import { UserCircle, Building2, FileText, Bookmark, MessageCircle, Search } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
+import { HowItWorks } from '@/components/how-it-works';
 import { StatStrip } from '@/components/stat-strip';
 
 export const metadata: Metadata = {
   title: 'Sport Visa — ფეხბურთელები კლუბებს ენახებიან',
   description: 'პლატფორმა, სადაც ფეხბურთელები კლუბებს პოულობენ და კლუბები ფეხბურთელებს.',
 };
-
-const HOW_IT_WORKS = [
-  {
-    icon: UserCircle,
-    step: '01',
-    title: 'შექმენი პროფილი',
-    description: 'ატვირთე ფოტო, მიუთითე პოზიცია, ასაკი და ფიზიკური მახასიათებლები.',
-  },
-  {
-    icon: Search,
-    step: '02',
-    title: 'იპოვე კლუბი ან მოთამაშე',
-    description: 'გაფილტრე კლუბები ქალაქის, ლიგის და სხვა პარამეტრებით.',
-  },
-  {
-    icon: MessageCircle,
-    step: '03',
-    title: 'დაუკავშირდი',
-    description: 'გამოაგზავნე სერვისის მოთხოვნა ან გახსენი ჩატი პირდაპირ.',
-  },
-] as const;
 
 const FOOTBALLER_FEATURES = [
   'პოზიციის, ასაკის, ფიზ. მახასიათებლების პროფილი',
@@ -133,32 +113,7 @@ export default function HomePage() {
       </section>
 
       {/* ── HOW IT WORKS ──────────────────────────────────────────── */}
-      <section className="px-4 py-16 sm:py-20">
-        <div className="container mx-auto">
-          <h2 className="mb-12 text-center text-2xl font-semibold tracking-tight sm:text-3xl">
-            როგორ მუშაობს
-          </h2>
-          <div className="grid gap-10 sm:grid-cols-3">
-            {HOW_IT_WORKS.map(({ icon: Icon, step, title, description }) => (
-              <div
-                key={step}
-                className="flex flex-col items-center gap-4 text-center sm:items-start sm:text-left"
-              >
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary">
-                  <Icon className="h-6 w-6" />
-                </div>
-                <div className="flex flex-col gap-1">
-                  <span className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-                    {step}
-                  </span>
-                  <h3 className="text-lg font-semibold">{title}</h3>
-                  <p className="text-sm leading-relaxed text-muted-foreground">{description}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+      <HowItWorks />
 
       {/* ── FEATURES GRID ────────────────────────────────────────── */}
       <section className="bg-secondary/30 px-4 py-16 sm:py-20">
