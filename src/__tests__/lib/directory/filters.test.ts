@@ -88,6 +88,50 @@ describe('filtersToParams', () => {
     expect(result['foot']).toBeUndefined();
   });
 
+  it('serializes heightMin as string', () => {
+    const result = filtersToParams({ ...DEFAULT_FILTERS, heightMin: 170 });
+    expect(result['heightMin']).toBe('170');
+  });
+
+  it('serializes heightMax as string', () => {
+    const result = filtersToParams({ ...DEFAULT_FILTERS, heightMax: 195 });
+    expect(result['heightMax']).toBe('195');
+  });
+
+  it('serializes both heightMin and heightMax', () => {
+    const result = filtersToParams({ ...DEFAULT_FILTERS, heightMin: 165, heightMax: 190 });
+    expect(result['heightMin']).toBe('165');
+    expect(result['heightMax']).toBe('190');
+  });
+
+  it('omits heightMin and heightMax when undefined', () => {
+    const result = filtersToParams({ ...DEFAULT_FILTERS });
+    expect(result['heightMin']).toBeUndefined();
+    expect(result['heightMax']).toBeUndefined();
+  });
+
+  it('serializes weightMin as string', () => {
+    const result = filtersToParams({ ...DEFAULT_FILTERS, weightMin: 60 });
+    expect(result['weightMin']).toBe('60');
+  });
+
+  it('serializes weightMax as string', () => {
+    const result = filtersToParams({ ...DEFAULT_FILTERS, weightMax: 90 });
+    expect(result['weightMax']).toBe('90');
+  });
+
+  it('serializes both weightMin and weightMax', () => {
+    const result = filtersToParams({ ...DEFAULT_FILTERS, weightMin: 55, weightMax: 85 });
+    expect(result['weightMin']).toBe('55');
+    expect(result['weightMax']).toBe('85');
+  });
+
+  it('omits weightMin and weightMax when undefined', () => {
+    const result = filtersToParams({ ...DEFAULT_FILTERS });
+    expect(result['weightMin']).toBeUndefined();
+    expect(result['weightMax']).toBeUndefined();
+  });
+
   it('serializes nationality', () => {
     const result = filtersToParams({ ...DEFAULT_FILTERS, nationality: 'GEO' });
     expect(result['nationality']).toBe('GEO');
@@ -96,6 +140,16 @@ describe('filtersToParams', () => {
   it('omits nationality when undefined', () => {
     const result = filtersToParams({ ...DEFAULT_FILTERS });
     expect(result['nationality']).toBeUndefined();
+  });
+
+  it('serializes city', () => {
+    const result = filtersToParams({ ...DEFAULT_FILTERS, city: 'Tbilisi' });
+    expect(result['city']).toBe('Tbilisi');
+  });
+
+  it('omits city when undefined', () => {
+    const result = filtersToParams({ ...DEFAULT_FILTERS });
+    expect(result['city']).toBeUndefined();
   });
 
   it('serializes experience array', () => {
@@ -160,6 +214,42 @@ describe('countActiveFilters', () => {
     expect(countActiveFilters({ ...DEFAULT_FILTERS, ageMin: 18, ageMax: 35 })).toBe(1);
   });
 
+  it('counts heightMin alone as 1', () => {
+    expect(countActiveFilters({ ...DEFAULT_FILTERS, heightMin: 170 })).toBe(1);
+  });
+
+  it('counts heightMax alone as 1', () => {
+    expect(countActiveFilters({ ...DEFAULT_FILTERS, heightMax: 200 })).toBe(1);
+  });
+
+  it('counts heightMin + heightMax together as 1 (same filter group)', () => {
+    expect(countActiveFilters({ ...DEFAULT_FILTERS, heightMin: 165, heightMax: 195 })).toBe(1);
+  });
+
+  it('counts weightMin alone as 1', () => {
+    expect(countActiveFilters({ ...DEFAULT_FILTERS, weightMin: 60 })).toBe(1);
+  });
+
+  it('counts weightMax alone as 1', () => {
+    expect(countActiveFilters({ ...DEFAULT_FILTERS, weightMax: 90 })).toBe(1);
+  });
+
+  it('counts weightMin + weightMax together as 1 (same filter group)', () => {
+    expect(countActiveFilters({ ...DEFAULT_FILTERS, weightMin: 55, weightMax: 85 })).toBe(1);
+  });
+
+  it('counts nationality as 1', () => {
+    expect(countActiveFilters({ ...DEFAULT_FILTERS, nationality: 'GEO' })).toBe(1);
+  });
+
+  it('counts city as 1', () => {
+    expect(countActiveFilters({ ...DEFAULT_FILTERS, city: 'Tbilisi' })).toBe(1);
+  });
+
+  it('counts non-empty experience as 1', () => {
+    expect(countActiveFilters({ ...DEFAULT_FILTERS, experience: ['professional'] })).toBe(1);
+  });
+
   it('counts foot "right" as 1', () => {
     expect(countActiveFilters({ ...DEFAULT_FILTERS, foot: 'right' })).toBe(1);
   });
@@ -219,6 +309,30 @@ describe('hasActiveFilters', () => {
 
   it('returns true when ageMax is set', () => {
     expect(hasActiveFilters({ ...DEFAULT_FILTERS, ageMax: 30 })).toBe(true);
+  });
+
+  it('returns true when heightMin is set', () => {
+    expect(hasActiveFilters({ ...DEFAULT_FILTERS, heightMin: 170 })).toBe(true);
+  });
+
+  it('returns true when heightMax is set', () => {
+    expect(hasActiveFilters({ ...DEFAULT_FILTERS, heightMax: 200 })).toBe(true);
+  });
+
+  it('returns true when weightMin is set', () => {
+    expect(hasActiveFilters({ ...DEFAULT_FILTERS, weightMin: 60 })).toBe(true);
+  });
+
+  it('returns true when weightMax is set', () => {
+    expect(hasActiveFilters({ ...DEFAULT_FILTERS, weightMax: 90 })).toBe(true);
+  });
+
+  it('returns true when city is set', () => {
+    expect(hasActiveFilters({ ...DEFAULT_FILTERS, city: 'Tbilisi' })).toBe(true);
+  });
+
+  it('returns true when experience is non-empty', () => {
+    expect(hasActiveFilters({ ...DEFAULT_FILTERS, experience: ['semi'] })).toBe(true);
   });
 
   it('returns true when foot is not "all"', () => {
