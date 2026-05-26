@@ -1,64 +1,205 @@
+import type { Metadata } from 'next';
+import Link from 'next/link';
+import { UserCircle, Search, MessageCircle } from 'lucide-react';
+
 import { Button } from '@/components/ui/button';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
+import { StatStrip } from '@/components/stat-strip';
+
+export const metadata: Metadata = {
+  title: 'Sport Visa — ფეხბურთელები კლუბებს ენახებიან',
+  description: 'პლატფორმა, სადაც ფეხბურთელები კლუბებს პოულობენ და კლუბები ფეხბურთელებს.',
+};
+
+const HOW_IT_WORKS = [
+  {
+    icon: UserCircle,
+    step: '01',
+    title: 'შექმენი პროფილი',
+    description: 'ატვირთე ფოტო, მიუთითე პოზიცია, ასაკი და ფიზიკური მახასიათებლები.',
+  },
+  {
+    icon: Search,
+    step: '02',
+    title: 'იპოვე კლუბი ან მოთამაშე',
+    description: 'გაფილტრე კლუბები ქალაქის, ლიგის და სხვა პარამეტრებით.',
+  },
+  {
+    icon: MessageCircle,
+    step: '03',
+    title: 'დაუკავშირდი',
+    description: 'გამოაგზავნე სერვისის მოთხოვნა ან გახსენი ჩატი პირდაპირ.',
+  },
+] as const;
+
+const FOOTBALLER_FEATURES = [
+  'პოზიციის, ასაკის, ფიზ. მახასიათებლების პროფილი',
+  'ფოტო გალერეა',
+  'კლუბის გამოწერა',
+  'სერვისის მოთხოვნა',
+];
+
+const CLUB_FEATURES = [
+  'სტადიონი, ისტორია, შემადგენლობა',
+  'ფეხბურთელების directory',
+  'ფილტრები + real-time ჩატი',
+];
+
+const STATS = [
+  { value: '500+', label: 'ფეხბურთელი' },
+  { value: '80+', label: 'კლუბი' },
+  { value: '1 200+', label: 'მატჩი' },
+];
 
 export default function HomePage() {
   return (
-    <div className="container mx-auto flex flex-col gap-8 px-4 py-12">
-      <section className="flex flex-col gap-3">
-        <h1 className="text-3xl font-semibold tracking-tight md:text-4xl">
-          მოგესალმებით Sport Visa-ში
-        </h1>
-        <p className="text-muted-foreground max-w-2xl">
-          ეს არის სატესტო გვერდი T1.2 ეტაპისთვის — ვამოწმებთ Next.js App Router-ს, Tailwind v4-ს,
-          shadcn/ui კომპონენტებსა და Noto Sans Georgian ფონტს.
-        </p>
+    <div className="flex flex-col">
+      {/* ── HERO ──────────────────────────────────────────────────── */}
+      <section className="relative overflow-hidden bg-gradient-to-br from-primary via-primary to-primary/80 px-4 py-20 text-primary-foreground sm:py-28 lg:py-36">
+        {/* Decorative circles */}
+        <div aria-hidden className="pointer-events-none absolute inset-0 opacity-10">
+          <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="90%" cy="10%" r="200" fill="white" />
+            <circle cx="5%" cy="90%" r="140" fill="white" />
+          </svg>
+        </div>
+
+        <div className="container relative z-10 mx-auto flex flex-col items-center gap-10 text-center lg:flex-row lg:items-center lg:gap-16 lg:text-left">
+          {/* Copy */}
+          <div className="flex flex-col gap-6 lg:flex-1">
+            <h1 className="text-5xl font-bold tracking-tight sm:text-6xl lg:text-7xl">
+              Sport Visa
+            </h1>
+            <div className="flex flex-col gap-1.5 text-xl font-medium opacity-90 sm:text-2xl">
+              <p>ფეხბურთელები კლუბებს ენახებიან.</p>
+              <p>კლუბები ფეხბურთელებს პოულობენ.</p>
+            </div>
+            <div className="flex flex-col gap-3 sm:flex-row sm:justify-center lg:justify-start">
+              <Button size="lg" variant="secondary" className="text-base font-semibold" asChild>
+                <Link href="/auth/signup?role=footballer">ფეხბურთელად რეგისტრაცია</Link>
+              </Button>
+              <Button
+                size="lg"
+                variant="outline"
+                className="border-primary-foreground/40 bg-transparent text-base font-semibold text-primary-foreground hover:bg-primary-foreground/10"
+                asChild
+              >
+                <Link href="/auth/signup?role=club">კლუბად რეგისტრაცია</Link>
+              </Button>
+            </div>
+          </div>
+
+          {/* Illustration placeholder */}
+          <div className="w-full max-w-sm flex-shrink-0 lg:flex-1 lg:max-w-md">
+            <div className="flex aspect-[4/3] w-full items-center justify-center rounded-2xl border border-primary-foreground/20 bg-primary-foreground/10">
+              <span className="text-sm text-primary-foreground/40">
+                footballer + club badge illustration
+              </span>
+            </div>
+          </div>
+        </div>
       </section>
 
-      <section className="grid gap-6 md:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>shadcn/ui კომპონენტები</CardTitle>
-            <CardDescription>Button, Input და Card პრიმიტივები მუშაობს</CardDescription>
-          </CardHeader>
-          <CardContent className="flex flex-col gap-3">
-            <Input placeholder="თქვენი სახელი" aria-label="თქვენი სახელი" />
-            <div className="flex flex-wrap gap-2">
-              <Button>ძირითადი</Button>
-              <Button variant="secondary">მეორადი</Button>
-              <Button variant="outline">გარე</Button>
-              <Button variant="ghost">აჩრდილი</Button>
-              <Button variant="destructive">წაშლა</Button>
-            </div>
-          </CardContent>
-          <CardFooter className="border-t">
-            <span className="text-muted-foreground text-xs">
-              Tailwind CSS v4 + Radix Slot + class-variance-authority
-            </span>
-          </CardFooter>
-        </Card>
+      {/* ── HOW IT WORKS ──────────────────────────────────────────── */}
+      <section className="px-4 py-16 sm:py-20">
+        <div className="container mx-auto">
+          <h2 className="mb-12 text-center text-2xl font-semibold tracking-tight sm:text-3xl">
+            როგორ მუშაობს
+          </h2>
+          <div className="grid gap-10 sm:grid-cols-3">
+            {HOW_IT_WORKS.map(({ icon: Icon, step, title, description }) => (
+              <div
+                key={step}
+                className="flex flex-col items-center gap-4 text-center sm:items-start sm:text-left"
+              >
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary">
+                  <Icon className="h-6 w-6" />
+                </div>
+                <div className="flex flex-col gap-1">
+                  <span className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+                    {step}
+                  </span>
+                  <h3 className="text-lg font-semibold">{title}</h3>
+                  <p className="text-sm leading-relaxed text-muted-foreground">{description}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>ქართული ფონტი</CardTitle>
-            <CardDescription>
-              Noto Sans Georgian იტვირთება next/font-ით (display: swap)
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="flex flex-col gap-2 text-sm">
-            <p>აბგდევზთიკლმნოპჟრსტუფქღყშჩცძწჭხჯჰ</p>
-            <p className="font-medium">ფეხბურთელი · კლუბი · ტრანსფერი</p>
-            <p className="font-semibold">სპორტული პლატფორმა საქართველოსთვის</p>
-            <p className="font-bold">2026</p>
-          </CardContent>
-        </Card>
+      {/* ── FOR FOOTBALLERS ───────────────────────────────────────── */}
+      <section className="bg-secondary/40 px-4 py-16 sm:py-20">
+        <div className="container mx-auto">
+          <div className="grid gap-12 lg:grid-cols-2 lg:items-center">
+            {/* Placeholder image */}
+            <div className="flex aspect-video w-full items-center justify-center rounded-xl bg-muted">
+              <span className="text-sm text-muted-foreground">screenshot</span>
+            </div>
+            {/* Copy */}
+            <div className="flex flex-col gap-6">
+              <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">ფეხბურთელისთვის</h2>
+              <ul className="flex flex-col gap-3">
+                {FOOTBALLER_FEATURES.map((feature) => (
+                  <li key={feature} className="flex items-start gap-3">
+                    <span
+                      aria-hidden
+                      className="mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-primary/15 text-xs font-bold text-primary"
+                    >
+                      ✓
+                    </span>
+                    <span className="text-sm text-muted-foreground">{feature}</span>
+                  </li>
+                ))}
+              </ul>
+              <div>
+                <Button size="lg" asChild>
+                  <Link href="/auth/signup?role=footballer">დაიწყე — უფასოა</Link>
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── FOR CLUBS ─────────────────────────────────────────────── */}
+      <section className="px-4 py-16 sm:py-20">
+        <div className="container mx-auto">
+          <div className="grid gap-12 lg:grid-cols-2 lg:items-center">
+            {/* Copy — reversed on desktop */}
+            <div className="order-2 flex flex-col gap-6 lg:order-1">
+              <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">კლუბისთვის</h2>
+              <ul className="flex flex-col gap-3">
+                {CLUB_FEATURES.map((feature) => (
+                  <li key={feature} className="flex items-start gap-3">
+                    <span
+                      aria-hidden
+                      className="mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-primary/15 text-xs font-bold text-primary"
+                    >
+                      ✓
+                    </span>
+                    <span className="text-sm text-muted-foreground">{feature}</span>
+                  </li>
+                ))}
+              </ul>
+              <div>
+                <Button size="lg" asChild>
+                  <Link href="/auth/signup?role=club">კლუბი დარეგისტრირდი</Link>
+                </Button>
+              </div>
+            </div>
+            {/* Placeholder image */}
+            <div className="order-1 flex aspect-video w-full items-center justify-center rounded-xl bg-muted lg:order-2">
+              <span className="text-sm text-muted-foreground">screenshot</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── STATS STRIP ───────────────────────────────────────────── */}
+      <section className="border-y border-border bg-muted/30 px-4 py-12">
+        <div className="container mx-auto">
+          <StatStrip stats={STATS} className="mx-auto max-w-lg" />
+        </div>
       </section>
     </div>
   );
