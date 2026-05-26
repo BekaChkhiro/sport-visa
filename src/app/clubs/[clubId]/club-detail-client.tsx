@@ -150,6 +150,16 @@ export function ClubDetailClient({
   const canSubscribe = viewerRole === 'FOOTBALLER';
   const [isSubscribed, setIsSubscribed] = React.useState(initialIsSubscribed);
   const [subscribePending, setSubscribePending] = React.useState(false);
+  const [toast, setToast] = React.useState<{ message: string; type: 'success' | 'error' } | null>(
+    null,
+  );
+  const toastTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  function showToast(message: string, type: 'success' | 'error' = 'success') {
+    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+    setToast({ message, type });
+    toastTimerRef.current = setTimeout(() => setToast(null), 3000);
+  }
 
   function handleTabChange(tab: Tab) {
     const url = tab === 'history' ? `/clubs/${club.id}` : `/clubs/${club.id}?tab=${tab}`;
@@ -169,8 +179,10 @@ export function ClubDetailClient({
     const result = await toggleSubscription(club.id);
     if (result.status === 'error') {
       setIsSubscribed(!next);
+      showToast(result.message, 'error');
     } else {
       setIsSubscribed(result.subscribed);
+      showToast(result.subscribed ? 'კლუბზე გამოიწ.' : 'გამ. გაუქ.');
     }
     setSubscribePending(false);
   }
@@ -186,6 +198,21 @@ export function ClubDetailClient({
 
   return (
     <div className="mx-auto max-w-4xl space-y-6 px-4 py-8 md:px-6">
+      {toast ? (
+        <div
+          role="status"
+          aria-live="polite"
+          className={cn(
+            'fixed bottom-20 left-1/2 z-50 -translate-x-1/2 rounded-lg px-4 py-2.5 text-sm font-medium shadow-lg transition-all sm:bottom-6',
+            toast.type === 'error'
+              ? 'bg-destructive text-destructive-foreground'
+              : 'bg-foreground text-background',
+          )}
+        >
+          {toast.message}
+        </div>
+      ) : null}
+
       {/* Back link */}
       <div>
         <Button variant="ghost" size="sm" asChild>

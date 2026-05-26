@@ -160,6 +160,42 @@ describe('ClubDetailClient — subscribe button state', () => {
       );
     });
   });
+
+  it('shows success toast after subscribing', async () => {
+    toggleSubscriptionMock.mockResolvedValueOnce({ status: 'success', subscribed: true });
+
+    renderDetail({}, { viewerRole: 'FOOTBALLER', isSubscribed: false });
+    fireEvent.click(screen.getByRole('button', { name: /გამოწ/i }));
+
+    await waitFor(() => {
+      expect(screen.getByRole('status')).toBeDefined();
+      expect(screen.getByText('კლუბზე გამოიწ.')).toBeDefined();
+    });
+  });
+
+  it('shows success toast after unsubscribing', async () => {
+    toggleSubscriptionMock.mockResolvedValueOnce({ status: 'success', subscribed: false });
+
+    renderDetail({}, { viewerRole: 'FOOTBALLER', isSubscribed: true });
+    fireEvent.click(screen.getByRole('button', { name: /გამოწ/i }));
+
+    await waitFor(() => {
+      expect(screen.getByRole('status')).toBeDefined();
+      expect(screen.getByText('გამ. გაუქ.')).toBeDefined();
+    });
+  });
+
+  it('shows error toast when server returns error', async () => {
+    toggleSubscriptionMock.mockResolvedValueOnce({ status: 'error', message: 'სერვ. შეც.' });
+
+    renderDetail({}, { viewerRole: 'FOOTBALLER', isSubscribed: false });
+    fireEvent.click(screen.getByRole('button', { name: /გამოწ/i }));
+
+    await waitFor(() => {
+      expect(screen.getByRole('status')).toBeDefined();
+      expect(screen.getByText('სერვ. შეც.')).toBeDefined();
+    });
+  });
 });
 
 describe('ClubDetailClient — tab navigation', () => {
