@@ -47,6 +47,7 @@ enum NotificationType {
   SERVICE_REQUEST_RESOLVED
   NEW_MESSAGE
   APPLICATION_STATUS
+  NEW_CLUB_POST
   GENERAL
 }
 
@@ -245,6 +246,7 @@ model FootballerProfile {
   galleryItems  GalleryItem[]
   shortlistedBy ClubShortlist[]
   subscriptions ClubSubscription[]
+  postLikes     PostLike[]
 
   @@index([verificationStatus, isVisible])
   @@map("footballer_profiles")
@@ -326,6 +328,7 @@ model ClubProfile {
   historyEvents      ClubHistoryEvent[]
   shortlistedPlayers ClubShortlist[]
   subscribers        ClubSubscription[]
+  posts              ClubPost[]
 
   @@index([verificationStatus, isVisible])
   @@map("club_profiles")
@@ -399,4 +402,41 @@ model ClubSubscription {
   @@index([footballerProfileId])
   @@index([clubProfileId])
   @@map("club_subscriptions")
+}
+
+// ── Club posts & interactions ─────────────────────────────────────────────────
+
+// A news post created by a club and shown in subscribed footballers' newsfeed.
+// `imageKey` is an optional R2 object key for a cover image (kind=POST_IMAGE).
+model ClubPost {
+  id     String      @id @default(cuid())
+  clubId String
+  club   ClubProfile @relation(fields: [clubId], references: [id], onDelete: Cascade)
+
+  title    String
+  body     String    @db.VarChar(5000)
+  imageKey String? // R2 object key; full URL composed from R2_PUBLIC_BASE_URL at runtime
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  likes PostLike[]
+
+  @@index([clubId, createdAt])
+  @@map("club_posts")
+}
+
+// A footballer likes a club's post. One like per footballer per post.
+model PostLike {
+  id                  String            @id @default(cuid())
+  postId              String
+  post                ClubPost          @relation(fields: [postId], references: [id], onDelete: Cascade)
+  footballerProfileId String
+  footballerProfile   FootballerProfile @relation(fields: [footballerProfileId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([postId, footballerProfileId])
+  @@index([footballerProfileId])
+  @@map("post_likes")
 }
