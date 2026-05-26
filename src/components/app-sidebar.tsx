@@ -11,6 +11,7 @@ import {
   DownloadIcon,
   EditIcon,
   EyeIcon,
+  ListViewIcon,
   MessageCircleIcon,
   PlusIcon,
   SearchIcon,
@@ -100,6 +101,7 @@ function FootballerSidebar({
 }) {
   const navItems: NavItem[] = [
     { href: '/services/request', label: '+ სერვ. მოთხ.', icon: PlusIcon },
+    { href: '/services/my-requests', label: 'ჩემი მოთხ.', icon: ListViewIcon },
     { href: '/clubs', label: 'კლუბების ძიება', icon: SearchIcon },
     { href: '/chats', label: 'ჩატები', icon: MessageCircleIcon, badgeCount: stats?.unreadMessages },
   ];

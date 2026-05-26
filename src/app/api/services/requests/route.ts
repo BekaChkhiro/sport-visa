@@ -11,6 +11,35 @@ import { sendServiceRequestEmail } from '@/lib/resend';
 
 export const runtime = 'nodejs';
 
+export const GET = apiHandler(async () => {
+  const user = await requireAuthenticatedUser();
+
+  if (user.role !== 'FOOTBALLER') {
+    throw new ApiError('FORBIDDEN', 'Only footballers can view service requests');
+  }
+
+  const requests = await db.serviceRequest.findMany({
+    where: { userId: user.id },
+    orderBy: { createdAt: 'desc' },
+    select: {
+      id: true,
+      requestCode: true,
+      status: true,
+      createdAt: true,
+      startDate: true,
+      endDate: true,
+      notes: true,
+      adminNote: true,
+      contactPref: true,
+      category: {
+        select: { id: true, name: true, slug: true, icon: true },
+      },
+    },
+  });
+
+  return NextResponse.json({ requests });
+});
+
 const createSchema = z.object({
   categoryId: z.string().min(1, 'Category is required'),
   startDate: z

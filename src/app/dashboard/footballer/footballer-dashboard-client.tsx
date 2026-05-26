@@ -8,6 +8,7 @@ import { signOut } from 'next-auth/react';
 import { AppShell } from '@/components/app-shell';
 import { ProfileCompletionBanner } from '@/components/profile-completion-banner';
 import { EmptyState } from '@/components/ui/empty-state';
+import { StatusPill } from '@/components/ui/status-pill';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ArrowRightIcon, PlusIcon, HeartIcon } from '@/components/icons';
@@ -45,6 +46,14 @@ type FootballerDashboardUser = {
   profileCompletion: number;
 };
 
+type DashboardServiceRequest = {
+  id: string;
+  requestCode: string;
+  status: 'PENDING' | 'RESOLVED' | 'REJECTED';
+  createdAt: string;
+  categoryName: string;
+};
+
 type FootballerDashboardClientProps = {
   currentPath: string;
   userId: string;
@@ -54,7 +63,16 @@ type FootballerDashboardClientProps = {
   subscribedClubs: SubscribedClub[];
   newsfeedPosts: NewsfeedPost[];
   profileMissingFields: string[];
+  serviceRequests: DashboardServiceRequest[];
 };
+
+function toStatusPill(
+  status: 'PENDING' | 'RESOLVED' | 'REJECTED',
+): 'pending' | 'approved' | 'rejected' {
+  if (status === 'RESOLVED') return 'approved';
+  if (status === 'REJECTED') return 'rejected';
+  return 'pending';
+}
 
 export function FootballerDashboardClient({
   currentPath,
@@ -65,6 +83,7 @@ export function FootballerDashboardClient({
   subscribedClubs,
   newsfeedPosts,
   profileMissingFields,
+  serviceRequests,
 }: FootballerDashboardClientProps) {
   const router = useRouter();
   const [bannerDismissed, setBannerDismissed] = React.useState(false);
@@ -172,19 +191,51 @@ export function FootballerDashboardClient({
             >
               სერვის მოთხოვნები
             </h2>
-            <Button variant="outline" size="sm" asChild>
-              <Link href="/services/request">
-                <PlusIcon className="size-4" />
-                ახ. მოთხ.
-              </Link>
-            </Button>
+            <div className="flex items-center gap-2">
+              {serviceRequests.length > 0 && (
+                <Button variant="ghost" size="sm" asChild>
+                  <Link href="/services/my-requests">
+                    ყველა
+                    <ArrowRightIcon className="size-4" />
+                  </Link>
+                </Button>
+              )}
+              <Button variant="outline" size="sm" asChild>
+                <Link href="/services/request">
+                  <PlusIcon className="size-4" />
+                  ახ. მოთხ.
+                </Link>
+              </Button>
+            </div>
           </div>
-          <div className="rounded-xl border border-border bg-card">
-            <EmptyState
-              title="მოთხოვნები არ არის"
-              description="სერვისის მოთხოვნა ჯერ არ გამოგიგზავნია."
-            />
-          </div>
+          {serviceRequests.length === 0 ? (
+            <div className="rounded-xl border border-border bg-card">
+              <EmptyState
+                title="მოთხოვნები არ არის"
+                description="სერვისის მოთხოვნა ჯერ არ გამოგიგზავნია."
+              />
+            </div>
+          ) : (
+            <div className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-card">
+              {serviceRequests.slice(0, 5).map((req) => (
+                <div key={req.id} className="flex items-center justify-between gap-3 px-4 py-3">
+                  <span className="truncate text-sm">{req.categoryName}</span>
+                  <div className="flex shrink-0 items-center gap-2">
+                    <StatusPill status={toStatusPill(req.status)} />
+                    <time
+                      dateTime={req.createdAt}
+                      className="hidden text-xs text-muted-foreground sm:inline"
+                    >
+                      {new Intl.DateTimeFormat('ka', {
+                        day: '2-digit',
+                        month: 'short',
+                      }).format(new Date(req.createdAt))}
+                    </time>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </section>
 
         {subscribedClubs.length > 0 ? (
