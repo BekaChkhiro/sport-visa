@@ -171,6 +171,10 @@ export function AdminDashboardClient({
       currentPath={currentPath}
       user={user}
       userId={userId}
+      adminBadges={{
+        pendingVerifications: kpi.pendingFootballers + kpi.pendingClubs,
+        pendingServiceRequests: kpi.pendingServiceRequests,
+      }}
       onSignOut={handleSignOut}
     >
       <div className="space-y-8">

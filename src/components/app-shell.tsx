@@ -7,6 +7,7 @@ import { Logo } from '@/components/logo';
 import { Button } from '@/components/ui/button';
 import {
   AppSidebar,
+  type AppSidebarAdminBadges,
   type AppSidebarRole,
   type AppSidebarStats,
   type AppSidebarUser,
@@ -19,7 +20,7 @@ import { MenuIcon } from '@/components/icons';
 import { useNotifications } from '@/hooks/use-notifications';
 import { cn } from '@/lib/utils';
 
-type AppShellRole = AppSidebarRole | 'admin';
+type AppShellRole = AppSidebarRole;
 
 type AppShellUser = AppSidebarUser & {
   email?: string;
@@ -32,6 +33,7 @@ type AppShellProps = {
   userId?: string | null;
   unreadNotifications?: number;
   sidebarStats?: AppSidebarStats;
+  adminBadges?: AppSidebarAdminBadges;
   onSignOut: () => void;
   children: React.ReactNode;
 };
@@ -43,11 +45,11 @@ function AppShell({
   userId = null,
   unreadNotifications = 0,
   sidebarStats,
+  adminBadges,
   onSignOut,
   children,
 }: AppShellProps) {
   const [drawerOpen, setDrawerOpen] = React.useState(false);
-  const sidebarRole: AppSidebarRole = role === 'admin' ? 'footballer' : role;
 
   const {
     notifications,
@@ -73,7 +75,11 @@ function AppShell({
           >
             <MenuIcon className="size-5" />
           </Button>
-          <Link href="/dashboard" className="flex items-center" aria-label="Sport Visa">
+          <Link
+            href={role === 'admin' ? '/admin' : '/dashboard'}
+            className="flex items-center"
+            aria-label="Sport Visa"
+          >
             <Logo size="md" showWordmark />
           </Link>
         </div>
@@ -97,14 +103,13 @@ function AppShell({
       </header>
 
       <div className="flex flex-1">
-        {role !== 'admin' ? (
-          <AppSidebar
-            role={sidebarRole}
-            currentPath={currentPath}
-            user={user}
-            stats={sidebarStats}
-          />
-        ) : null}
+        <AppSidebar
+          role={role}
+          currentPath={currentPath}
+          user={user}
+          stats={sidebarStats}
+          adminBadges={adminBadges}
+        />
 
         <main className={cn('flex-1 overflow-x-hidden p-4 md:p-6 lg:p-8')}>{children}</main>
       </div>
