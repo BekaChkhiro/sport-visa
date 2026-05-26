@@ -48,6 +48,7 @@ export {
   // Communication
   MessageCircle as MessageCircleIcon,
   Bell as BellIcon,
+  Mail as MailIcon,
   Send as SendIcon,
   Paperclip as PaperclipIcon,
   // Status

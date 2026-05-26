@@ -46,6 +46,11 @@ vi.mock('@/lib/auth/require-user', () => ({
   requireAuthenticatedUser: mockRequireUser,
 }));
 
+const mockGetEmailDigestEnabled = vi.hoisted(() => vi.fn().mockResolvedValue(true));
+vi.mock('@/lib/notification-preferences', () => ({
+  getEmailDigestEnabled: mockGetEmailDigestEnabled,
+}));
+
 import { ApiError } from '@/lib/api-error';
 import { POST } from '@/app/api/digest/send/route';
 
@@ -86,6 +91,8 @@ beforeEach(() => {
   mockNotifFindMany.mockReset();
   mockSendDigest.mockReset();
   mockRequireUser.mockReset();
+  mockGetEmailDigestEnabled.mockReset();
+  mockGetEmailDigestEnabled.mockResolvedValue(true);
 });
 
 describe('POST /api/digest/send — auth', () => {
@@ -214,5 +221,46 @@ describe('POST /api/digest/send — sends digests', () => {
         }),
       }),
     );
+  });
+});
+
+describe('POST /api/digest/send — notification preferences', () => {
+  it('skips users who have disabled emailDigest', async () => {
+    mockNotifFindMany.mockResolvedValueOnce([NOTIF_USER_A, NOTIF_USER_B]);
+    mockGetEmailDigestEnabled
+      .mockResolvedValueOnce(false) // user-a opted out
+      .mockResolvedValueOnce(true); // user-b opted in
+    mockSendDigest.mockResolvedValue({ id: 'ok' });
+
+    const res = await POST(makeRequest({ key: INTERNAL_KEY }));
+    const body = await res.json();
+
+    expect(body.sent).toBe(1);
+    expect(body.skipped).toBe(1);
+    expect(mockSendDigest).toHaveBeenCalledTimes(1);
+  });
+
+  it('sends to all users when all have emailDigest enabled', async () => {
+    mockNotifFindMany.mockResolvedValueOnce([NOTIF_USER_A, NOTIF_USER_B]);
+    mockGetEmailDigestEnabled.mockResolvedValue(true);
+    mockSendDigest.mockResolvedValue({ id: 'ok' });
+
+    const res = await POST(makeRequest({ key: INTERNAL_KEY }));
+    const body = await res.json();
+
+    expect(body.sent).toBe(2);
+    expect(body.skipped).toBe(0);
+  });
+
+  it('skips all users when all have emailDigest disabled', async () => {
+    mockNotifFindMany.mockResolvedValueOnce([NOTIF_USER_A, NOTIF_USER_B]);
+    mockGetEmailDigestEnabled.mockResolvedValue(false);
+
+    const res = await POST(makeRequest({ key: INTERNAL_KEY }));
+    const body = await res.json();
+
+    expect(body.sent).toBe(0);
+    expect(body.skipped).toBe(2);
+    expect(mockSendDigest).not.toHaveBeenCalled();
   });
 });

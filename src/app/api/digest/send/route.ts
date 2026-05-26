@@ -5,6 +5,7 @@ import { requireAuthenticatedUser } from '@/lib/auth/require-user';
 import { db } from '@/lib/db';
 import { env } from '@/lib/env';
 import { logger } from '@/lib/logger';
+import { getEmailDigestEnabled } from '@/lib/notification-preferences';
 import { sendDigestEmail } from '@/lib/resend';
 
 export const runtime = 'nodejs';
@@ -88,6 +89,12 @@ export const POST = apiHandler(async (request: Request) => {
       }));
 
       try {
+        const digestEnabled = await getEmailDigestEnabled(userId);
+        if (!digestEnabled) {
+          skipped++;
+          logger.debug({ caller, userId }, 'digest_email_skipped_preference');
+          return;
+        }
         await sendDigestEmail(userData.email, { recipientName, posts, appUrl });
         sent++;
         logger.info({ caller, userId, postCount: posts.length }, 'digest_email_sent');
