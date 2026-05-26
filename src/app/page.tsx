@@ -3,8 +3,11 @@ import Link from 'next/link';
 import { UserCircle, Building2, FileText, Bookmark, MessageCircle, Search } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
+import { Contact } from '@/components/contact';
+import { FAQ } from '@/components/faq';
 import { HowItWorks } from '@/components/how-it-works';
 import { StatStrip } from '@/components/stat-strip';
+import { Testimonials } from '@/components/testimonials';
 
 export const metadata: Metadata = {
   title: 'Sport Visa — ფეხბურთელები კლუბებს ენახებიან',
@@ -219,6 +222,15 @@ export default function HomePage() {
           <StatStrip stats={STATS} className="mx-auto max-w-lg" />
         </div>
       </section>
+
+      {/* ── TESTIMONIALS ──────────────────────────────────────────── */}
+      <Testimonials />
+
+      {/* ── FAQ ───────────────────────────────────────────────────── */}
+      <FAQ />
+
+      {/* ── CONTACT ───────────────────────────────────────────────── */}
+      <Contact />
     </div>
   );
 }
