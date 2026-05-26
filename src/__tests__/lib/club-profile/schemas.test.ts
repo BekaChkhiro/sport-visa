@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   clubHistoryEventSchema,
+  clubPostSchema,
   clubRosterEntrySchema,
   updateClubBioSchema,
   updateClubIdentitySchema,
@@ -310,5 +311,50 @@ describe('clubHistoryEventSchema', () => {
   it('accepts a description exactly 500 characters long', () => {
     const r = clubHistoryEventSchema.safeParse({ ...validEvent, description: 'a'.repeat(500) });
     expect(r.success).toBe(true);
+  });
+});
+
+describe('clubPostSchema', () => {
+  const validPost = { title: 'ახალი სეზონი დაიწყო', body: 'ჩვენი გუნდი მზადაა.' };
+
+  it('accepts a valid post', () => {
+    expect(clubPostSchema.safeParse(validPost).success).toBe(true);
+  });
+
+  it('rejects an empty title', () => {
+    const r = clubPostSchema.safeParse({ ...validPost, title: '' });
+    expect(r.success).toBe(false);
+    if (!r.success) expect(r.error.flatten().fieldErrors.title).toBeTruthy();
+  });
+
+  it('rejects a title over 200 characters', () => {
+    const r = clubPostSchema.safeParse({ ...validPost, title: 'a'.repeat(201) });
+    expect(r.success).toBe(false);
+  });
+
+  it('rejects an empty body', () => {
+    const r = clubPostSchema.safeParse({ ...validPost, body: '' });
+    expect(r.success).toBe(false);
+    if (!r.success) expect(r.error.flatten().fieldErrors.body).toBeTruthy();
+  });
+
+  it('rejects a body over 5000 characters', () => {
+    const r = clubPostSchema.safeParse({ ...validPost, body: 'a'.repeat(5001) });
+    expect(r.success).toBe(false);
+  });
+
+  it('accepts body exactly 5000 characters long', () => {
+    const r = clubPostSchema.safeParse({ ...validPost, body: 'a'.repeat(5000) });
+    expect(r.success).toBe(true);
+  });
+
+  it('trims whitespace from title', () => {
+    const r = clubPostSchema.parse({ ...validPost, title: '  სათაური  ' });
+    expect(r.title).toBe('სათაური');
+  });
+
+  it('trims whitespace from body', () => {
+    const r = clubPostSchema.parse({ ...validPost, body: '  ტექსტი  ' });
+    expect(r.body).toBe('ტექსტი');
   });
 });

@@ -16,6 +16,10 @@ const mockHistoryCreate = vi.hoisted(() => vi.fn());
 const mockHistoryFindFirst = vi.hoisted(() => vi.fn());
 const mockHistoryUpdate = vi.hoisted(() => vi.fn());
 const mockHistoryDelete = vi.hoisted(() => vi.fn());
+const mockPostCreate = vi.hoisted(() => vi.fn());
+const mockPostFindFirst = vi.hoisted(() => vi.fn());
+const mockPostUpdate = vi.hoisted(() => vi.fn());
+const mockPostDelete = vi.hoisted(() => vi.fn());
 
 vi.mock('@/lib/db', () => ({
   db: {
@@ -35,6 +39,12 @@ vi.mock('@/lib/db', () => ({
       update: mockHistoryUpdate,
       delete: mockHistoryDelete,
     },
+    clubPost: {
+      create: mockPostCreate,
+      findFirst: mockPostFindFirst,
+      update: mockPostUpdate,
+      delete: mockPostDelete,
+    },
   },
 }));
 
@@ -52,6 +62,9 @@ import {
   addClubRosterEntry,
   updateClubRosterEntry,
   deleteClubRosterEntry,
+  createClubPost,
+  updateClubPost,
+  deleteClubPost,
 } from '@/lib/club-profile/actions';
 
 const clubSession = { user: { id: 'u1', role: 'CLUB' } };
@@ -72,6 +85,10 @@ beforeEach(() => {
   mockHistoryFindFirst.mockReset();
   mockHistoryUpdate.mockReset();
   mockHistoryDelete.mockReset();
+  mockPostCreate.mockReset();
+  mockPostFindFirst.mockReset();
+  mockPostUpdate.mockReset();
+  mockPostDelete.mockReset();
 });
 
 // ── updateClubIdentity ────────────────────────────────────────────────────────
@@ -750,5 +767,175 @@ describe('deleteClubHistoryEvent', () => {
 
     expect(r.status).toBe('error');
     expect(mockHistoryDelete).not.toHaveBeenCalled();
+  });
+});
+
+// ── createClubPost ─────────────────────────────────────────────────────────────
+
+const validPost = { title: 'ახალი სეზონი', body: 'ჩვენი გუნდი მზადაა ახალი სეზონისთვის.' };
+
+describe('createClubPost — auth & role guards', () => {
+  it('rejects unauthenticated caller', async () => {
+    mockAuth.mockResolvedValueOnce(null);
+    const r = await createClubPost(validPost);
+    expect(r.status).toBe('error');
+    expect(mockPostCreate).not.toHaveBeenCalled();
+  });
+
+  it('rejects footballer role', async () => {
+    mockAuth.mockResolvedValueOnce(footballerSession);
+    const r = await createClubPost(validPost);
+    expect(r.status).toBe('error');
+    expect(mockPostCreate).not.toHaveBeenCalled();
+  });
+});
+
+describe('createClubPost — validation', () => {
+  it('rejects empty title', async () => {
+    mockAuth.mockResolvedValueOnce(clubSession);
+    const r = await createClubPost({ ...validPost, title: '' });
+    expect(r.status).toBe('error');
+    if (r.status === 'error') expect(r.fieldErrors?.title).toBeTruthy();
+  });
+
+  it('rejects empty body', async () => {
+    mockAuth.mockResolvedValueOnce(clubSession);
+    const r = await createClubPost({ ...validPost, body: '' });
+    expect(r.status).toBe('error');
+    if (r.status === 'error') expect(r.fieldErrors?.body).toBeTruthy();
+  });
+});
+
+describe('createClubPost — happy path', () => {
+  it('creates post and returns postId', async () => {
+    mockAuth.mockResolvedValueOnce(clubSession);
+    mockCpFindUnique.mockResolvedValueOnce({ id: 'club1' });
+    mockPostCreate.mockResolvedValueOnce({ id: 'post1' });
+
+    const r = await createClubPost(validPost);
+
+    expect(r.status).toBe('success');
+    if (r.status === 'success') expect(r.postId).toBe('post1');
+    expect(mockPostCreate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ clubId: 'club1', title: validPost.title }),
+      }),
+    );
+  });
+
+  it('returns error when club profile is missing', async () => {
+    mockAuth.mockResolvedValueOnce(clubSession);
+    mockCpFindUnique.mockResolvedValueOnce(null);
+
+    const r = await createClubPost(validPost);
+
+    expect(r.status).toBe('error');
+    expect(mockPostCreate).not.toHaveBeenCalled();
+  });
+});
+
+// ── updateClubPost ─────────────────────────────────────────────────────────────
+
+describe('updateClubPost — auth & role guards', () => {
+  it('rejects unauthenticated caller', async () => {
+    mockAuth.mockResolvedValueOnce(null);
+    const r = await updateClubPost('p1', validPost);
+    expect(r.status).toBe('error');
+    expect(mockPostUpdate).not.toHaveBeenCalled();
+  });
+
+  it('rejects footballer role', async () => {
+    mockAuth.mockResolvedValueOnce(footballerSession);
+    const r = await updateClubPost('p1', validPost);
+    expect(r.status).toBe('error');
+    expect(mockPostUpdate).not.toHaveBeenCalled();
+  });
+});
+
+describe('updateClubPost — happy path', () => {
+  it('updates existing post', async () => {
+    mockAuth.mockResolvedValueOnce(clubSession);
+    mockCpFindUnique.mockResolvedValueOnce({ id: 'club1' });
+    mockPostFindFirst.mockResolvedValueOnce({ id: 'p1' });
+    mockPostUpdate.mockResolvedValueOnce({});
+
+    const r = await updateClubPost('p1', validPost);
+
+    expect(r.status).toBe('success');
+    expect(mockPostUpdate).toHaveBeenCalledWith(expect.objectContaining({ where: { id: 'p1' } }));
+  });
+
+  it('returns error when post not found', async () => {
+    mockAuth.mockResolvedValueOnce(clubSession);
+    mockCpFindUnique.mockResolvedValueOnce({ id: 'club1' });
+    mockPostFindFirst.mockResolvedValueOnce(null);
+
+    const r = await updateClubPost('p1', validPost);
+
+    expect(r.status).toBe('error');
+    expect(mockPostUpdate).not.toHaveBeenCalled();
+  });
+
+  it('returns error when club profile is missing', async () => {
+    mockAuth.mockResolvedValueOnce(clubSession);
+    mockCpFindUnique.mockResolvedValueOnce(null);
+
+    const r = await updateClubPost('p1', validPost);
+
+    expect(r.status).toBe('error');
+    expect(mockPostUpdate).not.toHaveBeenCalled();
+  });
+});
+
+// ── deleteClubPost ─────────────────────────────────────────────────────────────
+
+describe('deleteClubPost — auth & role guards', () => {
+  it('rejects unauthenticated caller', async () => {
+    mockAuth.mockResolvedValueOnce(null);
+    const r = await deleteClubPost('p1');
+    expect(r.status).toBe('error');
+    expect(mockPostDelete).not.toHaveBeenCalled();
+  });
+
+  it('rejects footballer role', async () => {
+    mockAuth.mockResolvedValueOnce(footballerSession);
+    const r = await deleteClubPost('p1');
+    expect(r.status).toBe('error');
+    expect(mockPostDelete).not.toHaveBeenCalled();
+  });
+});
+
+describe('deleteClubPost — happy path', () => {
+  it('deletes post on happy path', async () => {
+    mockAuth.mockResolvedValueOnce(clubSession);
+    mockCpFindUnique.mockResolvedValueOnce({ id: 'club1' });
+    mockPostFindFirst.mockResolvedValueOnce({ id: 'p1' });
+    mockPostDelete.mockResolvedValueOnce({});
+
+    const r = await deleteClubPost('p1');
+
+    expect(r.status).toBe('success');
+    expect(mockPostDelete).toHaveBeenCalledWith({ where: { id: 'p1' } });
+  });
+
+  it('returns error when post not found', async () => {
+    mockAuth.mockResolvedValueOnce(clubSession);
+    mockCpFindUnique.mockResolvedValueOnce({ id: 'club1' });
+    mockPostFindFirst.mockResolvedValueOnce(null);
+
+    const r = await deleteClubPost('p1');
+
+    expect(r.status).toBe('error');
+    expect(mockPostDelete).not.toHaveBeenCalled();
+  });
+
+  it('returns error when club profile is missing', async () => {
+    mockAuth.mockResolvedValueOnce(clubSession);
+    mockCpFindUnique.mockResolvedValueOnce(null);
+
+    const r = await deleteClubPost('p1');
+
+    expect(r.status).toBe('error');
+    expect(mockPostDelete).not.toHaveBeenCalled();
   });
 });

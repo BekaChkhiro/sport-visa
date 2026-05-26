@@ -34,6 +34,7 @@ export default async function ClubDashboardPage() {
     db.clubProfile.findUnique({
       where: { userId },
       select: {
+        id: true,
         name: true,
         city: true,
         logoKey: true,
@@ -55,6 +56,16 @@ export default async function ClubDashboardPage() {
                 avatarKey: true,
               },
             },
+          },
+        },
+        posts: {
+          orderBy: { createdAt: 'desc' },
+          take: 10,
+          select: {
+            id: true,
+            title: true,
+            createdAt: true,
+            _count: { select: { likes: true } },
           },
         },
         _count: {
@@ -89,6 +100,13 @@ export default async function ClubDashboardPage() {
     shortlistedAt: entry.createdAt.toISOString(),
   }));
 
+  const recentPosts = profile.posts.map((p) => ({
+    id: p.id,
+    title: p.title,
+    likeCount: p._count.likes,
+    createdAt: p.createdAt.toISOString(),
+  }));
+
   return (
     <ClubDashboardClient
       currentPath="/dashboard/club"
@@ -106,6 +124,7 @@ export default async function ClubDashboardPage() {
       }}
       unreadNotifications={unreadNotifications}
       recentShortlist={recentShortlist}
+      recentPosts={recentPosts}
     />
   );
 }

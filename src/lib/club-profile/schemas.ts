@@ -100,3 +100,20 @@ export type ClubRosterEntryInput = z.infer<typeof clubRosterEntrySchema>;
 export type ClubRosterEntryAddState =
   | { status: 'success'; entryId: string }
   | { status: 'error'; message: string; fieldErrors?: Record<string, string[]> };
+
+// ── Club post ──────────────────────────────────────────────────────────────────
+
+export const clubPostSchema = z.object({
+  title: z.string().trim().min(1, 'სათაური სავალდებულოა').max(200, 'სათაური მაქს. 200 სიმბ.'),
+  body: z.string().trim().min(1, 'ტექსტი სავალდებულოა').max(5000, 'ტექსტი მაქს. 5000 სიმბ.'),
+});
+
+export type ClubPostInput = z.infer<typeof clubPostSchema>;
+
+export type ClubPostActionState =
+  | { status: 'success' }
+  | { status: 'error'; message: string; fieldErrors?: Record<string, string[]> };
+
+export type ClubPostCreateState =
+  | { status: 'success'; postId: string }
+  | { status: 'error'; message: string; fieldErrors?: Record<string, string[]> };

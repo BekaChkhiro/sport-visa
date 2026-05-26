@@ -11,9 +11,12 @@ import {
   updateClubBioSchema,
   clubHistoryEventSchema,
   clubRosterEntrySchema,
+  clubPostSchema,
   type ClubActionState,
   type ClubHistoryEventAddState,
   type ClubRosterEntryAddState,
+  type ClubPostActionState,
+  type ClubPostCreateState,
 } from './schemas';
 
 function revalidateClubPaths() {
@@ -343,5 +346,106 @@ export async function deleteClubRosterEntry(id: string): Promise<ClubActionState
   await db.clubRosterEntry.delete({ where: { id } });
 
   revalidateClubPaths();
+  return { status: 'success' };
+}
+
+// ── Club posts ────────────────────────────────────────────────────────────────
+
+function revalidatePostPaths(clubId: string, postId?: string) {
+  revalidatePath('/dashboard/club');
+  revalidatePath(`/clubs/${clubId}`);
+  if (postId) revalidatePath(`/clubs/${clubId}/posts/${postId}`);
+}
+
+export async function createClubPost(data: unknown): Promise<ClubPostCreateState> {
+  const session = await auth();
+  if (!session?.user?.id) return { status: 'error', message: 'ავტორიზაცია საჭიროა' };
+  if (session.user.role !== 'CLUB') return { status: 'error', message: 'წვდომა აკრძალულია' };
+
+  const parsed = clubPostSchema.safeParse(data);
+  if (!parsed.success) {
+    const fieldErrors: Record<string, string[]> = {};
+    for (const [k, issues] of Object.entries(parsed.error.flatten().fieldErrors)) {
+      if (issues) fieldErrors[k] = issues;
+    }
+    return { status: 'error', message: 'შეავსე ფორმა სწორად', fieldErrors };
+  }
+
+  const club = await db.clubProfile.findUnique({
+    where: { userId: session.user.id },
+    select: { id: true },
+  });
+  if (!club) return { status: 'error', message: 'პროფილი ვერ მოიძებნა' };
+
+  const post = await db.clubPost.create({
+    data: {
+      clubId: club.id,
+      title: parsed.data.title,
+      body: parsed.data.body,
+    },
+  });
+
+  revalidatePostPaths(club.id, post.id);
+  return { status: 'success', postId: post.id };
+}
+
+export async function updateClubPost(postId: string, data: unknown): Promise<ClubPostActionState> {
+  const session = await auth();
+  if (!session?.user?.id) return { status: 'error', message: 'ავტორიზაცია საჭიროა' };
+  if (session.user.role !== 'CLUB') return { status: 'error', message: 'წვდომა აკრძალულია' };
+
+  const parsed = clubPostSchema.safeParse(data);
+  if (!parsed.success) {
+    const fieldErrors: Record<string, string[]> = {};
+    for (const [k, issues] of Object.entries(parsed.error.flatten().fieldErrors)) {
+      if (issues) fieldErrors[k] = issues;
+    }
+    return { status: 'error', message: 'შეავსე ფორმა სწორად', fieldErrors };
+  }
+
+  const club = await db.clubProfile.findUnique({
+    where: { userId: session.user.id },
+    select: { id: true },
+  });
+  if (!club) return { status: 'error', message: 'პროფილი ვერ მოიძებნა' };
+
+  const existing = await db.clubPost.findFirst({
+    where: { id: postId, clubId: club.id },
+    select: { id: true },
+  });
+  if (!existing) return { status: 'error', message: 'პოსტი ვერ მოიძებნა' };
+
+  await db.clubPost.update({
+    where: { id: postId },
+    data: {
+      title: parsed.data.title,
+      body: parsed.data.body,
+    },
+  });
+
+  revalidatePostPaths(club.id, postId);
+  return { status: 'success' };
+}
+
+export async function deleteClubPost(postId: string): Promise<ClubPostActionState> {
+  const session = await auth();
+  if (!session?.user?.id) return { status: 'error', message: 'ავტორიზაცია საჭიროა' };
+  if (session.user.role !== 'CLUB') return { status: 'error', message: 'წვდომა აკრძალულია' };
+
+  const club = await db.clubProfile.findUnique({
+    where: { userId: session.user.id },
+    select: { id: true },
+  });
+  if (!club) return { status: 'error', message: 'პროფილი ვერ მოიძებნა' };
+
+  const existing = await db.clubPost.findFirst({
+    where: { id: postId, clubId: club.id },
+    select: { id: true },
+  });
+  if (!existing) return { status: 'error', message: 'პოსტი ვერ მოიძებნა' };
+
+  await db.clubPost.delete({ where: { id: postId } });
+
+  revalidatePostPaths(club.id);
   return { status: 'success' };
 }

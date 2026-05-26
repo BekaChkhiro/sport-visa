@@ -70,6 +70,17 @@ export default async function ClubDetailPage({ params, searchParams }: Props) {
           description: true,
         },
       },
+      posts: {
+        orderBy: { createdAt: 'desc' },
+        take: 20,
+        select: {
+          id: true,
+          title: true,
+          body: true,
+          createdAt: true,
+          _count: { select: { likes: true } },
+        },
+      },
     },
   });
 
@@ -130,6 +141,13 @@ export default async function ClubDetailPage({ params, searchParams }: Props) {
           year: e.year,
           title: e.title,
           description: e.description ?? undefined,
+        })),
+        posts: club.posts.map((p) => ({
+          id: p.id,
+          title: p.title,
+          body: p.body,
+          likeCount: p._count.likes,
+          createdAt: p.createdAt.toISOString(),
         })),
       }}
       isSubscribed={isSubscribed}

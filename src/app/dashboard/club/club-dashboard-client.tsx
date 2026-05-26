@@ -17,7 +17,12 @@ import {
   PlusIcon,
   MessageCircleIcon,
   StarIcon,
+  EditIcon,
+  DeleteIcon,
+  HeartIcon,
+  SpinnerIcon,
 } from '@/components/icons';
+import { deleteClubPost } from '@/lib/club-profile/actions';
 import type { AppSidebarStats } from '@/components/app-sidebar';
 import type { VerificationStatus } from '@/components/verification-badge';
 import { cn } from '@/lib/utils';
@@ -31,6 +36,13 @@ type ShortlistedFootballer = {
   nationality: string | null;
   avatarUrl?: string;
   shortlistedAt: string;
+};
+
+type DashboardPost = {
+  id: string;
+  title: string;
+  likeCount: number;
+  createdAt: string;
 };
 
 type ClubDashboardUser = {
@@ -47,6 +59,7 @@ type ClubDashboardClientProps = {
   stats: AppSidebarStats;
   unreadNotifications: number;
   recentShortlist: ShortlistedFootballer[];
+  recentPosts: DashboardPost[];
 };
 
 function VerificationBanner({
@@ -129,12 +142,89 @@ function ShortlistCard({ footballer }: { footballer: ShortlistedFootballer }) {
   );
 }
 
+function PostsList({ posts }: { posts: DashboardPost[] }) {
+  const [deletingId, setDeletingId] = React.useState<string | null>(null);
+  const [localPosts, setLocalPosts] = React.useState(posts);
+
+  async function handleDelete(id: string) {
+    if (deletingId) return;
+    setDeletingId(id);
+    setLocalPosts((prev) => prev.filter((p) => p.id !== id));
+    const result = await deleteClubPost(id);
+    if (result.status === 'error') {
+      setLocalPosts(posts);
+    }
+    setDeletingId(null);
+  }
+
+  if (localPosts.length === 0) {
+    return (
+      <div className="rounded-xl border border-border bg-card">
+        <EmptyState
+          title="სიახლეები არ არის"
+          description="გამოაქვეყნე სიახლე, რომ ფეხბურთელები ინფორმირებული იყვნენ."
+          action={
+            <Button variant="default" size="sm" asChild>
+              <Link href="/posts/new">
+                <PlusIcon className="size-4" />
+                სიახლის დამატება
+              </Link>
+            </Button>
+          }
+        />
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col divide-y divide-border overflow-hidden rounded-xl border border-border bg-card">
+      {localPosts.map((post) => (
+        <div key={post.id} className="flex items-center gap-3 px-4 py-3">
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-sm font-medium">{post.title}</p>
+            <div className="mt-0.5 flex items-center gap-2 text-xs text-muted-foreground">
+              <span className="flex items-center gap-0.5">
+                <HeartIcon className="size-3" aria-hidden="true" />
+                {post.likeCount}
+              </span>
+              <span>·</span>
+              <span>{new Date(post.createdAt).toLocaleDateString('ka-GE')}</span>
+            </div>
+          </div>
+          <div className="flex shrink-0 gap-1">
+            <Button variant="ghost" size="sm" asChild>
+              <Link href={`/posts/${post.id}/edit`} aria-label="რედ.">
+                <EditIcon className="size-3.5" />
+              </Link>
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => handleDelete(post.id)}
+              disabled={deletingId === post.id}
+              aria-label="წაშ."
+              className="text-destructive hover:text-destructive"
+            >
+              {deletingId === post.id ? (
+                <SpinnerIcon className="size-3.5 animate-spin" />
+              ) : (
+                <DeleteIcon className="size-3.5" />
+              )}
+            </Button>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export function ClubDashboardClient({
   currentPath,
   user,
   stats,
   unreadNotifications,
   recentShortlist,
+  recentPosts,
 }: ClubDashboardClientProps) {
   const router = useRouter();
   const [bannerDismissed, setBannerDismissed] = React.useState(false);
@@ -245,20 +335,24 @@ export function ClubDashboardClient({
               </Link>
             </Button>
           </div>
-          <div className="rounded-xl border border-border bg-card">
-            <EmptyState
-              title="სიახლეები არ არის"
-              description="გამოაქვეყნე სიახლე, რომ ფეხბურთელები ინფორმირებული იყვნენ."
-              action={
-                <Button variant="default" size="sm" asChild>
-                  <Link href="/posts/new">
-                    <PlusIcon className="size-4" />
-                    სიახლის დამატება
-                  </Link>
-                </Button>
-              }
-            />
-          </div>
+          {recentPosts.length > 0 ? (
+            <PostsList posts={recentPosts} />
+          ) : (
+            <div className="rounded-xl border border-border bg-card">
+              <EmptyState
+                title="სიახლეები არ არის"
+                description="გამოაქვეყნე სიახლე, რომ ფეხბურთელები ინფორმირებული იყვნენ."
+                action={
+                  <Button variant="default" size="sm" asChild>
+                    <Link href="/posts/new">
+                      <PlusIcon className="size-4" />
+                      სიახლის დამატება
+                    </Link>
+                  </Button>
+                }
+              />
+            </div>
+          )}
         </section>
       </div>
     </AppShell>
