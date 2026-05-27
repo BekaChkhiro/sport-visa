@@ -2,7 +2,7 @@ import { Skeleton, SkeletonText } from '@/components/ui/skeleton';
 
 export default function ProfilePreviewLoading() {
   return (
-    <div className="max-w-3xl space-y-6 px-4 py-6">
+    <div className="mx-auto max-w-3xl space-y-6 px-4 py-6">
       <Skeleton className="h-12 w-full rounded-xl" />
       <div className="space-y-4 rounded-xl border p-5">
         <Skeleton className="h-40 w-full rounded-lg" />

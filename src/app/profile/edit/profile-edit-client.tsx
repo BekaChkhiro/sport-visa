@@ -142,7 +142,7 @@ export function ProfileEditClient({
       sidebarStats={sidebarStats}
       onSignOut={handleSignOut}
     >
-      <div className="max-w-2xl space-y-8">
+      <div className="mx-auto max-w-2xl space-y-8">
         <h1 className="text-2xl font-semibold">პროფილის რედაქტირება</h1>
 
         <AvatarSection initialAvatar={initialAvatar} />
