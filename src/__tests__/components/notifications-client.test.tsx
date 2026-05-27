@@ -102,10 +102,10 @@ function renderClient(
   return {
     ...render(
       <NotificationsClient
-        currentPath="/notifications"
+        shellRole="footballer"
+        shellUser={BASE_USER}
         userId="u1"
-        role="footballer"
-        user={BASE_USER}
+        unreadNotifications={0}
         initialNotifications={[]}
       />,
     ),
@@ -214,10 +214,10 @@ describe('NotificationsClient — initialNotifications forwarded to hook', () =>
 
     render(
       <NotificationsClient
-        currentPath="/notifications"
+        shellRole="footballer"
+        shellUser={BASE_USER}
         userId="u1"
-        role="footballer"
-        user={BASE_USER}
+        unreadNotifications={1}
         initialNotifications={[UNREAD_NOTIF]}
       />,
     );

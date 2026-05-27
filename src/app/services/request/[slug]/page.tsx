@@ -1,16 +1,9 @@
 import { notFound, redirect } from 'next/navigation';
 import type { Metadata } from 'next';
 
-import { auth } from '@/lib/auth';
 import { db } from '@/lib/db';
-import type { VerificationStatus } from '@/components/verification-badge';
+import { requireAppShellContext } from '@/lib/app-shell/load-context';
 import { ServiceRequestFormClient } from './service-request-form-client';
-
-type PrismaVerificationStatus = 'PENDING' | 'VERIFIED' | 'REJECTED';
-
-function toUiVerificationStatus(status: PrismaVerificationStatus): VerificationStatus {
-  return status.toLowerCase() as VerificationStatus;
-}
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -24,74 +17,33 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function ServiceRequestFormPage({ params }: Props) {
-  const session = await auth();
+  const { slug } = await params;
+  const shell = await requireAppShellContext(`/services/request/${slug}`);
 
-  if (!session?.user) {
-    redirect('/auth/signin');
-  }
-
-  if (session.user.role !== 'FOOTBALLER') {
+  if (shell.role !== 'footballer') {
     redirect('/dashboard');
   }
 
-  const { slug } = await params;
-
-  const [profile, category, unreadNotifications] = await Promise.all([
-    db.footballerProfile.findUnique({
-      where: { userId: session.user.id },
-      select: {
-        firstName: true,
-        lastName: true,
-        positions: true,
-        nationality: true,
-        avatarKey: true,
-        verificationStatus: true,
-        profileViewCount: true,
-        shortlistedBy: { select: { id: true } },
-      },
-    }),
-    db.serviceCategory.findUnique({
-      where: { slug, isActive: true },
-      select: { id: true, slug: true, name: true },
-    }),
-    db.notification.count({ where: { userId: session.user.id, read: false } }),
-  ]);
-
-  if (!profile) {
-    redirect('/onboarding');
-  }
+  const category = await db.serviceCategory.findUnique({
+    where: { slug, isActive: true },
+    select: { id: true, slug: true, name: true },
+  });
 
   if (!category) {
     notFound();
   }
 
-  const r2BaseUrl = process.env.R2_PUBLIC_BASE_URL ?? '';
-  const name = `${profile.firstName} ${profile.lastName}`.trim();
-  const initials = [profile.firstName[0], profile.lastName[0]]
-    .filter(Boolean)
-    .join('')
-    .toUpperCase();
-
   return (
     <ServiceRequestFormClient
       currentPath="/services/request"
-      userId={session.user.id}
-      userEmail={session.user.email ?? ''}
+      userId={shell.userId}
+      userEmail={shell.user.email ?? ''}
       user={{
-        name,
-        initials,
-        image: profile.avatarKey ? `${r2BaseUrl}/${profile.avatarKey}` : undefined,
-        position: profile.positions[0] ?? undefined,
-        nationality: profile.nationality ?? undefined,
-        verificationStatus: toUiVerificationStatus(profile.verificationStatus),
-        profileCompletion: 100,
+        ...shell.user,
+        profileCompletion: shell.user.profileCompletion ?? 0,
       }}
-      stats={{
-        views: profile.profileViewCount,
-        saves: profile.shortlistedBy.length,
-        unreadMessages: 0,
-      }}
-      unreadNotifications={unreadNotifications}
+      stats={shell.sidebarStats ?? {}}
+      unreadNotifications={shell.unreadNotifications}
       category={category}
     />
   );

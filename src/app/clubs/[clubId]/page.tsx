@@ -1,8 +1,8 @@
 import type { Metadata } from 'next';
-import { notFound, redirect } from 'next/navigation';
+import { notFound } from 'next/navigation';
 
 import { db } from '@/lib/db';
-import { loadAppShellContext } from '@/lib/app-shell/load-context';
+import { requireAppShellContext } from '@/lib/app-shell/load-context';
 import type { VerificationStatus } from '@/components/verification-badge';
 import { ClubDetailClient } from './club-detail-client';
 
@@ -46,8 +46,8 @@ function toUiVerificationStatus(status: string): VerificationStatus {
 }
 
 export default async function ClubDetailPage({ params, searchParams }: Props) {
-  const [shell, { clubId }, sp] = await Promise.all([loadAppShellContext(), params, searchParams]);
-  if (!shell) redirect(`/auth/signin?callbackUrl=/clubs/${(await params).clubId}`);
+  const { clubId } = await params;
+  const [shell, sp] = await Promise.all([requireAppShellContext(`/clubs/${clubId}`), searchParams]);
 
   const tab = sp.tab ?? 'history';
 

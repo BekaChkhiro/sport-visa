@@ -62,10 +62,10 @@ function errorResponse(status = 500): Response {
 function renderPrefs(prefs = DEFAULT_PREFS) {
   return render(
     <NotificationPreferencesClient
-      currentPath="/settings/notifications"
+      shellRole="footballer"
+      shellUser={BASE_USER}
       userId="u1"
-      role="footballer"
-      user={BASE_USER}
+      unreadNotifications={0}
       initialPrefs={prefs}
     />,
   );

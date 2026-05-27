@@ -11,16 +11,20 @@ import { useNotifications } from '@/hooks/use-notifications';
 import { formatRelativeTime } from '@/lib/format-relative-time';
 import { cn } from '@/lib/utils';
 import type { NotificationItem } from '@/hooks/use-notifications';
+import type {
+  AppSidebarAdminBadges,
+  AppSidebarRole,
+  AppSidebarStats,
+  AppSidebarUser,
+} from '@/components/app-sidebar';
 
 type NotificationsClientProps = {
-  currentPath: string;
+  shellRole: AppSidebarRole;
+  shellUser: AppSidebarUser & { email?: string };
   userId: string;
-  role: 'footballer' | 'club';
-  user: {
-    name: string;
-    initials: string;
-    image?: string;
-  };
+  sidebarStats?: AppSidebarStats;
+  adminBadges?: AppSidebarAdminBadges;
+  unreadNotifications: number;
   initialNotifications: NotificationItem[];
 };
 
@@ -70,10 +74,12 @@ function NotificationRow({
 }
 
 export function NotificationsClient({
-  currentPath,
+  shellRole,
+  shellUser,
   userId,
-  role,
-  user,
+  sidebarStats,
+  adminBadges,
+  unreadNotifications,
   initialNotifications,
 }: NotificationsClientProps) {
   const router = useRouter();
@@ -90,10 +96,13 @@ export function NotificationsClient({
 
   return (
     <AppShell
-      role={role}
-      currentPath={currentPath}
+      role={shellRole}
+      currentPath="/notifications"
       userId={userId}
-      user={user}
+      user={shellUser}
+      unreadNotifications={unreadNotifications}
+      sidebarStats={sidebarStats}
+      adminBadges={adminBadges}
       onSignOut={handleSignOut}
     >
       <div className="space-y-6">

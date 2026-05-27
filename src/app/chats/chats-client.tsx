@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { ProfileAvatar } from '@/components/profile-avatar';
 import { EmptyState } from '@/components/ui/empty-state';
 import { MessageCircleIcon, SearchIcon } from '@/components/icons';
-import type { AppSidebarStats } from '@/components/app-sidebar';
+import type { AppSidebarStats, AppSidebarUser } from '@/components/app-sidebar';
 import { formatRelativeTime } from '@/lib/format-relative-time';
 import { cn } from '@/lib/utils';
 
@@ -28,14 +28,7 @@ type ChatsClientProps = {
   currentPath: string;
   userId: string;
   role: 'footballer' | 'club';
-  user: {
-    name: string;
-    initials: string;
-    image?: string;
-    position?: string;
-    nationality?: string;
-    city?: string;
-  };
+  user: AppSidebarUser & { email?: string };
   unreadNotifications: number;
   sidebarStats?: AppSidebarStats;
   conversations: ConversationItem[];

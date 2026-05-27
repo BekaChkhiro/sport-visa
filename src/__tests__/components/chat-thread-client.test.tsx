@@ -120,6 +120,7 @@ function renderClient(messages: ChatThreadMessage[] = []) {
       userId="club-user"
       role="club"
       user={BASE_USER}
+      unreadNotifications={0}
       conversation={BASE_CONVERSATION}
       initialMessages={messages}
     />,

@@ -1,8 +1,8 @@
-import { notFound, redirect } from 'next/navigation';
+import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 
 import { db } from '@/lib/db';
-import { loadAppShellContext } from '@/lib/app-shell/load-context';
+import { requireAppShellContext } from '@/lib/app-shell/load-context';
 import { ClubPostDetailClient } from './club-post-detail-client';
 
 type Props = {
@@ -29,8 +29,8 @@ function clubInitials(name: string) {
 }
 
 export default async function ClubPostDetailPage({ params }: Props) {
-  const [shell, { clubId, postId }] = await Promise.all([loadAppShellContext(), params]);
-  if (!shell) redirect(`/auth/signin?callbackUrl=/clubs/${clubId}/posts/${postId}`);
+  const { clubId, postId } = await params;
+  const shell = await requireAppShellContext(`/clubs/${clubId}/posts/${postId}`);
 
   const r2BaseUrl = process.env.R2_PUBLIC_BASE_URL ?? '';
 

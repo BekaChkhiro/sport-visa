@@ -1,79 +1,39 @@
 import { redirect } from 'next/navigation';
 import type { Metadata } from 'next';
 
-import { auth } from '@/lib/auth';
 import { db } from '@/lib/db';
-import type { VerificationStatus } from '@/components/verification-badge';
+import { requireAppShellContext } from '@/lib/app-shell/load-context';
 import { MyRequestsClient } from './my-requests-client';
 
 export const metadata: Metadata = {
   title: 'ჩემი სერვ. მოთხოვნები',
 };
 
-type PrismaVerificationStatus = 'PENDING' | 'VERIFIED' | 'REJECTED';
-
-function toUiVerificationStatus(status: PrismaVerificationStatus): VerificationStatus {
-  return status.toLowerCase() as VerificationStatus;
-}
-
 export default async function MyRequestsPage() {
-  const session = await auth();
+  const shell = await requireAppShellContext('/services/my-requests');
 
-  if (!session?.user) {
-    redirect('/auth/signin');
-  }
-
-  if (session.user.role !== 'FOOTBALLER') {
+  if (shell.role !== 'footballer') {
     redirect('/dashboard');
   }
 
-  const userId = session.user.id;
-
-  const [profile, serviceRequests, unreadNotifications] = await Promise.all([
-    db.footballerProfile.findUnique({
-      where: { userId },
-      select: {
-        firstName: true,
-        lastName: true,
-        positions: true,
-        nationality: true,
-        avatarKey: true,
-        verificationStatus: true,
-        profileViewCount: true,
-        shortlistedBy: { select: { id: true } },
+  const serviceRequests = await db.serviceRequest.findMany({
+    where: { userId: shell.userId },
+    orderBy: { createdAt: 'desc' },
+    select: {
+      id: true,
+      requestCode: true,
+      status: true,
+      createdAt: true,
+      startDate: true,
+      endDate: true,
+      notes: true,
+      adminNote: true,
+      contactPref: true,
+      category: {
+        select: { id: true, name: true, slug: true, icon: true },
       },
-    }),
-    db.serviceRequest.findMany({
-      where: { userId },
-      orderBy: { createdAt: 'desc' },
-      select: {
-        id: true,
-        requestCode: true,
-        status: true,
-        createdAt: true,
-        startDate: true,
-        endDate: true,
-        notes: true,
-        adminNote: true,
-        contactPref: true,
-        category: {
-          select: { id: true, name: true, slug: true, icon: true },
-        },
-      },
-    }),
-    db.notification.count({ where: { userId, read: false } }),
-  ]);
-
-  if (!profile) {
-    redirect('/onboarding');
-  }
-
-  const r2BaseUrl = process.env.R2_PUBLIC_BASE_URL ?? '';
-  const name = `${profile.firstName} ${profile.lastName}`.trim();
-  const initials = [profile.firstName[0], profile.lastName[0]]
-    .filter(Boolean)
-    .join('')
-    .toUpperCase();
+    },
+  });
 
   const requests = serviceRequests.map((r) => ({
     id: r.id,
@@ -91,22 +51,13 @@ export default async function MyRequestsPage() {
   return (
     <MyRequestsClient
       currentPath="/services/my-requests"
-      userId={userId}
+      userId={shell.userId}
       user={{
-        name,
-        initials,
-        image: profile.avatarKey ? `${r2BaseUrl}/${profile.avatarKey}` : undefined,
-        position: profile.positions[0] ?? undefined,
-        nationality: profile.nationality ?? undefined,
-        verificationStatus: toUiVerificationStatus(profile.verificationStatus),
-        profileCompletion: 100,
+        ...shell.user,
+        profileCompletion: shell.user.profileCompletion ?? 0,
       }}
-      stats={{
-        views: profile.profileViewCount,
-        saves: profile.shortlistedBy.length,
-        unreadMessages: 0,
-      }}
-      unreadNotifications={unreadNotifications}
+      stats={shell.sidebarStats ?? {}}
+      unreadNotifications={shell.unreadNotifications}
       requests={requests}
     />
   );

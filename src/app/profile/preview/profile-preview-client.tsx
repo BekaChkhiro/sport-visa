@@ -67,17 +67,30 @@ type ProfileData = {
 
 type ProfilePreviewClientProps = {
   currentPath: string;
+  userId: string;
   user: {
     name: string;
     initials: string;
     image?: string;
     position?: string;
+    nationality?: string;
+    city?: string;
     verificationStatus?: VerificationStatus;
+    profileCompletion?: number;
   };
+  unreadNotifications: number;
+  sidebarStats?: { views?: number; saves?: number; unreadMessages?: number };
   profile: ProfileData;
 };
 
-export function ProfilePreviewClient({ currentPath, user, profile }: ProfilePreviewClientProps) {
+export function ProfilePreviewClient({
+  currentPath,
+  userId,
+  user,
+  unreadNotifications,
+  sidebarStats,
+  profile,
+}: ProfilePreviewClientProps) {
   const router = useRouter();
 
   async function handleSignOut() {
@@ -98,7 +111,15 @@ export function ProfilePreviewClient({ currentPath, user, profile }: ProfilePrev
   ].filter(Boolean);
 
   return (
-    <AppShell role="footballer" currentPath={currentPath} user={user} onSignOut={handleSignOut}>
+    <AppShell
+      role="footballer"
+      currentPath={currentPath}
+      userId={userId}
+      user={user}
+      unreadNotifications={unreadNotifications}
+      sidebarStats={sidebarStats}
+      onSignOut={handleSignOut}
+    >
       <div className="max-w-3xl space-y-6">
         {/* ── Preview banner ─────────────────────────────────────────────── */}
         <div className="flex items-center justify-between gap-4 rounded-xl border border-primary/30 bg-primary/5 px-4 py-3">

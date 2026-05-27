@@ -31,24 +31,23 @@ type MobileNavDrawerProps = {
 };
 
 const LINKS: Record<MobileNavRole, NavLink[]> = {
-  public: [
-    { href: '/', label: 'მთავარი' },
-    { href: '/about', label: 'პროდუქტი' },
-    { href: '/pricing', label: 'ფასები' },
-  ],
+  public: [{ href: '/', label: 'მთავარი' }],
   footballer: [
-    { href: '/dashboard', label: 'პანელი' },
+    { href: '/dashboard/footballer', label: 'პანელი' },
     { href: '/clubs', label: 'კლუბები' },
-    { href: '/services', label: 'სერვისები' },
+    { href: '/services/request', label: 'სერვისები' },
+    { href: '/services/my-requests', label: 'ჩემი მოთხოვნები' },
     { href: '/chats', label: 'ჩატები' },
-    { href: '/profile', label: 'პროფილი' },
+    { href: '/notifications', label: 'შეტყობინებები' },
+    { href: '/profile/edit', label: 'პროფილი' },
   ],
   club: [
-    { href: '/dashboard', label: 'პანელი' },
+    { href: '/dashboard/club', label: 'პანელი' },
     { href: '/directory', label: 'მოთამაშეები' },
     { href: '/shortlist', label: 'შერჩეულები' },
     { href: '/chats', label: 'ჩატები' },
-    { href: '/profile', label: 'პროფილი' },
+    { href: '/notifications', label: 'შეტყობინებები' },
+    { href: '/profile/club/edit', label: 'პროფილი' },
   ],
   admin: [
     { href: '/admin', label: 'პანელი' },
@@ -59,6 +58,12 @@ const LINKS: Record<MobileNavRole, NavLink[]> = {
     { href: '/admin/ref-data', label: 'სცნ. მონ.' },
   ],
 };
+
+function profilePathFor(role: MobileNavRole): string {
+  if (role === 'club') return '/profile/club/edit';
+  if (role === 'admin') return '/admin';
+  return '/profile/edit';
+}
 
 function MobileNavDrawer({
   role,
@@ -106,7 +111,7 @@ function MobileNavDrawer({
             <div className="flex flex-col gap-2">
               <p className="text-sm font-medium">{user.name}</p>
               <Button variant="outline" size="sm" asChild>
-                <Link href="/profile" onClick={() => onOpenChange(false)}>
+                <Link href={profilePathFor(role)} onClick={() => onOpenChange(false)}>
                   პროფილი
                 </Link>
               </Button>

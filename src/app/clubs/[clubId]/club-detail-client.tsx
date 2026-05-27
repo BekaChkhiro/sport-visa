@@ -317,7 +317,7 @@ export function ClubDetailClient({
                         className={cn('size-4', isSubscribed ? 'fill-current' : '')}
                         aria-hidden="true"
                       />
-                      {isSubscribed ? 'გამოწ.' : 'გამოწ. გაუქ.'}
+                      {isSubscribed ? 'გამოწ. გაუქ.' : 'გამოწერა'}
                     </Button>
                   )}
                 </div>

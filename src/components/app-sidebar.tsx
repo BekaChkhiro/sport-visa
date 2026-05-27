@@ -9,7 +9,6 @@ import { ProfileAvatar } from '@/components/profile-avatar';
 import {
   AlertCircleIcon,
   BarChartIcon,
-  DownloadIcon,
   EditIcon,
   EyeIcon,
   FileTextIcon,
@@ -112,8 +111,8 @@ function FootballerSidebar({
   stats?: AppSidebarStats;
 }) {
   const navItems: NavItem[] = [
-    { href: '/services/request', label: '+ სერვ. მოთხ.', icon: PlusIcon },
-    { href: '/services/my-requests', label: 'ჩემი მოთხ.', icon: ListViewIcon },
+    { href: '/services/request', label: 'სერვისის მოთხოვნა', icon: PlusIcon },
+    { href: '/services/my-requests', label: 'ჩემი მოთხოვნები', icon: ListViewIcon },
     { href: '/clubs', label: 'კლუბების ძიება', icon: SearchIcon },
     { href: '/chats', label: 'ჩატები', icon: MessageCircleIcon, badgeCount: stats?.unreadMessages },
   ];
@@ -147,19 +146,13 @@ function FootballerSidebar({
           <Button variant="default" size="sm" asChild className="flex-1">
             <Link href="/profile/edit">
               <EditIcon className="size-3.5" />
-              რედ.
+              რედაქტ.
             </Link>
           </Button>
           <Button variant="outline" size="sm" asChild className="flex-1">
             <Link href="/profile/preview">
               <EyeIcon className="size-3.5" />
-              პრევიუ
-            </Link>
-          </Button>
-          <Button variant="outline" size="sm" asChild className="flex-1">
-            <Link href="/profile/cv">
-              <DownloadIcon className="size-3.5" />
-              CV
+              ნახვა
             </Link>
           </Button>
         </div>
