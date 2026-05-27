@@ -1588,6 +1588,171 @@ These are mandatory for shipping. The validator will flag missing items.
 
 ---
 
+### Phase 14: Playwright E2E Suite
+
+#### T14.1: Playwright bootstrap (config + fixtures + seed + CI)
+- [ ] **Status**: TODO
+- **Complexity**: Medium
+- **Estimated**: 6 hours
+- **Dependencies**: T11.8
+- **Description**:
+  - **Touchpoints**: create `playwright.config.ts`, create `e2e/` directory with `e2e/fixtures/`, `e2e/helpers/`, `e2e/specs/`; create `e2e/global-setup.ts` for seed; edit `package.json` scripts; edit `.github/workflows/ci.yml`
+  - **Contract**: `npm run e2e` runs full headless suite against `http://127.0.0.1:3000`; auth fixtures expose `footballerPage`, `clubPage`, `adminPage`, `verifiedFootballerPage` with cookies pre-set; seed script drops + reseeds a `sport_visa_e2e` Postgres database with deterministic users + reference data
+  - Install `@playwright/test`, run `npx playwright install --with-deps chromium webkit`
+  - Configure `webServer` block in `playwright.config.ts` so `next dev -H 127.0.0.1` is started/torn down per run
+  - Build a `e2e/global-setup.ts` that calls a `prisma/seed-e2e.ts` to create: 1 admin, 2 footballers (1 verified, 1 pending), 2 clubs (1 verified, 1 pending), 3 service categories, 1 league
+  - Auth fixtures sign each role in via the real signin form once per worker and persist storageState
+  - Add `e2e`, `e2e:ui`, `e2e:debug`, `e2e:report` npm scripts
+  - Add a Playwright job to `.github/workflows/ci.yml` that runs after lint/typecheck/unit tests
+- **Acceptance Criteria**:
+  - `npm run e2e e2e/specs/smoke.spec.ts` (a single ping test) passes locally
+  - Auth fixture `footballerPage` lands on `/dashboard/footballer` without going through signin form again
+  - CI job reports green on the smoke spec
+  - Seed script is idempotent — running twice produces identical DB state
+
+#### T14.2: E2E — public pages + auth + onboarding flows
+- [ ] **Status**: TODO
+- **Complexity**: High
+- **Estimated**: 8 hours
+- **Dependencies**: T14.1
+- **Description**:
+  - **Touchpoints**: create `e2e/specs/public.spec.ts`, `e2e/specs/auth.spec.ts`, `e2e/specs/onboarding.spec.ts`
+  - **Contract**: each spec runs in chromium AND webkit; uses fixtures from T14.1
+  - Public pages: landing (`/`) hero/features/how/testimonials/FAQ/contact, `/robots.txt`, `/sitemap.xml` content
+  - Signup happy path: register footballer + register club, intercept Resend so verification token is captured, `/api/auth/verify-email?token=...`, then signin
+  - Signin: wrong password 401, locked-out behavior, "remember me", forgot-password → reset link → reset → signin with new password
+  - Onboarding: role selection → footballer wizard → finishes at `/dashboard/footballer`; role selection → club wizard → finishes at `/dashboard/club`
+  - Verify `/verification-pending` shows when unverified user hits gated route
+- **Acceptance Criteria**:
+  - All three specs green in chromium + webkit
+  - Each happy path uses **real DOM interactions** (typing, clicking) — not direct API calls
+  - Every redirect target is asserted (URL + visible content)
+
+#### T14.3: E2E — footballer profile, gallery, preview
+- [ ] **Status**: TODO
+- **Complexity**: High
+- **Estimated**: 8 hours
+- **Dependencies**: T14.1
+- **Description**:
+  - **Touchpoints**: create `e2e/specs/footballer-profile.spec.ts`, `e2e/specs/footballer-gallery.spec.ts`, `e2e/specs/footballer-preview.spec.ts`, `e2e/helpers/uploads.ts`
+  - **Contract**: tests use the `footballerPage` fixture; gallery upload helper stubs R2 presign with a local file:// or mock S3 response
+  - Profile edit: basic info save + validation errors (name length, DOB future date, etc.)
+  - Physical attributes: height/weight/dominant foot/positions — boundary values
+  - Career history: add/edit/reorder/delete entries, date overlap warning
+  - Gallery: upload 3 photos, reorder by drag, set cover, delete; assert R2 presign request shape
+  - Preview: footballer's own `/profile/preview` reflects the latest edit within 1 reload
+- **Acceptance Criteria**:
+  - Every form on the footballer side has an E2E test covering save AND validation error
+  - Gallery upload flow asserts the presign + confirm round-trip
+  - Preview page reflects edits without a hard refresh
+
+#### T14.4: E2E — club profile, history, roster, post composer
+- [ ] **Status**: TODO
+- **Complexity**: High
+- **Estimated**: 8 hours
+- **Dependencies**: T14.1
+- **Description**:
+  - **Touchpoints**: create `e2e/specs/club-profile.spec.ts`, `e2e/specs/club-history.spec.ts`, `e2e/specs/club-roster.spec.ts`, `e2e/specs/club-posts.spec.ts`
+  - **Contract**: uses `clubPage` fixture; roster spec also signs in as a footballer to assert that a "subscribe" CTA appears on the club's public page
+  - Club profile basic info edit with league dropdown, logo upload
+  - History timeline: add achievement, reorder, delete; year validation
+  - Roster: add/remove members, search-and-invite, role assignment
+  - Post composer: draft → publish, edit published, delete, preview at `/clubs/[clubId]/posts/[postId]`
+- **Acceptance Criteria**:
+  - Club's public profile page reflects all four CRUD areas correctly
+  - A published post is visible on the newsfeed for a subscribed footballer (cross-feature check)
+  - Validation errors render inline, not in a toast
+
+#### T14.5: E2E — discovery, filters, shortlist, newsfeed
+- [ ] **Status**: TODO
+- **Complexity**: High
+- **Estimated**: 8 hours
+- **Dependencies**: T14.1
+- **Description**:
+  - **Touchpoints**: create `e2e/specs/directory.spec.ts`, `e2e/specs/footballer-detail.spec.ts`, `e2e/specs/club-directory.spec.ts`, `e2e/specs/shortlist.spec.ts`, `e2e/specs/newsfeed.spec.ts`
+  - **Contract**: each filter assertion verifies BOTH URL search params AND visible result count
+  - Directory: open `/directory` as a club, apply each filter family (position, age range, geography, physical, foot), combine 3 filters, clear filters
+  - Footballer detail: `/directory/[footballerId]` renders profile + "Save to shortlist" + "Start chat" CTAs
+  - Club directory: `/clubs` list, sort, search by name, league filter
+  - Shortlist: add → list → remove → empty state
+  - Newsfeed: subscribed clubs appear, unsubscribed do not, infinite scroll loads page 2
+- **Acceptance Criteria**:
+  - Every filter combination round-trips through URL params
+  - Shortlist add/remove updates the count in the header within 1s
+  - Newsfeed page 2 fetch is asserted via network expect
+
+#### T14.6: E2E — real-time chat + notifications
+- [ ] **Status**: TODO
+- **Complexity**: High
+- **Estimated**: 10 hours
+- **Dependencies**: T14.1
+- **Description**:
+  - **Touchpoints**: create `e2e/specs/chat.spec.ts`, `e2e/specs/notifications.spec.ts`, `e2e/specs/notification-prefs.spec.ts`, `e2e/helpers/pusher-mock.ts`
+  - **Contract**: uses TWO browser contexts (footballer + club) in the same test for real-time assertions; mocks Pusher with a local broadcast bridge OR uses a dev-only Pusher channel
+  - Chat: footballer starts chat from a club profile → club sees thread → both send messages → read receipts increment → unread count clears on open
+  - Conversation list ordering by latest message
+  - Notification dropdown: new notification appears, click marks as read, "see all" → `/notifications`
+  - Email notifications: assert Resend send was called (via a mock interceptor) when a new post hits a subscribed footballer
+  - Notification preferences: toggle email digest → digest job behavior verified
+- **Acceptance Criteria**:
+  - Cross-context test: club sees footballer's message within 2s without page reload
+  - Email notification mock asserts subject + recipient
+  - Unread badge clears within 1 reload after reading
+
+#### T14.7: E2E — services + full admin panel
+- [ ] **Status**: TODO
+- **Complexity**: High
+- **Estimated**: 8 hours
+- **Dependencies**: T14.1
+- **Description**:
+  - **Touchpoints**: create `e2e/specs/services.spec.ts`, `e2e/specs/admin-verification.spec.ts`, `e2e/specs/admin-users.spec.ts`, `e2e/specs/admin-moderation.spec.ts`, `e2e/specs/admin-ref-data.spec.ts`, `e2e/specs/admin-dashboard.spec.ts`
+  - **Contract**: admin specs use `adminPage` fixture
+  - Services: browse categories → submit request → see "My requests" with status timeline
+  - Admin verification queue: open pending footballer → approve → assert profile flipped to verified on public page
+  - Admin users: search by name/email, change role, ban, restore
+  - Admin moderation: hide post, restore post, delete chat message
+  - Admin ref-data: add/edit/delete league, add/edit/delete service category
+  - Admin dashboard: KPI cards reflect seeded counts
+- **Acceptance Criteria**:
+  - Verification approve flips public visibility in the same test run
+  - Ban prevents the banned user from signing in (cross-feature)
+  - Ref-data CRUD reflects in the user-facing dropdowns
+
+#### T14.8: Visual regression baselines (light/dark × mobile/desktop)
+- [ ] **Status**: TODO
+- **Complexity**: Medium
+- **Estimated**: 6 hours
+- **Dependencies**: T14.2, T14.3, T14.4, T14.5, T14.6, T14.7
+- **Description**:
+  - **Touchpoints**: create `e2e/specs/visual.spec.ts`, create `e2e/visual-baselines/` (committed snapshots)
+  - **Contract**: `toHaveScreenshot()` per page in 4 modes — light/desktop, light/mobile, dark/desktop, dark/mobile
+  - Cover ~14 key pages: `/`, `/auth/signin`, `/auth/signup`, `/onboarding`, `/dashboard/footballer`, `/dashboard/club`, `/profile/edit`, `/profile/preview`, `/directory`, `/clubs`, `/chats`, `/notifications`, `/admin`, `/admin/verification`
+  - Mask dynamic regions (timestamps, avatars) to keep diffs deterministic
+  - Document update workflow (`npx playwright test --update-snapshots`) in `docs/visual-testing.md`
+- **Acceptance Criteria**:
+  - 14 pages × 4 modes = 56 baseline snapshots committed
+  - CI fails on any diff > 0.1% per region
+  - docs/visual-testing.md explains how to refresh baselines safely
+
+#### T14.9: Bug-fix sweep — fix every defect found by T14.2–T14.8
+- [ ] **Status**: TODO
+- **Complexity**: High
+- **Estimated**: 12 hours
+- **Dependencies**: T14.2, T14.3, T14.4, T14.5, T14.6, T14.7, T14.8
+- **Description**:
+  - **Touchpoints**: whichever app files the failing tests touch (no test fixture changes here — fixes go in app code)
+  - **Contract**: every test that was red at the end of T14.2–T14.8 is green AND every visual diff is either fixed or its baseline updated with a justification
+  - Triage each failure into: app bug / flake / test bug. Only the first category counts; fix in app code
+  - Stabilize flakes: replace timing-based waits with `expect(...).toHaveText(...)` etc.
+  - Re-run full suite 3× consecutively to prove non-flake
+  - Log each fix in `docs/e2e-fixes.md` (one line per bug: symptom → root cause → fix)
+- **Acceptance Criteria**:
+  - All E2E specs green for 3 consecutive runs locally and on CI
+  - `docs/e2e-fixes.md` lists every defect found + its resolution
+  - Zero pending Playwright `test.fixme` / `test.skip` in the repo
+
+---
+
 ## Progress Tracking
 
 ### Overall Status
