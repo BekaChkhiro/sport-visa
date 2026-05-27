@@ -27,6 +27,8 @@ import {
   addGalleryItem,
   deleteGalleryItem,
   reorderGalleryItems,
+  updateAvatar,
+  updateCover,
 } from '@/lib/profile/actions';
 import {
   COUNTRIES,
@@ -83,6 +85,8 @@ type GalleryPhoto = {
   isTemp?: boolean;
 };
 
+type StoredMedia = { key: string; url: string } | null;
+
 type ProfileEditClientProps = {
   currentPath: string;
   userId: string;
@@ -98,6 +102,8 @@ type ProfileEditClientProps = {
   };
   unreadNotifications: number;
   sidebarStats?: { views?: number; saves?: number; unreadMessages?: number };
+  initialAvatar: StoredMedia;
+  initialCover: StoredMedia;
   initialPersonalInfo: PersonalInfo;
   initialSportInfo: SportInfo;
   initialCareerEntries: CareerEntry[];
@@ -111,6 +117,8 @@ export function ProfileEditClient({
   user,
   unreadNotifications,
   sidebarStats,
+  initialAvatar,
+  initialCover,
   initialPersonalInfo,
   initialSportInfo,
   initialCareerEntries,
@@ -137,6 +145,8 @@ export function ProfileEditClient({
       <div className="max-w-2xl space-y-8">
         <h1 className="text-2xl font-semibold">პროფილის რედაქტირება</h1>
 
+        <AvatarSection initialAvatar={initialAvatar} />
+        <CoverSection initialCover={initialCover} />
         <PersonalInfoSection initialData={initialPersonalInfo} />
         <SportInfoSection initialData={initialSportInfo} />
         <PhotoGallerySection initialPhotos={initialGalleryPhotos} />
@@ -520,6 +530,200 @@ function SportInfoSection({ initialData }: { initialData: SportInfo }) {
         </div>
       </div>
     </section>
+  );
+}
+
+// ── Avatar + Cover ────────────────────────────────────────────────────────────
+
+const AVATAR_ALLOWED = ['image/jpeg', 'image/png', 'image/webp'];
+const SINGLE_IMAGE_MAX_BYTES = 10 * 1024 * 1024;
+
+type SingleImageSectionProps = {
+  title: string;
+  description: string;
+  initial: StoredMedia;
+  kind: 'AVATAR' | 'OTHER';
+  shape: 'circle' | 'banner';
+  save: (
+    key: string | null,
+  ) => Promise<{ status: 'success' } | { status: 'error'; message: string }>;
+};
+
+function SingleImageSection({
+  title,
+  description,
+  initial,
+  kind,
+  shape,
+  save,
+}: SingleImageSectionProps) {
+  const [image, setImage] = React.useState<StoredMedia>(initial);
+  const [uploading, setUploading] = React.useState(false);
+  const [error, setError] = React.useState('');
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+
+  async function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    e.target.value = '';
+
+    if (!AVATAR_ALLOWED.includes(file.type)) {
+      setError('ნებადართულია მხოლოდ JPEG, PNG ან WEBP');
+      return;
+    }
+    if (file.size > SINGLE_IMAGE_MAX_BYTES) {
+      setError(`ფაილი ძალიან დიდია (მაქს. ${SINGLE_IMAGE_MAX_BYTES / 1024 / 1024} MB)`);
+      return;
+    }
+
+    setUploading(true);
+    setError('');
+
+    try {
+      const presignRes = await fetch('/api/uploads/presign', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ kind, contentType: file.type, contentLength: file.size }),
+      });
+      if (!presignRes.ok) throw new Error('Presign failed');
+      const { key, uploadUrl, requiredHeaders } = (await presignRes.json()) as {
+        key: string;
+        uploadUrl: string;
+        requiredHeaders: Record<string, string>;
+      };
+
+      const putRes = await fetch(uploadUrl, {
+        method: 'PUT',
+        headers: requiredHeaders,
+        body: file,
+      });
+      if (!putRes.ok) throw new Error('Upload failed');
+
+      const confirmRes = await fetch('/api/uploads/confirm', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ key, kind }),
+      });
+      if (!confirmRes.ok) throw new Error('Confirm failed');
+      const { url } = (await confirmRes.json()) as { url: string };
+
+      const result = await save(key);
+      if (result.status === 'error') throw new Error(result.message);
+
+      setImage({ key, url });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'ატვირთვა ვერ მოხდა');
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  async function handleRemove() {
+    if (!image) return;
+    setUploading(true);
+    setError('');
+    const result = await save(null);
+    if (result.status === 'error') {
+      setError(result.message);
+    } else {
+      setImage(null);
+    }
+    setUploading(false);
+  }
+
+  return (
+    <section className="space-y-3">
+      <div className="space-y-1">
+        <h2 className="text-sm font-medium uppercase tracking-wide text-muted-foreground">
+          {title}
+        </h2>
+        <p className="text-xs text-muted-foreground">{description}</p>
+      </div>
+
+      {image ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={image.url}
+          alt={title}
+          className={cn(
+            'border border-border bg-muted object-cover',
+            shape === 'circle' ? 'size-32 rounded-full' : 'h-40 w-full rounded-lg',
+          )}
+        />
+      ) : (
+        <div
+          className={cn(
+            'flex items-center justify-center border border-dashed border-border bg-muted/40 text-xs text-muted-foreground',
+            shape === 'circle' ? 'size-32 rounded-full' : 'h-40 w-full rounded-lg',
+          )}
+        >
+          ფოტო არ არის
+        </div>
+      )}
+
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept={AVATAR_ALLOWED.join(',')}
+        className="hidden"
+        onChange={handleFileSelect}
+      />
+
+      <div className="flex gap-2">
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => fileInputRef.current?.click()}
+          disabled={uploading}
+        >
+          {uploading ? 'მუშავდება…' : image ? 'შეცვლა' : 'ფოტოს არჩევა'}
+        </Button>
+        {image ? (
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={handleRemove}
+            disabled={uploading}
+          >
+            წაშლა
+          </Button>
+        ) : null}
+      </div>
+
+      {error && (
+        <p role="alert" className="text-sm text-destructive">
+          {error}
+        </p>
+      )}
+    </section>
+  );
+}
+
+function AvatarSection({ initialAvatar }: { initialAvatar: StoredMedia }) {
+  return (
+    <SingleImageSection
+      title="ავატარი"
+      description="პროფილის მთავარი ფოტო. რეკომენდებული — კვადრატული, მინიმუმ 400×400."
+      initial={initialAvatar}
+      kind="AVATAR"
+      shape="circle"
+      save={updateAvatar}
+    />
+  );
+}
+
+function CoverSection({ initialCover }: { initialCover: StoredMedia }) {
+  return (
+    <SingleImageSection
+      title="გარეკანი"
+      description="დიდი ფონური ფოტო, რომელიც ჩანს პროფილის გვერდის თავში. რეკომენდებული — 1600×400."
+      initial={initialCover}
+      kind="OTHER"
+      shape="banner"
+      save={updateCover}
+    />
   );
 }
 
