@@ -11,7 +11,7 @@ const { auth } = NextAuth(authConfig);
 const REQUEST_ID_HEADER = 'x-request-id';
 
 // Routes that require an authenticated, email-verified session.
-const PROTECTED_PREFIXES = ['/dashboard', '/admin', '/onboarding', '/profile', '/chat'];
+const PROTECTED_PREFIXES = ['/dashboard', '/admin', '/onboarding', '/profile', '/chat', '/clubs'];
 
 // Auth-only routes — authenticated + verified users are redirected away.
 const AUTH_PREFIXES = ['/auth/'];

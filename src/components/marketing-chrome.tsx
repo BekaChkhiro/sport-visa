@@ -11,6 +11,7 @@ const APP_SHELL_PREFIXES = [
   '/admin',
   '/chat',
   '/chats',
+  '/clubs',
   '/dashboard',
   '/directory',
   '/notifications',

@@ -1,7 +1,8 @@
 import type { Metadata } from 'next';
+import { redirect } from 'next/navigation';
 
-import { auth } from '@/lib/auth';
 import { db } from '@/lib/db';
+import { loadAppShellContext } from '@/lib/app-shell/load-context';
 import type { VerificationStatus } from '@/components/verification-badge';
 import { ClubsDirectoryClient } from './clubs-directory-client';
 
@@ -48,10 +49,11 @@ export default async function ClubsPage({
 }: {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
-  const [session, sp] = await Promise.all([auth(), searchParams]);
+  const [shell, sp] = await Promise.all([loadAppShellContext(), searchParams]);
+  if (!shell) redirect('/auth/signin?callbackUrl=/clubs');
 
-  const viewerRole = session?.user?.role ?? null;
-  const viewerUserId = session?.user?.id ?? null;
+  const viewerRole = shell.role.toUpperCase();
+  const viewerUserId = shell.userId;
 
   const page = Math.max(1, int(sp.page) ?? 1);
   const sort = parseSort(str(sp.sort));
@@ -101,9 +103,8 @@ export default async function ClubsPage({
     }),
   ]);
 
-  // For FOOTBALLER users, fetch their current subscriptions for the clubs on this page
   let subscribedClubIds = new Set<string>();
-  if (viewerRole === 'FOOTBALLER' && viewerUserId) {
+  if (viewerRole === 'FOOTBALLER') {
     const footballer = await db.footballerProfile.findUnique({
       where: { userId: viewerUserId },
       select: { id: true },
@@ -142,6 +143,12 @@ export default async function ClubsPage({
 
   return (
     <ClubsDirectoryClient
+      shellRole={shell.role}
+      shellUser={shell.user}
+      userId={shell.userId}
+      sidebarStats={shell.sidebarStats}
+      adminBadges={shell.adminBadges}
+      unreadNotifications={shell.unreadNotifications}
       viewerRole={viewerRole}
       items={items}
       total={total}

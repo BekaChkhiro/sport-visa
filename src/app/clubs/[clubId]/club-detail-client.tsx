@@ -4,9 +4,17 @@ import * as React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
+import { signOut } from 'next-auth/react';
 
+import { AppShell } from '@/components/app-shell';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import type {
+  AppSidebarAdminBadges,
+  AppSidebarRole,
+  AppSidebarStats,
+  AppSidebarUser,
+} from '@/components/app-sidebar';
 import { VerificationBadge, type VerificationStatus } from '@/components/verification-badge';
 import {
   BellIcon,
@@ -132,6 +140,12 @@ function toGoogleMapsEmbedUrl(url: string): string | null {
 }
 
 type ClubDetailClientProps = {
+  shellRole: AppSidebarRole;
+  shellUser: AppSidebarUser & { email?: string };
+  userId: string;
+  sidebarStats?: AppSidebarStats;
+  adminBadges?: AppSidebarAdminBadges;
+  unreadNotifications: number;
   viewerRole: string | null;
   activeTab: string;
   club: ClubData;
@@ -139,12 +153,23 @@ type ClubDetailClientProps = {
 };
 
 export function ClubDetailClient({
+  shellRole,
+  shellUser,
+  userId,
+  sidebarStats,
+  adminBadges,
+  unreadNotifications,
   viewerRole,
   activeTab: activeTabRaw,
   club,
   isSubscribed: initialIsSubscribed,
 }: ClubDetailClientProps) {
   const router = useRouter();
+
+  async function handleSignOut() {
+    await signOut({ redirect: false });
+    router.push('/auth/signin');
+  }
   const activeTab = toValidTab(activeTabRaw);
 
   const canSubscribe = viewerRole === 'FOOTBALLER';
@@ -197,162 +222,178 @@ export function ClubDetailClient({
   const embedUrl = club.stadiumMapUrl ? toGoogleMapsEmbedUrl(club.stadiumMapUrl) : null;
 
   return (
-    <div className="mx-auto max-w-4xl space-y-6 px-4 py-8 md:px-6">
-      {toast ? (
-        <div
-          role="status"
-          aria-live="polite"
-          className={cn(
-            'fixed bottom-20 left-1/2 z-50 -translate-x-1/2 rounded-lg px-4 py-2.5 text-sm font-medium shadow-lg transition-all sm:bottom-6',
-            toast.type === 'error'
-              ? 'bg-destructive text-destructive-foreground'
-              : 'bg-foreground text-background',
-          )}
-        >
-          {toast.message}
-        </div>
-      ) : null}
-
-      {/* Back link */}
-      <div>
-        <Button variant="ghost" size="sm" asChild>
-          <Link href="/clubs">
-            <ArrowLeftIcon className="size-4" />
-            კლუბებზე დაბრუნება
-          </Link>
-        </Button>
-      </div>
-
-      {/* Hero */}
-      <div className="overflow-hidden rounded-xl border border-border bg-card">
-        {club.coverUrl ? (
-          <div className="relative aspect-[4/1] w-full overflow-hidden bg-muted">
-            <Image
-              src={club.coverUrl}
-              alt={`${club.name} cover`}
-              fill
-              className="object-cover"
-              sizes="(max-width: 768px) 100vw, 900px"
-              priority
-            />
-          </div>
-        ) : (
-          <div className="h-24 bg-muted/50 sm:h-32" />
-        )}
-
-        <div className="flex flex-col gap-4 p-4 sm:flex-row sm:items-start sm:gap-6 sm:p-6">
-          <div className="shrink-0">
-            <Avatar className="size-20 rounded-xl shadow-sm sm:size-24">
-              {club.logoUrl ? (
-                <AvatarImage
-                  src={club.logoUrl}
-                  alt={`${club.name} ლოგო`}
-                  className="rounded-xl object-contain"
-                />
-              ) : null}
-              <AvatarFallback className="rounded-xl bg-muted text-lg font-bold text-muted-foreground">
-                {clubInitials(club.name)}
-              </AvatarFallback>
-            </Avatar>
-          </div>
-
-          <div className="flex flex-1 flex-col gap-2">
-            <div className="flex flex-wrap items-start justify-between gap-2">
-              <div>
-                <h1 className="text-2xl font-bold leading-tight">{club.name}</h1>
-                {metaParts.length > 0 && (
-                  <p className="mt-1 flex items-center gap-1 text-sm text-muted-foreground">
-                    <MapPinIcon className="size-3.5 shrink-0" aria-hidden="true" />
-                    {metaParts.join(' · ')}
-                  </p>
-                )}
-              </div>
-
-              <div className="flex flex-wrap gap-2">
-                {(canSubscribe || viewerRole === null) && (
-                  <Button
-                    type="button"
-                    variant={isSubscribed ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={handleSubscribeToggle}
-                    disabled={subscribePending}
-                    aria-pressed={isSubscribed}
-                  >
-                    <BellIcon
-                      className={cn('size-4', isSubscribed ? 'fill-current' : '')}
-                      aria-hidden="true"
-                    />
-                    {isSubscribed ? 'გამოწ.' : 'გამოწ. გაუქ.'}
-                  </Button>
-                )}
-              </div>
-            </div>
-
-            <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
-              <VerificationBadge status={club.verificationStatus} />
-              <span className="flex items-center gap-1">
-                <EyeIcon className="size-3.5" aria-hidden="true" />
-                {club.profileViewCount} ნახვა
-              </span>
-              <span className="flex items-center gap-1">
-                <BellIcon className="size-3.5" aria-hidden="true" />
-                {club.subscriberCount} გამ.
-              </span>
-            </div>
-
-            {club.officialWebsite && (
-              <div className="flex items-center gap-1 text-xs">
-                <GlobeIcon className="size-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />
-                <a
-                  href={club.officialWebsite}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-primary hover:underline"
-                >
-                  {club.officialWebsite.replace(/^https?:\/\//, '')}
-                  <ExternalLinkIcon className="ml-0.5 inline size-3" aria-hidden="true" />
-                </a>
-              </div>
+    <AppShell
+      role={shellRole}
+      currentPath="/clubs"
+      user={shellUser}
+      userId={userId}
+      unreadNotifications={unreadNotifications}
+      sidebarStats={sidebarStats}
+      adminBadges={adminBadges}
+      onSignOut={handleSignOut}
+    >
+      <div className="mx-auto max-w-4xl space-y-6">
+        {toast ? (
+          <div
+            role="status"
+            aria-live="polite"
+            className={cn(
+              'fixed bottom-20 left-1/2 z-50 -translate-x-1/2 rounded-lg px-4 py-2.5 text-sm font-medium shadow-lg transition-all sm:bottom-6',
+              toast.type === 'error'
+                ? 'bg-destructive text-destructive-foreground'
+                : 'bg-foreground text-background',
             )}
+          >
+            {toast.message}
+          </div>
+        ) : null}
+
+        {/* Back link */}
+        <div>
+          <Button variant="ghost" size="sm" asChild>
+            <Link href="/clubs">
+              <ArrowLeftIcon className="size-4" />
+              კლუბებზე დაბრუნება
+            </Link>
+          </Button>
+        </div>
+
+        {/* Hero */}
+        <div className="overflow-hidden rounded-xl border border-border bg-card">
+          {club.coverUrl ? (
+            <div className="relative aspect-[4/1] w-full overflow-hidden bg-muted">
+              <Image
+                src={club.coverUrl}
+                alt={`${club.name} cover`}
+                fill
+                className="object-cover"
+                sizes="(max-width: 768px) 100vw, 900px"
+                priority
+              />
+            </div>
+          ) : (
+            <div className="h-24 bg-muted/50 sm:h-32" />
+          )}
+
+          <div className="flex flex-col gap-4 p-4 sm:flex-row sm:items-start sm:gap-6 sm:p-6">
+            <div className="shrink-0">
+              <Avatar className="size-20 rounded-xl shadow-sm sm:size-24">
+                {club.logoUrl ? (
+                  <AvatarImage
+                    src={club.logoUrl}
+                    alt={`${club.name} ლოგო`}
+                    className="rounded-xl object-contain"
+                  />
+                ) : null}
+                <AvatarFallback className="rounded-xl bg-muted text-lg font-bold text-muted-foreground">
+                  {clubInitials(club.name)}
+                </AvatarFallback>
+              </Avatar>
+            </div>
+
+            <div className="flex flex-1 flex-col gap-2">
+              <div className="flex flex-wrap items-start justify-between gap-2">
+                <div>
+                  <h1 className="text-2xl font-bold leading-tight">{club.name}</h1>
+                  {metaParts.length > 0 && (
+                    <p className="mt-1 flex items-center gap-1 text-sm text-muted-foreground">
+                      <MapPinIcon className="size-3.5 shrink-0" aria-hidden="true" />
+                      {metaParts.join(' · ')}
+                    </p>
+                  )}
+                </div>
+
+                <div className="flex flex-wrap gap-2">
+                  {(canSubscribe || viewerRole === null) && (
+                    <Button
+                      type="button"
+                      variant={isSubscribed ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={handleSubscribeToggle}
+                      disabled={subscribePending}
+                      aria-pressed={isSubscribed}
+                    >
+                      <BellIcon
+                        className={cn('size-4', isSubscribed ? 'fill-current' : '')}
+                        aria-hidden="true"
+                      />
+                      {isSubscribed ? 'გამოწ.' : 'გამოწ. გაუქ.'}
+                    </Button>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+                <VerificationBadge status={club.verificationStatus} />
+                <span className="flex items-center gap-1">
+                  <EyeIcon className="size-3.5" aria-hidden="true" />
+                  {club.profileViewCount} ნახვა
+                </span>
+                <span className="flex items-center gap-1">
+                  <BellIcon className="size-3.5" aria-hidden="true" />
+                  {club.subscriberCount} გამ.
+                </span>
+              </div>
+
+              {club.officialWebsite && (
+                <div className="flex items-center gap-1 text-xs">
+                  <GlobeIcon
+                    className="size-3.5 shrink-0 text-muted-foreground"
+                    aria-hidden="true"
+                  />
+                  <a
+                    href={club.officialWebsite}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-primary hover:underline"
+                  >
+                    {club.officialWebsite.replace(/^https?:\/\//, '')}
+                    <ExternalLinkIcon className="ml-0.5 inline size-3" aria-hidden="true" />
+                  </a>
+                </div>
+              )}
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* Tab navigation */}
-      <div className="border-b border-border">
-        <nav className="-mb-px flex gap-1 overflow-x-auto" aria-label="კლუბის ტაბები">
-          {(Object.entries(TAB_LABELS) as [Tab, string][]).map(([tab, label]) => (
-            <button
-              key={tab}
-              type="button"
-              onClick={() => handleTabChange(tab)}
-              className={cn(
-                'whitespace-nowrap border-b-2 px-4 py-2.5 text-sm font-medium transition-colors',
-                activeTab === tab
-                  ? 'border-primary text-primary'
-                  : 'border-transparent text-muted-foreground hover:border-border hover:text-foreground',
-              )}
-              aria-current={activeTab === tab ? 'page' : undefined}
-            >
-              {label}
-            </button>
-          ))}
-        </nav>
-      </div>
+        {/* Tab navigation */}
+        <div className="border-b border-border">
+          <nav className="-mb-px flex gap-1 overflow-x-auto" aria-label="კლუბის ტაბები">
+            {(Object.entries(TAB_LABELS) as [Tab, string][]).map(([tab, label]) => (
+              <button
+                key={tab}
+                type="button"
+                onClick={() => handleTabChange(tab)}
+                className={cn(
+                  'whitespace-nowrap border-b-2 px-4 py-2.5 text-sm font-medium transition-colors',
+                  activeTab === tab
+                    ? 'border-primary text-primary'
+                    : 'border-transparent text-muted-foreground hover:border-border hover:text-foreground',
+                )}
+                aria-current={activeTab === tab ? 'page' : undefined}
+              >
+                {label}
+              </button>
+            ))}
+          </nav>
+        </div>
 
-      {/* Tab content */}
-      {activeTab === 'history' && <HistoryTab bio={club.bio} historyEvents={club.historyEvents} />}
-      {activeTab === 'roster' && <RosterTab rosterEntries={club.rosterEntries} />}
-      {activeTab === 'stadium' && (
-        <StadiumTab
-          stadiumName={club.stadiumName}
-          stadiumCapacity={club.stadiumCapacity}
-          stadiumAddress={club.stadiumAddress}
-          embedUrl={embedUrl}
-        />
-      )}
-      {activeTab === 'news' && <NewsTab clubId={club.id} posts={club.posts} />}
-    </div>
+        {/* Tab content */}
+        {activeTab === 'history' && (
+          <HistoryTab bio={club.bio} historyEvents={club.historyEvents} />
+        )}
+        {activeTab === 'roster' && <RosterTab rosterEntries={club.rosterEntries} />}
+        {activeTab === 'stadium' && (
+          <StadiumTab
+            stadiumName={club.stadiumName}
+            stadiumCapacity={club.stadiumCapacity}
+            stadiumAddress={club.stadiumAddress}
+            embedUrl={embedUrl}
+          />
+        )}
+        {activeTab === 'news' && <NewsTab clubId={club.id} posts={club.posts} />}
+      </div>
+    </AppShell>
   );
 }
 

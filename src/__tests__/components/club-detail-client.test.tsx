@@ -6,8 +6,18 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 afterEach(cleanup);
 
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn() }) }));
+vi.mock('next-auth/react', () => ({ signOut: vi.fn().mockResolvedValue(undefined) }));
 vi.mock('@/lib/clubs/actions', () => ({
   toggleSubscription: vi.fn(),
+}));
+vi.mock('@/hooks/use-notifications', () => ({
+  useNotifications: () => ({
+    notifications: [],
+    unreadCount: 0,
+    loading: false,
+    markRead: vi.fn(),
+    markAllRead: vi.fn(),
+  }),
 }));
 
 import { ClubDetailClient } from '@/app/clubs/[clubId]/club-detail-client';
@@ -62,6 +72,10 @@ function renderDetail(
 ) {
   return render(
     <ClubDetailClient
+      shellRole="footballer"
+      shellUser={{ name: 'Test User', initials: 'TU' }}
+      userId="u1"
+      unreadNotifications={0}
       viewerRole={props.viewerRole ?? 'FOOTBALLER'}
       activeTab={props.activeTab ?? 'history'}
       club={{ ...baseClub, ...clubOverrides }}
