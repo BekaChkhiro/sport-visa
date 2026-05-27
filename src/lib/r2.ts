@@ -70,6 +70,16 @@ function getClient(): S3Client {
       accessKeyId: cfg.accessKeyId,
       secretAccessKey: cfg.secretAccessKey,
     },
+    // Disable the SDK's default CRC32 integrity-protection middleware (added in
+    // @aws-sdk/client-s3 v3.731+). It bakes `x-amz-checksum-crc32` and
+    // `x-amz-sdk-checksum-algorithm` into the presigned URL's signed headers,
+    // which the browser must then send on the direct PUT. R2's CORS allowlist
+    // would have to enumerate those vendor headers — and any future ones the
+    // SDK adds — for browser uploads to work. Setting WHEN_REQUIRED keeps the
+    // signed headers limited to Content-Type / Content-Length, which is all
+    // R2 needs and all the CORS policy documents.
+    requestChecksumCalculation: 'WHEN_REQUIRED',
+    responseChecksumValidation: 'WHEN_REQUIRED',
   });
   return cachedClient;
 }

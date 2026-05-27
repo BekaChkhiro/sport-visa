@@ -46,3 +46,48 @@ export async function toggleSubscription(clubProfileId: string): Promise<Subscri
   revalidatePath('/dashboard/footballer');
   return { status: 'success', subscribed: true };
 }
+
+type LikeResult =
+  | { status: 'success'; liked: boolean; likeCount: number }
+  | { status: 'error'; message: string };
+
+// Toggles the current footballer's like on a club post. Only FOOTBALLER role
+// can like; clubs and admins are rejected. Returns the post-update like count
+// so callers can update the displayed counter without a refetch.
+export async function togglePostLike(postId: string): Promise<LikeResult> {
+  const session = await auth();
+  if (!session?.user?.id) return { status: 'error', message: 'ავტორიზაცია საჭიროა' };
+  if (session.user.role !== 'FOOTBALLER') {
+    return { status: 'error', message: 'მხოლოდ ფეხბურთელებს შეუძლიათ მოწონება' };
+  }
+
+  const footballer = await db.footballerProfile.findUnique({
+    where: { userId: session.user.id },
+    select: { id: true },
+  });
+  if (!footballer) return { status: 'error', message: 'ფეხბურთელის პროფილი ვერ მოიძებნა' };
+
+  const post = await db.clubPost.findUnique({
+    where: { id: postId },
+    select: { clubId: true },
+  });
+  if (!post) return { status: 'error', message: 'პოსტი ვერ მოიძებნა' };
+
+  const existing = await db.postLike.findUnique({
+    where: { postId_footballerProfileId: { postId, footballerProfileId: footballer.id } },
+    select: { id: true },
+  });
+
+  if (existing) {
+    await db.postLike.delete({ where: { id: existing.id } });
+  } else {
+    await db.postLike.create({
+      data: { postId, footballerProfileId: footballer.id },
+    });
+  }
+
+  const likeCount = await db.postLike.count({ where: { postId } });
+  revalidatePath(`/clubs/${post.clubId}/posts/${postId}`);
+  revalidatePath(`/clubs/${post.clubId}`);
+  return { status: 'success', liked: !existing, likeCount };
+}

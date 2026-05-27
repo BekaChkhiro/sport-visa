@@ -8,13 +8,15 @@ import { signOut } from 'next-auth/react';
 import { AppShell } from '@/components/app-shell';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { ArrowLeftIcon } from '@/components/icons';
+import { ArrowLeftIcon, HeartIcon } from '@/components/icons';
 import type {
   AppSidebarAdminBadges,
   AppSidebarRole,
   AppSidebarStats,
   AppSidebarUser,
 } from '@/components/app-sidebar';
+import { togglePostLike } from '@/lib/clubs/actions';
+import { cn } from '@/lib/utils';
 
 type ClubPostDetailClientProps = {
   shellRole: AppSidebarRole;
@@ -23,9 +25,17 @@ type ClubPostDetailClientProps = {
   sidebarStats?: AppSidebarStats;
   adminBadges?: AppSidebarAdminBadges;
   unreadNotifications: number;
+  canLike: boolean;
   clubId: string;
   club: { name: string; logoUrl?: string; initials: string };
-  post: { title: string; body: string; publishedAt: string; likeCount: number };
+  post: {
+    id: string;
+    title: string;
+    body: string;
+    publishedAt: string;
+    likeCount: number;
+    isLiked: boolean;
+  };
 };
 
 export function ClubPostDetailClient({
@@ -35,15 +45,37 @@ export function ClubPostDetailClient({
   sidebarStats,
   adminBadges,
   unreadNotifications,
+  canLike,
   clubId,
   club,
   post,
 }: ClubPostDetailClientProps) {
   const router = useRouter();
+  const [liked, setLiked] = React.useState(post.isLiked);
+  const [likeCount, setLikeCount] = React.useState(post.likeCount);
+  const [pending, setPending] = React.useState(false);
 
   async function handleSignOut() {
     await signOut({ redirect: false });
     router.push('/auth/signin');
+  }
+
+  async function handleToggleLike() {
+    if (!canLike || pending) return;
+    const optimisticLiked = !liked;
+    setLiked(optimisticLiked);
+    setLikeCount((c) => c + (optimisticLiked ? 1 : -1));
+    setPending(true);
+
+    const result = await togglePostLike(post.id);
+    if (result.status === 'error') {
+      setLiked(!optimisticLiked);
+      setLikeCount((c) => c + (optimisticLiked ? -1 : 1));
+    } else {
+      setLiked(result.liked);
+      setLikeCount(result.likeCount);
+    }
+    setPending(false);
   }
 
   return (
@@ -94,8 +126,30 @@ export function ClubPostDetailClient({
             {post.body}
           </p>
 
-          <div className="mt-6 border-t border-border pt-4 text-xs text-muted-foreground">
-            ❤ {post.likeCount}
+          <div className="mt-6 flex items-center gap-2 border-t border-border pt-4">
+            {canLike ? (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={handleToggleLike}
+                disabled={pending}
+                aria-pressed={liked}
+                aria-label={liked ? 'მოწონების მოხსნა' : 'მოწონება'}
+                className="gap-1.5"
+              >
+                <HeartIcon
+                  className={cn('size-4', liked ? 'fill-current text-red-500' : '')}
+                  aria-hidden="true"
+                />
+                <span className="text-xs">{likeCount}</span>
+              </Button>
+            ) : (
+              <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                <HeartIcon className="size-4" aria-hidden="true" />
+                {likeCount}
+              </span>
+            )}
           </div>
         </article>
       </div>

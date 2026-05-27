@@ -50,6 +50,9 @@ type FormData = {
   jerseyNumber: string;
   experienceLevel: string;
   desiredLeague: string;
+  // Step 3
+  avatarKey: string;
+  avatarUrl: string;
 };
 
 const EMPTY_FORM: FormData = {
@@ -67,7 +70,12 @@ const EMPTY_FORM: FormData = {
   jerseyNumber: '',
   experienceLevel: '',
   desiredLeague: '',
+  avatarKey: '',
+  avatarUrl: '',
 };
+
+const AVATAR_MAX_BYTES = 10 * 1024 * 1024;
+const AVATAR_ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 
 export function FootballerWizard({ displayName }: { displayName: string }) {
   const router = useRouter();
@@ -170,6 +178,7 @@ export function FootballerWizard({ displayName }: { displayName: string }) {
         experienceLevel:
           (form.experienceLevel as (typeof EXPERIENCE_LEVEL_VALUES)[number]) || undefined,
         desiredLeague: form.desiredLeague || undefined,
+        avatarKey: form.avatarKey || undefined,
       });
       if (result.status === 'success') {
         router.replace('/dashboard/footballer');
@@ -198,7 +207,7 @@ export function FootballerWizard({ displayName }: { displayName: string }) {
         {step === 2 && (
           <Step2 form={form} errors={errors} onChange={set} onTogglePosition={togglePosition} />
         )}
-        {step === 3 && <Step3 />}
+        {step === 3 && <Step3 form={form} onChange={set} />}
         {step === 4 && <Step4 form={form} displayName={displayName} />}
       </div>
 
@@ -500,20 +509,135 @@ function Step2({
 
 // ── Step 3: Media ────────────────────────────────────────────────────────────
 
-function Step3() {
+function Step3({
+  form,
+  onChange,
+}: {
+  form: FormData;
+  onChange: (field: keyof FormData, value: string | string[]) => void;
+}) {
+  const [uploading, setUploading] = React.useState(false);
+  const [uploadError, setUploadError] = React.useState('');
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+
+  async function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    e.target.value = '';
+
+    if (!AVATAR_ALLOWED_TYPES.includes(file.type)) {
+      setUploadError('ნებადართულია მხოლოდ JPEG, PNG ან WEBP');
+      return;
+    }
+    if (file.size > AVATAR_MAX_BYTES) {
+      setUploadError(`ფაილი ძალიან დიდია (მაქს. ${AVATAR_MAX_BYTES / 1024 / 1024} MB)`);
+      return;
+    }
+
+    setUploading(true);
+    setUploadError('');
+
+    try {
+      const presignRes = await fetch('/api/uploads/presign', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ kind: 'AVATAR', contentType: file.type, contentLength: file.size }),
+      });
+      if (!presignRes.ok) {
+        throw new Error('Presign failed');
+      }
+      const { uploadUrl, key, requiredHeaders } = (await presignRes.json()) as {
+        uploadUrl: string;
+        key: string;
+        requiredHeaders: Record<string, string>;
+      };
+
+      const putRes = await fetch(uploadUrl, {
+        method: 'PUT',
+        headers: requiredHeaders,
+        body: file,
+      });
+      if (!putRes.ok) {
+        throw new Error('Upload failed');
+      }
+
+      const previewUrl = URL.createObjectURL(file);
+      onChange('avatarKey', key);
+      onChange('avatarUrl', previewUrl);
+    } catch {
+      setUploadError('ატვირთვა ვერ მოხერხდა. სცადე თავიდან.');
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  function handleRemove() {
+    if (form.avatarUrl) URL.revokeObjectURL(form.avatarUrl);
+    onChange('avatarKey', '');
+    onChange('avatarUrl', '');
+  }
+
   return (
-    <div className="py-8 flex flex-col items-center gap-4 text-center">
-      <div className="size-16 rounded-full bg-muted flex items-center justify-center">
-        <ImageIcon className="size-8 text-muted-foreground" />
-      </div>
+    <div className="py-4 flex flex-col items-center gap-4 text-center">
       <div className="space-y-1">
-        <h2 className="font-medium">ფოტო და ვიდეო</h2>
+        <h2 className="font-medium">ავატარი</h2>
         <p className="text-sm text-muted-foreground max-w-sm">
-          ფოტო გალერეა და ვიდეო ლინკები შეგიძლია დაამატო პროფილის რედაქტირების გვერდიდან პროფილის
-          შექმნის შემდეგ.
+          აირჩიე პროფილის ფოტო. ფოტო გალერეა და ვიდეო ლინკები შეგიძლია დაამატო პროფილის რედაქტირების
+          გვერდიდან.
         </p>
       </div>
-      <p className="text-xs text-muted-foreground">განაგრძე &rarr; გადახედვისთვის</p>
+
+      {form.avatarUrl ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={form.avatarUrl}
+          alt="ავატარი"
+          className="size-32 rounded-full object-cover ring-2 ring-border"
+        />
+      ) : (
+        <div className="size-32 rounded-full bg-muted flex items-center justify-center">
+          <ImageIcon className="size-12 text-muted-foreground" />
+        </div>
+      )}
+
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept={AVATAR_ALLOWED_TYPES.join(',')}
+        className="hidden"
+        onChange={handleFileSelect}
+      />
+
+      <div className="flex gap-2">
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => fileInputRef.current?.click()}
+          disabled={uploading}
+        >
+          {uploading ? 'იტვირთება…' : form.avatarKey ? 'შეცვლა' : 'ფოტოს არჩევა'}
+        </Button>
+        {form.avatarKey ? (
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={handleRemove}
+            disabled={uploading}
+          >
+            წაშლა
+          </Button>
+        ) : null}
+      </div>
+
+      {uploadError && (
+        <p role="alert" className="text-sm text-destructive">
+          {uploadError}
+        </p>
+      )}
+
+      <p className="text-xs text-muted-foreground">არასავალდებულო — შემდეგ შეგიძლია დაამატო.</p>
     </div>
   );
 }

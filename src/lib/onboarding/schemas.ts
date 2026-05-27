@@ -132,7 +132,15 @@ export const footballerStep2Schema = z.object({
   desiredLeague: z.preprocess(toOptStr, z.string().max(100).optional()),
 });
 
-export const footballerOnboardingSchema = footballerStep1Schema.merge(footballerStep2Schema);
+export const footballerStep3Schema = z.object({
+  // R2 object key of the uploaded avatar (e.g. "avatar/<uuid>.jpg"). Optional —
+  // the user can skip and upload later from /profile/edit.
+  avatarKey: z.preprocess(toOptStr, z.string().max(255).optional()),
+});
+
+export const footballerOnboardingSchema = footballerStep1Schema
+  .merge(footballerStep2Schema)
+  .merge(footballerStep3Schema);
 export type FootballerOnboardingInput = z.infer<typeof footballerOnboardingSchema>;
 
 export const clubOnboardingSchema = z.object({

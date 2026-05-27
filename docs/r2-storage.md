@@ -129,7 +129,11 @@ Bucket → Settings → CORS Policy → paste:
 ```json
 [
   {
-    "AllowedOrigins": ["http://localhost:3000", "https://sport-visa.example.com"],
+    "AllowedOrigins": [
+      "http://localhost:3000",
+      "http://127.0.0.1:3000",
+      "https://sport-visa-production.up.railway.app"
+    ],
     "AllowedMethods": ["PUT", "GET"],
     "AllowedHeaders": ["Content-Type", "Content-Length"],
     "ExposeHeaders": ["ETag"],
@@ -138,8 +142,16 @@ Bucket → Settings → CORS Policy → paste:
 ]
 ```
 
-Add every origin the app may run from (Vercel preview URLs, custom domains).
-Without this, the browser's `PUT` to R2 will fail with a CORS error.
+Add every origin the app may run from (Railway production, Vercel previews,
+custom domains). Without the production origin in the allowlist, the
+browser's `PUT` to R2 will fail with a CORS preflight error.
+
+> **Note**: `src/lib/r2.ts` sets `requestChecksumCalculation: 'WHEN_REQUIRED'`
+> on the S3Client to disable the AWS SDK v3.731+ default that bakes
+> `x-amz-checksum-crc32` / `x-amz-sdk-checksum-algorithm` into the presigned
+> URL's signed headers. Keep that setting — otherwise the CORS allowlist
+> above also has to enumerate those vendor headers and any future ones the
+> SDK chooses to add.
 
 ### 4. Public read URL
 
