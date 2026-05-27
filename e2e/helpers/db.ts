@@ -145,6 +145,103 @@ export async function addGalleryItem(
 }
 
 /**
+ * Create a verified club with a fully-onboarded profile — used by specs that
+ * drive /profile/club/edit, /profile/club/preview, /clubs/[id], and the post
+ * composer. Returns the credentials plus the club profile id so specs can
+ * deep-link into clubProfileId-scoped routes without re-querying the DB.
+ */
+export async function createVerifiedClubWithProfile(suffix: string): Promise<{
+  email: string;
+  password: string;
+  userId: string;
+  clubProfileId: string;
+}> {
+  const email = `profile-club-${suffix}@sport-visa.test`;
+  const password = 'TestPass123!';
+  const passwordHash = await bcrypt.hash(password, PASSWORD_HASH_ROUNDS);
+
+  await db().user.deleteMany({ where: { email } });
+
+  const user = await db().user.create({
+    data: {
+      email,
+      role: 'CLUB',
+      emailVerified: new Date(),
+      passwordHash,
+      firstName: 'FC',
+      lastName: `Test ${suffix}`,
+      clubProfile: {
+        create: {
+          name: `FC Test ${suffix}`,
+          country: 'GE',
+          city: 'თბილისი',
+          foundedYear: 1990,
+          verificationStatus: 'VERIFIED',
+        },
+      },
+    },
+    include: { clubProfile: true },
+  });
+
+  if (!user.clubProfile) {
+    throw new Error('expected clubProfile to be created');
+  }
+
+  return { email, password, userId: user.id, clubProfileId: user.clubProfile.id };
+}
+
+/**
+ * Seed a single history event onto a club profile so preview / public-detail
+ * specs can assert rendering without going through the edit form.
+ */
+export async function addClubHistoryEventDb(
+  clubProfileId: string,
+  year: number,
+  title: string,
+  description?: string,
+): Promise<{ id: string }> {
+  return db().clubHistoryEvent.create({
+    data: { clubId: clubProfileId, year, title, description: description ?? null },
+    select: { id: true },
+  });
+}
+
+/**
+ * Seed a single roster entry onto a club profile.
+ */
+export async function addClubRosterEntryDb(
+  clubProfileId: string,
+  playerName: string,
+  position?: string,
+  jerseyNumber?: number,
+): Promise<{ id: string }> {
+  return db().clubRosterEntry.create({
+    data: {
+      clubId: clubProfileId,
+      playerName,
+      position: position ?? null,
+      jerseyNumber: jerseyNumber ?? null,
+    },
+    select: { id: true },
+  });
+}
+
+/**
+ * Seed a club post directly so public-detail and post-detail specs can assert
+ * rendering without going through the composer form.
+ */
+export async function addClubPostDb(
+  clubProfileId: string,
+  title: string,
+  body: string,
+): Promise<{ id: string }> {
+  return db().clubPost.create({
+    data: { clubId: clubProfileId, title, body },
+    select: { id: true },
+  });
+}
+
+/**
  * Remove a user created during a spec. Cascades through
  * profile / token / session relations.
  */
