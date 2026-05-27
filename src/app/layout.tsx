@@ -1,8 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import { Noto_Sans_Georgian } from 'next/font/google';
 
-import { SiteFooter } from '@/components/site-footer';
-import { SiteHeader } from '@/components/site-header';
+import { MarketingChrome } from '@/components/marketing-chrome';
 import { ThemeProvider } from '@/components/theme-provider';
 
 import './globals.css';
@@ -75,9 +74,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           enableSystem
           disableTransitionOnChange
         >
-          <SiteHeader />
-          <main className="flex-1">{children}</main>
-          <SiteFooter />
+          <MarketingChrome>{children}</MarketingChrome>
         </ThemeProvider>
       </body>
     </html>

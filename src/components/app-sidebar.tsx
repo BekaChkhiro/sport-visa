@@ -365,7 +365,7 @@ function AppSidebar({ role, currentPath, user, stats, adminBadges, className }: 
     <aside
       data-slot="app-sidebar"
       className={cn(
-        'sticky top-16 hidden h-[calc(100vh-4rem)] w-[264px] shrink-0 overflow-y-auto border-r border-border bg-card px-4 py-6 lg:block',
+        'sticky top-16 hidden h-[calc(100vh-4rem)] w-72 shrink-0 overflow-y-auto border-r border-border bg-card px-4 py-6 lg:block',
         className,
       )}
     >

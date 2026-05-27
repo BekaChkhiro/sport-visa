@@ -159,7 +159,7 @@ export function ShortlistClient({
         </div>
       ) : null}
 
-      <div className="mx-auto max-w-3xl space-y-6">
+      <div className="space-y-6">
         <div>
           <Button variant="ghost" size="sm" asChild>
             <Link href="/dashboard/club">

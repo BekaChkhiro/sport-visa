@@ -85,7 +85,7 @@ export function ServiceCategoriesClient({
       sidebarStats={stats}
       onSignOut={handleSignOut}
     >
-      <div className="max-w-2xl space-y-6">
+      <div className="space-y-6">
         <div>
           <Button variant="ghost" size="sm" asChild className="-ml-2 mb-4">
             <Link href="/dashboard">

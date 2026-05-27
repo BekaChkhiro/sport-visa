@@ -246,7 +246,7 @@ export function ClubDashboardClient({
       sidebarStats={stats}
       onSignOut={handleSignOut}
     >
-      <div className="space-y-8 max-w-3xl">
+      <div className="space-y-8">
         {!bannerDismissed && user.verificationStatus ? (
           <VerificationBanner
             status={user.verificationStatus}

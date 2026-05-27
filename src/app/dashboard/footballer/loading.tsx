@@ -2,7 +2,7 @@ import { Skeleton, SkeletonCard, SkeletonListItem } from '@/components/ui/skelet
 
 export default function FootballerDashboardLoading() {
   return (
-    <div className="container mx-auto max-w-3xl space-y-8 px-4 py-6">
+    <div className="space-y-8 px-4 py-6">
       <Skeleton className="h-20 w-full rounded-xl" />
 
       <div className="space-y-3">
