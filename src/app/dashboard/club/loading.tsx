@@ -1,8 +1,10 @@
+import { AppShellSkeleton } from '@/components/app-shell-skeleton';
 import { Skeleton } from '@/components/ui/skeleton';
 
-// Mirrors ClubDashboardClient: optional verification banner, three sections
-// (recent shortlist rows, active chats placeholder, recent posts) — each
-// with a heading row + content area.
+// Mirrors ClubDashboardClient: verification banner + shortlist rows + chats
+// placeholder + post cards. Wrapped in the club AppShell skeleton so the
+// sidebar and header stay visible while loading.
+
 function FootballerRowSkeleton() {
   return (
     <div className="flex items-center gap-3 rounded-xl border border-border bg-card px-4 py-3">
@@ -41,45 +43,47 @@ function SectionHeading() {
 
 export default function ClubDashboardLoading() {
   return (
-    <div className="space-y-8 px-4 py-6 md:p-6 lg:p-8">
-      {/* Verification banner */}
-      <div className="rounded-xl border border-border bg-card p-4">
-        <Skeleton className="mb-2 h-4 w-48" />
-        <Skeleton className="h-3 w-3/4" />
-      </div>
-
-      {/* Recent shortlist */}
-      <section>
-        <SectionHeading />
-        <div className="flex flex-col gap-2">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <FootballerRowSkeleton key={i} />
-          ))}
-          <Skeleton className="h-8 w-44 self-start rounded-md" />
+    <AppShellSkeleton variant="club">
+      <div className="space-y-8">
+        {/* Verification banner */}
+        <div className="rounded-xl border border-border bg-card p-4">
+          <Skeleton className="mb-2 h-4 w-48" />
+          <Skeleton className="h-3 w-3/4" />
         </div>
-      </section>
 
-      {/* Active chats */}
-      <section>
-        <SectionHeading />
-        <div className="rounded-xl border border-border bg-card p-6">
-          <div className="flex flex-col items-center gap-2 py-6">
-            <Skeleton className="size-10 rounded-full" />
-            <Skeleton className="h-4 w-32" />
-            <Skeleton className="h-3 w-56" />
+        {/* Recent shortlist */}
+        <section>
+          <SectionHeading />
+          <div className="flex flex-col gap-2">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <FootballerRowSkeleton key={i} />
+            ))}
+            <Skeleton className="h-8 w-44 self-start rounded-md" />
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* Recent posts */}
-      <section>
-        <SectionHeading />
-        <div className="space-y-3">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <PostCardSkeleton key={i} />
-          ))}
-        </div>
-      </section>
-    </div>
+        {/* Active chats */}
+        <section>
+          <SectionHeading />
+          <div className="rounded-xl border border-border bg-card p-6">
+            <div className="flex flex-col items-center gap-2 py-6">
+              <Skeleton className="size-10 rounded-full" />
+              <Skeleton className="h-4 w-32" />
+              <Skeleton className="h-3 w-56" />
+            </div>
+          </div>
+        </section>
+
+        {/* Recent posts */}
+        <section>
+          <SectionHeading />
+          <div className="space-y-3">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <PostCardSkeleton key={i} />
+            ))}
+          </div>
+        </section>
+      </div>
+    </AppShellSkeleton>
   );
 }
