@@ -36,6 +36,7 @@ export default async function ProfileEditPage() {
       experienceLevel: true,
       desiredLeague: true,
       avatarKey: true,
+      coverKey: true,
       verificationStatus: true,
       profileViewCount: true,
       agentName: true,
@@ -73,6 +74,14 @@ export default async function ProfileEditPage() {
       user={shell.user}
       unreadNotifications={shell.unreadNotifications}
       sidebarStats={shell.sidebarStats}
+      initialAvatar={
+        profile.avatarKey
+          ? { key: profile.avatarKey, url: `${r2BaseUrl}/${profile.avatarKey}` }
+          : null
+      }
+      initialCover={
+        profile.coverKey ? { key: profile.coverKey, url: `${r2BaseUrl}/${profile.coverKey}` } : null
+      }
       initialPersonalInfo={{
         firstName: profile.firstName,
         lastName: profile.lastName,

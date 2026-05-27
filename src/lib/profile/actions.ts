@@ -299,3 +299,70 @@ export async function updateAgentInfo(data: unknown): Promise<ProfileActionState
   revalidatePath('/profile/edit');
   return { status: 'success' };
 }
+
+// ── avatar / cover ────────────────────────────────────────────────────────────
+
+// Replaces the avatar (or removes it when key is null). Deletes the old R2
+// object best-effort so the bucket doesn't accumulate orphans.
+export async function updateAvatar(key: string | null): Promise<ProfileActionState> {
+  const session = await auth();
+  if (!session?.user?.id) return { status: 'error', message: 'ავტორიზაცია საჭიროა' };
+  if (session.user.role !== 'FOOTBALLER') return { status: 'error', message: 'წვდომა აკრძალულია' };
+
+  if (key !== null && (typeof key !== 'string' || key.length > 255)) {
+    return { status: 'error', message: 'არასწორი key' };
+  }
+
+  const userId = session.user.id;
+  const current = await db.footballerProfile.findUnique({
+    where: { userId },
+    select: { avatarKey: true },
+  });
+  if (!current) return { status: 'error', message: 'პროფილი ვერ მოიძებნა' };
+
+  await db.footballerProfile.update({ where: { userId }, data: { avatarKey: key } });
+
+  if (current.avatarKey && current.avatarKey !== key) {
+    try {
+      await deleteObject(current.avatarKey);
+    } catch {
+      // best-effort
+    }
+  }
+
+  revalidatePath('/profile/edit');
+  revalidatePath('/profile/preview');
+  revalidatePath('/dashboard/footballer');
+  return { status: 'success' };
+}
+
+export async function updateCover(key: string | null): Promise<ProfileActionState> {
+  const session = await auth();
+  if (!session?.user?.id) return { status: 'error', message: 'ავტორიზაცია საჭიროა' };
+  if (session.user.role !== 'FOOTBALLER') return { status: 'error', message: 'წვდომა აკრძალულია' };
+
+  if (key !== null && (typeof key !== 'string' || key.length > 255)) {
+    return { status: 'error', message: 'არასწორი key' };
+  }
+
+  const userId = session.user.id;
+  const current = await db.footballerProfile.findUnique({
+    where: { userId },
+    select: { coverKey: true },
+  });
+  if (!current) return { status: 'error', message: 'პროფილი ვერ მოიძებნა' };
+
+  await db.footballerProfile.update({ where: { userId }, data: { coverKey: key } });
+
+  if (current.coverKey && current.coverKey !== key) {
+    try {
+      await deleteObject(current.coverKey);
+    } catch {
+      // best-effort
+    }
+  }
+
+  revalidatePath('/profile/edit');
+  revalidatePath('/profile/preview');
+  return { status: 'success' };
+}
