@@ -1,8 +1,9 @@
+import { AppShellSkeleton } from '@/components/app-shell-skeleton';
 import { Skeleton } from '@/components/ui/skeleton';
 
-// Mirrors ShortlistClient: back-link, heading row (title + count + browse
-// directory CTA), and a vertical list of footballer rows (avatar + name +
-// meta + position chip + profile button + star).
+// Mirrors ShortlistClient: back-link, heading row, and a vertical list of
+// footballer rows. Club role for the sidebar (only clubs see shortlist).
+
 function ShortlistRowSkeleton() {
   return (
     <div className="flex items-center gap-3 rounded-xl border border-border bg-card px-4 py-3">
@@ -22,20 +23,22 @@ function ShortlistRowSkeleton() {
 
 export default function ShortlistLoading() {
   return (
-    <div className="space-y-6 px-4 py-6 md:p-6 lg:p-8">
-      <Skeleton className="h-7 w-44" />
-      <div className="flex items-center justify-between gap-2">
-        <div className="space-y-2">
-          <Skeleton className="h-6 w-56" />
-          <Skeleton className="h-3 w-24" />
+    <AppShellSkeleton variant="club">
+      <div className="space-y-6">
+        <Skeleton className="h-7 w-44" />
+        <div className="flex items-center justify-between gap-2">
+          <div className="space-y-2">
+            <Skeleton className="h-6 w-56" />
+            <Skeleton className="h-3 w-24" />
+          </div>
+          <Skeleton className="h-8 w-32 shrink-0 rounded-md" />
         </div>
-        <Skeleton className="h-8 w-32 shrink-0 rounded-md" />
+        <div className="space-y-2">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <ShortlistRowSkeleton key={i} />
+          ))}
+        </div>
       </div>
-      <div className="space-y-2">
-        {Array.from({ length: 6 }).map((_, i) => (
-          <ShortlistRowSkeleton key={i} />
-        ))}
-      </div>
-    </div>
+    </AppShellSkeleton>
   );
 }

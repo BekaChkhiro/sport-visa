@@ -1,8 +1,9 @@
+import { AppShellSkeleton } from '@/components/app-shell-skeleton';
 import { Skeleton } from '@/components/ui/skeleton';
 
-// Mirrors ProfileEditClient: page title, then a stack of stacked sections
-// (avatar circle, cover banner, then a series of form cards each with a
-// heading + several fields and a save button).
+// Mirrors ProfileEditClient: page title, then avatar + cover sections, then
+// stacked form section cards.
+
 function FormSectionSkeleton({ fields = 4 }: { fields?: number }) {
   return (
     <section>
@@ -26,28 +27,30 @@ function FormSectionSkeleton({ fields = 4 }: { fields?: number }) {
 
 export default function ProfileEditLoading() {
   return (
-    <div className="mx-auto max-w-2xl space-y-8 px-4 py-6 md:p-6 lg:p-8">
-      <Skeleton className="h-8 w-64" />
+    <AppShellSkeleton variant="footballer">
+      <div className="mx-auto max-w-2xl space-y-8">
+        <Skeleton className="h-8 w-64" />
 
-      {/* Avatar */}
-      <section className="space-y-3">
-        <Skeleton className="h-3 w-20" />
-        <Skeleton className="h-3 w-3/4" />
-        <Skeleton className="size-32 rounded-full" />
-        <Skeleton className="h-9 w-32 rounded-md" />
-      </section>
+        {/* Avatar */}
+        <section className="space-y-3">
+          <Skeleton className="h-3 w-20" />
+          <Skeleton className="h-3 w-3/4" />
+          <Skeleton className="size-32 rounded-full" />
+          <Skeleton className="h-9 w-32 rounded-md" />
+        </section>
 
-      {/* Cover */}
-      <section className="space-y-3">
-        <Skeleton className="h-3 w-24" />
-        <Skeleton className="h-3 w-3/4" />
-        <Skeleton className="h-40 w-full rounded-lg" />
-        <Skeleton className="h-9 w-32 rounded-md" />
-      </section>
+        {/* Cover */}
+        <section className="space-y-3">
+          <Skeleton className="h-3 w-24" />
+          <Skeleton className="h-3 w-3/4" />
+          <Skeleton className="h-40 w-full rounded-lg" />
+          <Skeleton className="h-9 w-32 rounded-md" />
+        </section>
 
-      <FormSectionSkeleton fields={6} />
-      <FormSectionSkeleton fields={6} />
-      <FormSectionSkeleton fields={2} />
-    </div>
+        <FormSectionSkeleton fields={6} />
+        <FormSectionSkeleton fields={6} />
+        <FormSectionSkeleton fields={2} />
+      </div>
+    </AppShellSkeleton>
   );
 }

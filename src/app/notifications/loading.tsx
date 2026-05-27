@@ -1,7 +1,9 @@
+import { AppShellSkeleton } from '@/components/app-shell-skeleton';
 import { Skeleton } from '@/components/ui/skeleton';
 
-// Mirrors NotificationsClient: header row (title + unread count + mark-all
-// button) and a stack of notification rows (dot + title + body + timestamp).
+// Mirrors NotificationsClient: header (title + unread count + mark-all
+// button) and a stack of notification rows.
+
 function NotificationRowSkeleton() {
   return (
     <div className="flex items-start gap-4 rounded-lg border border-border bg-background p-4">
@@ -18,19 +20,21 @@ function NotificationRowSkeleton() {
 
 export default function NotificationsLoading() {
   return (
-    <div className="space-y-6 px-4 py-6 md:p-6 lg:p-8">
-      <div className="flex items-center justify-between gap-3">
-        <div className="space-y-1.5">
-          <Skeleton className="h-6 w-44" />
-          <Skeleton className="h-3 w-28" />
+    <AppShellSkeleton variant="footballer">
+      <div className="space-y-6">
+        <div className="flex items-center justify-between gap-3">
+          <div className="space-y-1.5">
+            <Skeleton className="h-6 w-44" />
+            <Skeleton className="h-3 w-28" />
+          </div>
+          <Skeleton className="h-8 w-32 shrink-0 rounded-md" />
         </div>
-        <Skeleton className="h-8 w-32 shrink-0 rounded-md" />
+        <div className="space-y-2">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <NotificationRowSkeleton key={i} />
+          ))}
+        </div>
       </div>
-      <div className="space-y-2">
-        {Array.from({ length: 5 }).map((_, i) => (
-          <NotificationRowSkeleton key={i} />
-        ))}
-      </div>
-    </div>
+    </AppShellSkeleton>
   );
 }

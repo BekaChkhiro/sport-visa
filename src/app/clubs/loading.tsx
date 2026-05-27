@@ -1,8 +1,10 @@
+import { AppShellSkeleton } from '@/components/app-shell-skeleton';
 import { Skeleton } from '@/components/ui/skeleton';
 
-// Mirrors ClubsDirectoryClient: title + count, filter bar (search input,
-// country/city/sort selects), then a responsive grid of club cards (logo +
-// name + meta + subscribe button).
+// Mirrors ClubsDirectoryClient: title + count + filter bar + responsive
+// grid of club cards. Wrapped in AppShellSkeleton so the sidebar and
+// header stay visible during the load.
+
 function ClubCardSkeleton() {
   return (
     <div className="space-y-3 rounded-xl border border-border bg-card p-4">
@@ -21,7 +23,7 @@ function ClubCardSkeleton() {
 
 export default function ClubsLoading() {
   return (
-    <div className="px-4 py-6 md:p-6 lg:p-8">
+    <AppShellSkeleton variant="footballer">
       <div className="mb-6 space-y-2">
         <Skeleton className="h-7 w-32" />
         <Skeleton className="h-3 w-20" />
@@ -40,6 +42,6 @@ export default function ClubsLoading() {
           <ClubCardSkeleton key={i} />
         ))}
       </div>
-    </div>
+    </AppShellSkeleton>
   );
 }

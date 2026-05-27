@@ -1,9 +1,10 @@
+import { AppShellSkeleton } from '@/components/app-shell-skeleton';
 import { Skeleton } from '@/components/ui/skeleton';
 
-// Mirrors the layout of FootballerDashboardClient so the transition feels
-// stable: profile-completion banner, newsfeed cards with club + title +
-// excerpt + like, service-request rows with status pill + date, and the
-// subscribed-clubs chip row.
+// Mirrors FootballerDashboardClient: profile-completion banner, newsfeed
+// cards with club + title + excerpt + like, service-request rows with
+// status pill + date, and the subscribed-clubs chip row. Wrapped in the
+// AppShellSkeleton so the sidebar and header stay visible while loading.
 
 function SectionHeading({ width = 'w-32' }: { width?: string }) {
   return <Skeleton className={`mb-3 h-3 ${width}`} />;
@@ -50,58 +51,60 @@ function ClubChipSkeleton({ width }: { width: string }) {
 
 export default function FootballerDashboardLoading() {
   return (
-    <div className="space-y-8 px-4 py-6 md:p-6 lg:p-8">
-      {/* Profile completion banner */}
-      <div className="rounded-xl border border-border bg-card p-4">
-        <div className="mb-3 flex items-center justify-between gap-3">
-          <div className="flex-1 space-y-2">
-            <Skeleton className="h-4 w-48" />
-            <Skeleton className="h-3 w-3/4" />
+    <AppShellSkeleton variant="footballer">
+      <div className="space-y-8">
+        {/* Profile completion banner */}
+        <div className="rounded-xl border border-border bg-card p-4">
+          <div className="mb-3 flex items-center justify-between gap-3">
+            <div className="flex-1 space-y-2">
+              <Skeleton className="h-4 w-48" />
+              <Skeleton className="h-3 w-3/4" />
+            </div>
+            <Skeleton className="h-8 w-24 shrink-0 rounded-md" />
           </div>
-          <Skeleton className="h-8 w-24 shrink-0 rounded-md" />
+          <Skeleton className="h-2 w-full rounded-full" />
         </div>
-        <Skeleton className="h-2 w-full rounded-full" />
-      </div>
 
-      {/* Newsfeed */}
-      <section>
-        <SectionHeading width="w-28" />
-        <div className="space-y-3">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <NewsfeedCardSkeleton key={i} />
-          ))}
-        </div>
-      </section>
+        {/* Newsfeed */}
+        <section>
+          <SectionHeading width="w-28" />
+          <div className="space-y-3">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <NewsfeedCardSkeleton key={i} />
+            ))}
+          </div>
+        </section>
 
-      {/* Service requests */}
-      <section>
-        <div className="mb-3 flex items-center justify-between">
-          <Skeleton className="h-3 w-32" />
-          <div className="flex items-center gap-2">
+        {/* Service requests */}
+        <section>
+          <div className="mb-3 flex items-center justify-between">
+            <Skeleton className="h-3 w-32" />
+            <div className="flex items-center gap-2">
+              <Skeleton className="h-8 w-16 rounded-md" />
+              <Skeleton className="h-8 w-24 rounded-md" />
+            </div>
+          </div>
+          <div className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-card">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <ServiceRequestRowSkeleton key={i} />
+            ))}
+          </div>
+        </section>
+
+        {/* Subscribed clubs */}
+        <section>
+          <div className="mb-3 flex items-center justify-between">
+            <Skeleton className="h-3 w-36" />
             <Skeleton className="h-8 w-16 rounded-md" />
-            <Skeleton className="h-8 w-24 rounded-md" />
           </div>
-        </div>
-        <div className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-card">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <ServiceRequestRowSkeleton key={i} />
-          ))}
-        </div>
-      </section>
-
-      {/* Subscribed clubs */}
-      <section>
-        <div className="mb-3 flex items-center justify-between">
-          <Skeleton className="h-3 w-36" />
-          <Skeleton className="h-8 w-16 rounded-md" />
-        </div>
-        <div className="flex flex-wrap gap-3">
-          <ClubChipSkeleton width="w-36" />
-          <ClubChipSkeleton width="w-40" />
-          <ClubChipSkeleton width="w-32" />
-          <ClubChipSkeleton width="w-44" />
-        </div>
-      </section>
-    </div>
+          <div className="flex flex-wrap gap-3">
+            <ClubChipSkeleton width="w-36" />
+            <ClubChipSkeleton width="w-40" />
+            <ClubChipSkeleton width="w-32" />
+            <ClubChipSkeleton width="w-44" />
+          </div>
+        </section>
+      </div>
+    </AppShellSkeleton>
   );
 }

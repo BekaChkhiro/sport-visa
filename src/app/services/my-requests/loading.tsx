@@ -1,8 +1,9 @@
+import { AppShellSkeleton } from '@/components/app-shell-skeleton';
 import { Skeleton } from '@/components/ui/skeleton';
 
 // Mirrors MyRequestsClient: back-link, header (title + new-request CTA),
-// filter tabs strip, then a divide-y list of request rows (icon + name +
-// code + notes vs status pill + date).
+// filter tabs strip, then a divide-y list of request rows.
+
 function RequestRowSkeleton() {
   return (
     <div className="flex items-start justify-between gap-4 px-4 py-4">
@@ -24,27 +25,29 @@ function RequestRowSkeleton() {
 
 export default function MyRequestsLoading() {
   return (
-    <div className="space-y-6 px-4 py-6 md:p-6 lg:p-8">
-      <div>
-        <Skeleton className="mb-4 h-7 w-44" />
-        <div className="flex items-center justify-between gap-4">
-          <div className="space-y-2">
-            <Skeleton className="h-7 w-56" />
-            <Skeleton className="h-3 w-32" />
+    <AppShellSkeleton variant="footballer">
+      <div className="space-y-6">
+        <div>
+          <Skeleton className="mb-4 h-7 w-44" />
+          <div className="flex items-center justify-between gap-4">
+            <div className="space-y-2">
+              <Skeleton className="h-7 w-56" />
+              <Skeleton className="h-3 w-32" />
+            </div>
+            <Skeleton className="h-8 w-28 shrink-0 rounded-md" />
           </div>
-          <Skeleton className="h-8 w-28 shrink-0 rounded-md" />
+        </div>
+        <div className="flex gap-1 rounded-lg bg-muted p-1">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Skeleton key={i} className="h-7 flex-1 rounded-md" />
+          ))}
+        </div>
+        <div className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-card">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <RequestRowSkeleton key={i} />
+          ))}
         </div>
       </div>
-      <div className="flex gap-1 rounded-lg bg-muted p-1">
-        {Array.from({ length: 4 }).map((_, i) => (
-          <Skeleton key={i} className="h-7 flex-1 rounded-md" />
-        ))}
-      </div>
-      <div className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-card">
-        {Array.from({ length: 4 }).map((_, i) => (
-          <RequestRowSkeleton key={i} />
-        ))}
-      </div>
-    </div>
+    </AppShellSkeleton>
   );
 }

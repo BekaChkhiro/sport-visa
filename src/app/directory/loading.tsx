@@ -1,7 +1,10 @@
+import { AppShellSkeleton } from '@/components/app-shell-skeleton';
 import { Skeleton } from '@/components/ui/skeleton';
 
 // Mirrors DirectoryClient: left filter sidebar (desktop), and main column
-// with heading + count + filter/sort/view toggles + grid of footballer cards.
+// with heading + count + filter/sort/view toggles + grid of footballer
+// cards. Club role for the AppShell sidebar.
+
 function FootballerCardSkeleton() {
   return (
     <div className="space-y-3 rounded-xl border border-border bg-card p-4">
@@ -30,32 +33,34 @@ function FilterGroupSkeleton() {
 
 export default function DirectoryLoading() {
   return (
-    <div className="flex gap-6 px-4 py-6 md:p-6 lg:p-8">
-      {/* Filter sidebar (desktop only) */}
-      <aside className="hidden w-64 shrink-0 lg:flex lg:flex-col lg:gap-5">
-        <Skeleton className="h-6 w-32" />
-        {Array.from({ length: 6 }).map((_, i) => (
-          <FilterGroupSkeleton key={i} />
-        ))}
-        <Skeleton className="mt-2 h-9 w-full rounded-md" />
-      </aside>
+    <AppShellSkeleton variant="club">
+      <div className="flex gap-6">
+        {/* Filter sidebar (desktop only) */}
+        <aside className="hidden w-64 shrink-0 lg:flex lg:flex-col lg:gap-5">
+          <Skeleton className="h-6 w-32" />
+          {Array.from({ length: 6 }).map((_, i) => (
+            <FilterGroupSkeleton key={i} />
+          ))}
+          <Skeleton className="mt-2 h-9 w-full rounded-md" />
+        </aside>
 
-      {/* Main column */}
-      <div className="flex min-w-0 flex-1 flex-col gap-4">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <Skeleton className="h-6 w-44" />
-          <div className="flex items-center gap-2">
-            <Skeleton className="h-8 w-20 rounded-md lg:hidden" />
-            <Skeleton className="h-8 w-24 rounded-md" />
-            <Skeleton className="h-9 w-20 rounded-md" />
+        {/* Main column */}
+        <div className="flex min-w-0 flex-1 flex-col gap-4">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <Skeleton className="h-6 w-44" />
+            <div className="flex items-center gap-2">
+              <Skeleton className="h-8 w-20 rounded-md lg:hidden" />
+              <Skeleton className="h-8 w-24 rounded-md" />
+              <Skeleton className="h-9 w-20 rounded-md" />
+            </div>
+          </div>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            {Array.from({ length: 9 }).map((_, i) => (
+              <FootballerCardSkeleton key={i} />
+            ))}
           </div>
         </div>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          {Array.from({ length: 9 }).map((_, i) => (
-            <FootballerCardSkeleton key={i} />
-          ))}
-        </div>
       </div>
-    </div>
+    </AppShellSkeleton>
   );
 }
