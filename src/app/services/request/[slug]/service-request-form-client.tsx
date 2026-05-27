@@ -217,7 +217,7 @@ export function ServiceRequestFormClient({
       sidebarStats={stats}
       onSignOut={handleSignOut}
     >
-      <div className="max-w-2xl space-y-6">
+      <div className="mx-auto max-w-2xl space-y-6">
         <div>
           <Button variant="ghost" size="sm" asChild className="-ml-2 mb-4">
             <Link href="/services/request">

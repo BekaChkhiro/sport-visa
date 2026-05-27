@@ -132,7 +132,7 @@ export function ClubProfileEditClient({
       sidebarStats={stats}
       onSignOut={handleSignOut}
     >
-      <div className="max-w-2xl space-y-8">
+      <div className="mx-auto max-w-2xl space-y-8">
         <h1 className="text-2xl font-semibold">კლუბის პროფილის რედაქტირება</h1>
 
         <IdentitySection initialData={initialIdentity} />

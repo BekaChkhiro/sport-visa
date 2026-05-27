@@ -79,7 +79,7 @@ export function PostEditClient({
       sidebarStats={stats}
       onSignOut={handleSignOut}
     >
-      <div className="max-w-2xl space-y-6">
+      <div className="mx-auto max-w-2xl space-y-6">
         <div>
           <Button variant="ghost" size="sm" onClick={() => router.back()}>
             <ArrowLeftIcon className="size-4" />

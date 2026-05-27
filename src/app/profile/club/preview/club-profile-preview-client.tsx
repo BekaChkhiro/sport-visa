@@ -111,7 +111,7 @@ export function ClubProfilePreviewClient({
 
   return (
     <AppShell role="club" currentPath={currentPath} user={user} onSignOut={handleSignOut}>
-      <div className="max-w-3xl space-y-6">
+      <div className="mx-auto max-w-3xl space-y-6">
         {/* ── Preview banner ─────────────────────────────────────────────── */}
         <div className="flex items-center justify-between gap-4 rounded-xl border border-primary/30 bg-primary/5 px-4 py-3">
           <div className="flex items-center gap-3">
