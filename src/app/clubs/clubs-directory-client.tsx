@@ -2,12 +2,20 @@
 
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
+import { signOut } from 'next-auth/react';
 
+import { AppShell } from '@/components/app-shell';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ClubCard } from '@/components/club-card';
 import { EmptyState } from '@/components/ui/empty-state';
 import { ChevronLeftIcon, ChevronRightIcon, SearchIcon } from '@/components/icons';
+import type {
+  AppSidebarAdminBadges,
+  AppSidebarRole,
+  AppSidebarStats,
+  AppSidebarUser,
+} from '@/components/app-sidebar';
 import type { VerificationStatus } from '@/components/verification-badge';
 import { toggleSubscription } from '@/lib/clubs/actions';
 
@@ -34,6 +42,12 @@ const SORT_LABELS: Record<SortKey, string> = {
 };
 
 type ClubsDirectoryClientProps = {
+  shellRole: AppSidebarRole;
+  shellUser: AppSidebarUser & { email?: string };
+  userId: string;
+  sidebarStats?: AppSidebarStats;
+  adminBadges?: AppSidebarAdminBadges;
+  unreadNotifications: number;
   viewerRole: string | null;
   items: ClubItem[];
   total: number;
@@ -127,6 +141,12 @@ function Pagination({
 }
 
 export function ClubsDirectoryClient({
+  shellRole,
+  shellUser,
+  userId,
+  sidebarStats,
+  adminBadges,
+  unreadNotifications,
   viewerRole,
   items,
   total,
@@ -141,6 +161,11 @@ export function ClubsDirectoryClient({
 }: ClubsDirectoryClientProps) {
   const router = useRouter();
   const canSubscribe = viewerRole === 'FOOTBALLER';
+
+  async function handleSignOut() {
+    await signOut({ redirect: false });
+    router.push('/auth/signin');
+  }
 
   const [subscribedIds, setSubscribedIds] = React.useState<Set<string>>(
     () => new Set(items.filter((c) => c.isSubscribed).map((c) => c.id)),
@@ -232,7 +257,16 @@ export function ClubsDirectoryClient({
   const hasFilters = !!(initialSearch || initialCountry || initialCity);
 
   return (
-    <div className="container mx-auto px-4 py-8 md:px-6">
+    <AppShell
+      role={shellRole}
+      currentPath="/clubs"
+      user={shellUser}
+      userId={userId}
+      unreadNotifications={unreadNotifications}
+      sidebarStats={sidebarStats}
+      adminBadges={adminBadges}
+      onSignOut={handleSignOut}
+    >
       <div className="mb-6">
         <h1 className="text-2xl font-bold tracking-tight">კლუბები</h1>
         <p className="mt-1 text-sm text-muted-foreground">{total} კლუბი</p>
@@ -355,6 +389,6 @@ export function ClubsDirectoryClient({
       <div className="mt-6">
         <Pagination page={page} totalPages={totalPages} onPageChange={handlePageChange} />
       </div>
-    </div>
+    </AppShell>
   );
 }

@@ -2,7 +2,7 @@ import { Skeleton, SkeletonCard } from '@/components/ui/skeleton';
 
 export default function ClubsLoading() {
   return (
-    <div className="container mx-auto px-4 py-6">
+    <div className="px-4 py-6">
       <div className="mb-6 flex flex-wrap items-center gap-3">
         <Skeleton className="h-9 w-56" />
         <Skeleton className="h-9 w-32" />

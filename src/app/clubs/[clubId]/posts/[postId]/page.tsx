@@ -1,10 +1,9 @@
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import type { Metadata } from 'next';
-import Link from 'next/link';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Button } from '@/components/ui/button';
-import { ArrowLeftIcon } from '@/components/icons';
+
 import { db } from '@/lib/db';
+import { loadAppShellContext } from '@/lib/app-shell/load-context';
+import { ClubPostDetailClient } from './club-post-detail-client';
 
 type Props = {
   params: Promise<{ clubId: string; postId: string }>;
@@ -30,7 +29,9 @@ function clubInitials(name: string) {
 }
 
 export default async function ClubPostDetailPage({ params }: Props) {
-  const { clubId, postId } = await params;
+  const [shell, { clubId, postId }] = await Promise.all([loadAppShellContext(), params]);
+  if (!shell) redirect(`/auth/signin?callbackUrl=/clubs/${clubId}/posts/${postId}`);
+
   const r2BaseUrl = process.env.R2_PUBLIC_BASE_URL ?? '';
 
   const post = await db.clubPost.findFirst({
@@ -40,14 +41,9 @@ export default async function ClubPostDetailPage({ params }: Props) {
       title: true,
       body: true,
       createdAt: true,
-      updatedAt: true,
       _count: { select: { likes: true } },
       club: {
-        select: {
-          id: true,
-          name: true,
-          logoKey: true,
-        },
+        select: { name: true, logoKey: true },
       },
     },
   });
@@ -56,7 +52,6 @@ export default async function ClubPostDetailPage({ params }: Props) {
 
   const logoUrl = post.club.logoKey ? `${r2BaseUrl}/${post.club.logoKey}` : undefined;
   const initials = clubInitials(post.club.name);
-
   const publishedAt = post.createdAt.toLocaleDateString('ka-GE', {
     year: 'numeric',
     month: 'long',
@@ -64,47 +59,21 @@ export default async function ClubPostDetailPage({ params }: Props) {
   });
 
   return (
-    <div className="mx-auto max-w-2xl space-y-6 px-4 py-8 md:px-6">
-      <div>
-        <Button variant="ghost" size="sm" asChild>
-          <Link href={`/clubs/${clubId}?tab=news`}>
-            <ArrowLeftIcon className="size-4" />
-            სიახლეებზე დაბრუნება
-          </Link>
-        </Button>
-      </div>
-
-      <article className="rounded-xl border border-border bg-card p-5 sm:p-6">
-        <div className="mb-4 flex items-center gap-3">
-          <Avatar className="size-9 rounded-lg">
-            {logoUrl && (
-              <AvatarImage
-                src={logoUrl}
-                alt={post.club.name}
-                className="rounded-lg object-contain"
-              />
-            )}
-            <AvatarFallback className="rounded-lg bg-muted text-sm font-semibold text-muted-foreground">
-              {initials}
-            </AvatarFallback>
-          </Avatar>
-          <div className="min-w-0">
-            <Link href={`/clubs/${clubId}`} className="text-sm font-medium hover:underline">
-              {post.club.name}
-            </Link>
-            <p className="text-xs text-muted-foreground">{publishedAt}</p>
-          </div>
-        </div>
-
-        <h1 className="mb-4 text-2xl font-bold leading-snug">{post.title}</h1>
-        <p className="whitespace-pre-wrap text-sm leading-relaxed text-foreground/90">
-          {post.body}
-        </p>
-
-        <div className="mt-6 border-t border-border pt-4 text-xs text-muted-foreground">
-          ❤ {post._count.likes}
-        </div>
-      </article>
-    </div>
+    <ClubPostDetailClient
+      shellRole={shell.role}
+      shellUser={shell.user}
+      userId={shell.userId}
+      sidebarStats={shell.sidebarStats}
+      adminBadges={shell.adminBadges}
+      unreadNotifications={shell.unreadNotifications}
+      clubId={clubId}
+      club={{ name: post.club.name, logoUrl, initials }}
+      post={{
+        title: post.title,
+        body: post.body,
+        publishedAt,
+        likeCount: post._count.likes,
+      }}
+    />
   );
 }

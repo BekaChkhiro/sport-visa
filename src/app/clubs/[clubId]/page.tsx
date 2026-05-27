@@ -1,8 +1,8 @@
 import type { Metadata } from 'next';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 
-import { auth } from '@/lib/auth';
 import { db } from '@/lib/db';
+import { loadAppShellContext } from '@/lib/app-shell/load-context';
 import type { VerificationStatus } from '@/components/verification-badge';
 import { ClubDetailClient } from './club-detail-client';
 
@@ -46,7 +46,8 @@ function toUiVerificationStatus(status: string): VerificationStatus {
 }
 
 export default async function ClubDetailPage({ params, searchParams }: Props) {
-  const [session, { clubId }, sp] = await Promise.all([auth(), params, searchParams]);
+  const [shell, { clubId }, sp] = await Promise.all([loadAppShellContext(), params, searchParams]);
+  if (!shell) redirect(`/auth/signin?callbackUrl=/clubs/${(await params).clubId}`);
 
   const tab = sp.tab ?? 'history';
 
@@ -106,12 +107,12 @@ export default async function ClubDetailPage({ params, searchParams }: Props) {
 
   if (!club) notFound();
 
-  const viewerRole = session?.user?.role ?? null;
+  const viewerRole = shell.role.toUpperCase();
 
   let isSubscribed = false;
-  if (viewerRole === 'FOOTBALLER' && session?.user?.id) {
+  if (viewerRole === 'FOOTBALLER') {
     const footballer = await db.footballerProfile.findUnique({
-      where: { userId: session.user.id },
+      where: { userId: shell.userId },
       select: { id: true },
     });
     if (footballer) {
@@ -130,6 +131,12 @@ export default async function ClubDetailPage({ params, searchParams }: Props) {
 
   return (
     <ClubDetailClient
+      shellRole={shell.role}
+      shellUser={shell.user}
+      userId={shell.userId}
+      sidebarStats={shell.sidebarStats}
+      adminBadges={shell.adminBadges}
+      unreadNotifications={shell.unreadNotifications}
       viewerRole={viewerRole}
       activeTab={tab}
       club={{
