@@ -75,6 +75,76 @@ export async function createVerifiedNoProfileUser(
 }
 
 /**
+ * Create a verified footballer with a fully-onboarded profile — used by
+ * specs that drive /profile/edit and /profile/preview and want to mutate
+ * the profile without disturbing the shared seeded user.
+ *
+ * The profile carries the required-for-save fields (dateOfBirth, city,
+ * nationality, positions, dominantFoot, height, weight) so SportInfo and
+ * PersonalInfo server actions can be saved without filling missing values
+ * first.
+ */
+export async function createVerifiedFootballerWithProfile(
+  suffix: string,
+): Promise<{ email: string; password: string; profileId: string }> {
+  const email = `profile-footballer-${suffix}@sport-visa.test`;
+  const password = 'TestPass123!';
+  const passwordHash = await bcrypt.hash(password, PASSWORD_HASH_ROUNDS);
+
+  await db().user.deleteMany({ where: { email } });
+
+  const user = await db().user.create({
+    data: {
+      email,
+      role: 'FOOTBALLER',
+      emailVerified: new Date(),
+      passwordHash,
+      firstName: 'Profile',
+      lastName: 'Tester',
+      footballerProfile: {
+        create: {
+          firstName: 'Profile',
+          lastName: 'Tester',
+          dateOfBirth: new Date('2000-01-15'),
+          nationality: 'GE',
+          city: 'თბილისი',
+          country: 'GE',
+          positions: ['ST'],
+          dominantFoot: 'RIGHT',
+          height: 180,
+          weight: 75,
+          verificationStatus: 'VERIFIED',
+        },
+      },
+    },
+    include: { footballerProfile: true },
+  });
+
+  if (!user.footballerProfile) {
+    throw new Error('expected footballerProfile to be created');
+  }
+
+  return { email, password, profileId: user.footballerProfile.id };
+}
+
+/**
+ * Attach a deterministic gallery item to a footballer profile so preview /
+ * edit specs can assert gallery rendering without going through the R2
+ * presign upload flow.
+ */
+export async function addGalleryItem(
+  profileId: string,
+  mediaKey: string,
+  orderIndex = 0,
+): Promise<{ id: string }> {
+  const item = await db().galleryItem.create({
+    data: { profileId, mediaKey, orderIndex },
+    select: { id: true },
+  });
+  return item;
+}
+
+/**
  * Remove a user created during a spec. Cascades through
  * profile / token / session relations.
  */
