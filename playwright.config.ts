@@ -5,7 +5,9 @@ const E2E_DB_URL =
   process.env.E2E_DATABASE_URL ?? 'postgresql://postgres:postgres@localhost:5432/sport_visa_e2e';
 
 export default defineConfig({
-  testDir: './e2e/specs',
+  // Note: testDir is set per-project so the "setup" project can live in
+  // e2e/setup/ while the browser projects only see e2e/specs/. A global
+  // testDir would hide the setup files from discovery.
   globalSetup: './e2e/global-setup.ts',
   globalTeardown: './e2e/global-teardown.ts',
   fullyParallel: false,
@@ -22,14 +24,16 @@ export default defineConfig({
   },
   projects: [
     // Auth setup: signs in each role once and persists storage state
-    { name: 'setup', testMatch: /e2e\/setup\/.*\.setup\.ts/ },
+    { name: 'setup', testDir: './e2e/setup', testMatch: /.*\.setup\.ts$/ },
     {
       name: 'chromium',
+      testDir: './e2e/specs',
       use: { ...devices['Desktop Chrome'] },
       dependencies: process.env.PLAYWRIGHT_BASE_URL ? [] : ['setup'],
     },
     {
       name: 'webkit',
+      testDir: './e2e/specs',
       use: { ...devices['Desktop Safari'] },
       dependencies: process.env.PLAYWRIGHT_BASE_URL ? [] : ['setup'],
     },
