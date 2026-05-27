@@ -50,6 +50,25 @@ export default async function ClubPostDetailPage({ params }: Props) {
 
   if (!post) notFound();
 
+  // For footballers, check if they have already liked this post so the heart
+  // shows the correct initial state. Other roles cannot like, so skip.
+  let isLiked = false;
+  if (shell.role === 'footballer') {
+    const footballer = await db.footballerProfile.findUnique({
+      where: { userId: shell.userId },
+      select: { id: true },
+    });
+    if (footballer) {
+      const like = await db.postLike.findUnique({
+        where: {
+          postId_footballerProfileId: { postId, footballerProfileId: footballer.id },
+        },
+        select: { id: true },
+      });
+      isLiked = !!like;
+    }
+  }
+
   const logoUrl = post.club.logoKey ? `${r2BaseUrl}/${post.club.logoKey}` : undefined;
   const initials = clubInitials(post.club.name);
   const publishedAt = post.createdAt.toLocaleDateString('ka-GE', {
@@ -66,13 +85,16 @@ export default async function ClubPostDetailPage({ params }: Props) {
       sidebarStats={shell.sidebarStats}
       adminBadges={shell.adminBadges}
       unreadNotifications={shell.unreadNotifications}
+      canLike={shell.role === 'footballer'}
       clubId={clubId}
       club={{ name: post.club.name, logoUrl, initials }}
       post={{
+        id: post.id,
         title: post.title,
         body: post.body,
         publishedAt,
         likeCount: post._count.likes,
+        isLiked,
       }}
     />
   );

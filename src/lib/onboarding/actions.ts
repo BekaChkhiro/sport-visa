@@ -64,6 +64,7 @@ export async function saveFootballerProfile(data: unknown): Promise<OnboardingAc
         jerseyNumber: d.jerseyNumber ?? null,
         experienceLevel: (d.experienceLevel as ExperienceLevel) ?? null,
         desiredLeague: d.desiredLeague ?? null,
+        avatarKey: d.avatarKey ?? null,
       },
     });
   } catch (err) {
