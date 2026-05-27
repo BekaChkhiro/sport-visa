@@ -2,6 +2,7 @@
 
 import * as React from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 import { Logo } from '@/components/logo';
 import { Button } from '@/components/ui/button';
@@ -50,6 +51,7 @@ function AppShell({
   children,
 }: AppShellProps) {
   const [drawerOpen, setDrawerOpen] = React.useState(false);
+  const router = useRouter();
 
   const {
     notifications,
@@ -60,6 +62,10 @@ function AppShell({
   } = useNotifications(userId);
 
   const unreadCount = userId ? liveUnreadCount : unreadNotifications;
+
+  const profilePath =
+    role === 'club' ? '/profile/club/edit' : role === 'admin' ? '/admin' : '/profile/edit';
+  const settingsPath = role === 'admin' ? '/admin' : '/settings/notifications';
 
   return (
     <div data-slot="app-shell" className="flex min-h-screen flex-col">
@@ -97,6 +103,8 @@ function AppShell({
           )}
           <UserMenu
             user={{ name: user.name, initials: user.initials, image: user.image }}
+            onProfile={() => router.push(profilePath)}
+            onSettings={() => router.push(settingsPath)}
             onSignOut={onSignOut}
           />
         </div>

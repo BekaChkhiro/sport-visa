@@ -108,7 +108,7 @@ export function FootballerDashboardClient({
           <ProfileCompletionBanner
             percent={user.profileCompletion}
             missingFields={profileMissingFields}
-            onComplete={() => router.push('/onboarding')}
+            onComplete={() => router.push('/profile/edit')}
             onDismiss={() => setBannerDismissed(true)}
           />
         ) : null}
@@ -256,9 +256,10 @@ export function FootballerDashboardClient({
             </div>
             <div className="flex flex-wrap gap-3">
               {subscribedClubs.map((club) => (
-                <div
+                <Link
                   key={club.id}
-                  className="flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-sm"
+                  href={`/clubs/${club.id}`}
+                  className="flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-sm transition-colors hover:bg-muted"
                 >
                   {club.logoUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element
@@ -273,7 +274,7 @@ export function FootballerDashboardClient({
                     </span>
                   )}
                   <span className="font-medium">{club.name}</span>
-                </div>
+                </Link>
               ))}
             </div>
           </section>

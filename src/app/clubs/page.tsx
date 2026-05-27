@@ -1,8 +1,7 @@
 import type { Metadata } from 'next';
-import { redirect } from 'next/navigation';
 
 import { db } from '@/lib/db';
-import { loadAppShellContext } from '@/lib/app-shell/load-context';
+import { requireAppShellContext } from '@/lib/app-shell/load-context';
 import type { VerificationStatus } from '@/components/verification-badge';
 import { ClubsDirectoryClient } from './clubs-directory-client';
 
@@ -49,8 +48,7 @@ export default async function ClubsPage({
 }: {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
-  const [shell, sp] = await Promise.all([loadAppShellContext(), searchParams]);
-  if (!shell) redirect('/auth/signin?callbackUrl=/clubs');
+  const [shell, sp] = await Promise.all([requireAppShellContext('/clubs'), searchParams]);
 
   const viewerRole = shell.role.toUpperCase();
   const viewerUserId = shell.userId;

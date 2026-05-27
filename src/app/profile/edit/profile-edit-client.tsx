@@ -85,13 +85,19 @@ type GalleryPhoto = {
 
 type ProfileEditClientProps = {
   currentPath: string;
+  userId: string;
   user: {
     name: string;
     initials: string;
     image?: string;
     position?: string;
+    nationality?: string;
+    city?: string;
     verificationStatus?: VerificationStatus;
+    profileCompletion?: number;
   };
+  unreadNotifications: number;
+  sidebarStats?: { views?: number; saves?: number; unreadMessages?: number };
   initialPersonalInfo: PersonalInfo;
   initialSportInfo: SportInfo;
   initialCareerEntries: CareerEntry[];
@@ -101,7 +107,10 @@ type ProfileEditClientProps = {
 
 export function ProfileEditClient({
   currentPath,
+  userId,
   user,
+  unreadNotifications,
+  sidebarStats,
   initialPersonalInfo,
   initialSportInfo,
   initialCareerEntries,
@@ -116,7 +125,15 @@ export function ProfileEditClient({
   }
 
   return (
-    <AppShell role="footballer" currentPath={currentPath} user={user} onSignOut={handleSignOut}>
+    <AppShell
+      role="footballer"
+      currentPath={currentPath}
+      userId={userId}
+      user={user}
+      unreadNotifications={unreadNotifications}
+      sidebarStats={sidebarStats}
+      onSignOut={handleSignOut}
+    >
       <div className="max-w-2xl space-y-8">
         <h1 className="text-2xl font-semibold">პროფილის რედაქტირება</h1>
 

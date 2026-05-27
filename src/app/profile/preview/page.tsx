@@ -1,8 +1,8 @@
 import { redirect } from 'next/navigation';
 import type { Metadata } from 'next';
 
-import { auth } from '@/lib/auth';
 import { db } from '@/lib/db';
+import { requireAppShellContext } from '@/lib/app-shell/load-context';
 import type { VerificationStatus } from '@/components/verification-badge';
 import { ProfilePreviewClient } from './profile-preview-client';
 
@@ -17,21 +17,11 @@ function toUiVerificationStatus(status: PrismaVerificationStatus): VerificationS
 }
 
 export default async function ProfilePreviewPage() {
-  const session = await auth();
-
-  if (!session?.user) {
-    redirect('/auth/signin');
-  }
-
-  if (!session.user.emailVerified) {
-    redirect('/verification-pending');
-  }
-
-  if (session.user.role !== 'FOOTBALLER') {
+  const shell = await requireAppShellContext('/profile/preview');
+  if (shell.role !== 'footballer') {
     redirect('/dashboard');
   }
-
-  const userId = session.user.id;
+  const userId = shell.userId;
 
   const profile = await db.footballerProfile.findUnique({
     where: { userId },
@@ -83,10 +73,6 @@ export default async function ProfilePreviewPage() {
 
   const r2BaseUrl = process.env.R2_PUBLIC_BASE_URL ?? '';
   const name = `${profile.firstName} ${profile.lastName}`.trim();
-  const initials = [profile.firstName[0], profile.lastName[0]]
-    .filter(Boolean)
-    .join('')
-    .toUpperCase();
 
   const age = profile.dateOfBirth
     ? Math.floor(
@@ -97,13 +83,10 @@ export default async function ProfilePreviewPage() {
   return (
     <ProfilePreviewClient
       currentPath="/profile/preview"
-      user={{
-        name,
-        initials,
-        image: profile.avatarKey ? `${r2BaseUrl}/${profile.avatarKey}` : undefined,
-        position: profile.positions[0] ?? undefined,
-        verificationStatus: toUiVerificationStatus(profile.verificationStatus),
-      }}
+      userId={userId}
+      user={shell.user}
+      unreadNotifications={shell.unreadNotifications}
+      sidebarStats={shell.sidebarStats}
       profile={{
         name,
         age,

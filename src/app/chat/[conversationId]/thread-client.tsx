@@ -13,7 +13,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { ArrowLeftIcon, ExternalLinkIcon, SendIcon, SpinnerIcon } from '@/components/icons';
 import { usePusherChannel, usePusherEvent } from '@/hooks/use-pusher-channel';
 import { channels, events } from '@/lib/pusher-client';
-import type { AppSidebarStats } from '@/components/app-sidebar';
+import type { AppSidebarStats, AppSidebarUser } from '@/components/app-sidebar';
 import { cn } from '@/lib/utils';
 
 export type ChatThreadMessage = {
@@ -38,7 +38,8 @@ type ChatThreadClientProps = {
   currentPath: string;
   userId: string;
   role: 'footballer' | 'club';
-  user: { name: string; initials: string; image?: string };
+  user: AppSidebarUser & { email?: string };
+  unreadNotifications: number;
   conversation: ChatThreadConversation;
   initialMessages: ChatThreadMessage[];
   sidebarStats?: AppSidebarStats;
@@ -63,6 +64,7 @@ export function ChatThreadClient({
   userId,
   role,
   user,
+  unreadNotifications,
   conversation,
   initialMessages,
   sidebarStats,
@@ -183,6 +185,7 @@ export function ChatThreadClient({
       currentPath={currentPath}
       userId={userId}
       user={user}
+      unreadNotifications={unreadNotifications}
       sidebarStats={sidebarStats}
       onSignOut={handleSignOut}
     >

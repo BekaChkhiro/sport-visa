@@ -1,92 +1,41 @@
 import { redirect } from 'next/navigation';
 import type { Metadata } from 'next';
 
-import { auth } from '@/lib/auth';
 import { db } from '@/lib/db';
-import type { VerificationStatus } from '@/components/verification-badge';
+import { requireAppShellContext } from '@/lib/app-shell/load-context';
+import { computeFootballerProfileCompletion } from '@/lib/footballer-profile/completion';
 import { FootballerDashboardClient } from './footballer-dashboard-client';
 
 export const metadata: Metadata = {
-  title: 'Dashboard',
+  title: 'მთავარი',
 };
 
-type PrismaVerificationStatus = 'PENDING' | 'VERIFIED' | 'REJECTED';
-
-function toUiVerificationStatus(status: PrismaVerificationStatus): VerificationStatus {
-  return status.toLowerCase() as VerificationStatus;
-}
-
-function computeProfileCompletion(profile: {
-  dateOfBirth: Date | null;
-  nationality: string | null;
-  city: string | null;
-  phone: string | null;
-  bio: string | null;
-  positions: string[];
-  height: number | null;
-  weight: number | null;
-  dominantFoot: string | null;
-  currentClub: string | null;
-  experienceLevel: string | null;
-  avatarKey: string | null;
-}): { percent: number; missingFields: string[] } {
-  const checks: [boolean, string][] = [
-    [!!profile.dateOfBirth, 'დაბადების თარიღი'],
-    [!!profile.nationality, 'ეროვნება'],
-    [!!profile.city, 'ქალაქი'],
-    [!!profile.phone, 'ტელეფონი'],
-    [!!profile.bio, 'ბიო'],
-    [profile.positions.length > 0, 'პოზიცია'],
-    [!!profile.height, 'სიმაღლე'],
-    [!!profile.weight, 'წონა'],
-    [!!profile.dominantFoot, 'სასურველი ფეხი'],
-    [!!profile.currentClub, 'მიმდინარე კლუბი'],
-    [!!profile.experienceLevel, 'გამოცდილება'],
-    [!!profile.avatarKey, 'ავატარი'],
-  ];
-
-  const filled = checks.filter(([ok]) => ok).length;
-  const missingFields = checks.filter(([ok]) => !ok).map(([, label]) => label);
-  return {
-    percent: Math.round((filled / checks.length) * 100),
-    missingFields,
-  };
-}
-
 export default async function FootballerDashboardPage() {
-  const session = await auth();
+  const shell = await requireAppShellContext('/dashboard/footballer');
 
-  if (!session?.user) {
-    redirect('/auth/signin');
-  }
-
-  if (session.user.role !== 'FOOTBALLER') {
+  if (shell.role !== 'footballer') {
     redirect('/dashboard');
   }
 
-  const userId = session.user.id;
+  const userId = shell.userId;
+  const r2BaseUrl = process.env.R2_PUBLIC_BASE_URL ?? '';
 
-  const [profile, unreadNotifications, newsfeedPosts, rawServiceRequests] = await Promise.all([
+  const [profile, newsfeedPosts, rawServiceRequests, unreadMessages] = await Promise.all([
     db.footballerProfile.findUnique({
       where: { userId },
       select: {
-        firstName: true,
-        lastName: true,
+        dateOfBirth: true,
         nationality: true,
         city: true,
-        positions: true,
-        avatarKey: true,
-        dateOfBirth: true,
         phone: true,
         bio: true,
+        positions: true,
         height: true,
         weight: true,
         dominantFoot: true,
         currentClub: true,
         experienceLevel: true,
-        verificationStatus: true,
-        profileViewCount: true,
-        shortlistedBy: { select: { id: true } },
+        avatarKey: true,
         subscriptions: {
           select: {
             clubProfile: {
@@ -96,7 +45,6 @@ export default async function FootballerDashboardPage() {
         },
       },
     }),
-    db.notification.count({ where: { userId, read: false } }),
     db.clubPost.findMany({
       where: {
         club: {
@@ -130,19 +78,20 @@ export default async function FootballerDashboardPage() {
         category: { select: { name: true } },
       },
     }),
+    db.message.count({
+      where: {
+        conversation: { footballerUserId: userId },
+        senderUserId: { not: userId },
+        read: false,
+      },
+    }),
   ]);
 
   if (!profile) {
     redirect('/onboarding');
   }
 
-  const completion = computeProfileCompletion(profile);
-  const name = `${profile.firstName} ${profile.lastName}`.trim();
-  const initials = [profile.firstName[0], profile.lastName[0]]
-    .filter(Boolean)
-    .join('')
-    .toUpperCase();
-  const r2BaseUrl = process.env.R2_PUBLIC_BASE_URL ?? '';
+  const completion = computeFootballerProfileCompletion(profile);
 
   const subscribedClubs = profile.subscriptions.map((s) => ({
     id: s.clubProfile.id,
@@ -176,20 +125,14 @@ export default async function FootballerDashboardPage() {
       currentPath="/dashboard/footballer"
       userId={userId}
       user={{
-        name,
-        initials,
-        image: profile.avatarKey ? `${r2BaseUrl}/${profile.avatarKey}` : undefined,
-        position: profile.positions[0] ?? undefined,
-        nationality: profile.nationality ?? undefined,
-        verificationStatus: toUiVerificationStatus(profile.verificationStatus),
+        ...shell.user,
         profileCompletion: completion.percent,
       }}
       stats={{
-        views: profile.profileViewCount,
-        saves: profile.shortlistedBy.length,
-        unreadMessages: 0,
+        ...(shell.sidebarStats ?? {}),
+        unreadMessages,
       }}
-      unreadNotifications={unreadNotifications}
+      unreadNotifications={shell.unreadNotifications}
       subscribedClubs={subscribedClubs}
       newsfeedPosts={newsfeed}
       profileMissingFields={completion.missingFields}

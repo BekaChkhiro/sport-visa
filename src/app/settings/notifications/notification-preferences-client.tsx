@@ -8,6 +8,12 @@ import { AppShell } from '@/components/app-shell';
 import { Switch } from '@/components/ui/switch';
 import { BellIcon, MailIcon } from '@/components/icons';
 import { cn } from '@/lib/utils';
+import type {
+  AppSidebarAdminBadges,
+  AppSidebarRole,
+  AppSidebarStats,
+  AppSidebarUser,
+} from '@/components/app-sidebar';
 
 type Prefs = {
   emailInstant: boolean;
@@ -15,14 +21,12 @@ type Prefs = {
 };
 
 type NotificationPreferencesClientProps = {
-  currentPath: string;
+  shellRole: AppSidebarRole;
+  shellUser: AppSidebarUser & { email?: string };
   userId: string;
-  role: 'footballer' | 'club';
-  user: {
-    name: string;
-    initials: string;
-    image?: string;
-  };
+  sidebarStats?: AppSidebarStats;
+  adminBadges?: AppSidebarAdminBadges;
+  unreadNotifications: number;
   initialPrefs: Prefs;
 };
 
@@ -64,10 +68,12 @@ function PreferenceRow({
 }
 
 export function NotificationPreferencesClient({
-  currentPath,
+  shellRole,
+  shellUser,
   userId,
-  role,
-  user,
+  sidebarStats,
+  adminBadges,
+  unreadNotifications,
   initialPrefs,
 }: NotificationPreferencesClientProps) {
   const router = useRouter();
@@ -106,10 +112,13 @@ export function NotificationPreferencesClient({
 
   return (
     <AppShell
-      role={role}
-      currentPath={currentPath}
+      role={shellRole}
+      currentPath="/settings/notifications"
       userId={userId}
-      user={user}
+      user={shellUser}
+      unreadNotifications={unreadNotifications}
+      sidebarStats={sidebarStats}
+      adminBadges={adminBadges}
       onSignOut={handleSignOut}
     >
       <div className="mx-auto max-w-2xl space-y-6">

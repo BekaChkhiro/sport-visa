@@ -1,5 +1,7 @@
 import 'server-only';
 
+import { redirect } from 'next/navigation';
+
 import { auth } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { computeFootballerProfileCompletion } from '@/lib/footballer-profile/completion';
@@ -36,12 +38,15 @@ function initialsFromName(name: string): string {
   );
 }
 
+export type AppShellGate = 'unauthenticated' | 'unverified';
+
 // Resolves the AppShell context (role, user, stats, unread counts) from the
-// current session. Returns null when the request is unauthenticated — callers
-// are expected to redirect to /auth/signin in that case.
-export async function loadAppShellContext(): Promise<AppShellContext | null> {
+// current session. Returns a gate reason instead of the context when the
+// session is missing or the email is not verified — callers redirect.
+export async function loadAppShellContext(): Promise<AppShellContext | AppShellGate> {
   const session = await auth();
-  if (!session?.user) return null;
+  if (!session?.user) return 'unauthenticated';
+  if (!session.user.emailVerified) return 'unverified';
 
   const userId = session.user.id;
   const role = session.user.role;
@@ -156,4 +161,17 @@ export async function loadAppShellContext(): Promise<AppShellContext | null> {
     sidebarStats: { shortlistCount: profile._count.shortlistedPlayers },
     unreadNotifications,
   };
+}
+
+// Convenience wrapper: loads the context and redirects on gate failures.
+// Pass the current pathname so callbackUrl can route the user back after signin.
+export async function requireAppShellContext(callbackUrl: string): Promise<AppShellContext> {
+  const result = await loadAppShellContext();
+  if (result === 'unauthenticated') {
+    redirect(`/auth/signin?callbackUrl=${encodeURIComponent(callbackUrl)}`);
+  }
+  if (result === 'unverified') {
+    redirect('/verification-pending');
+  }
+  return result;
 }

@@ -1,9 +1,9 @@
 import { notFound, redirect } from 'next/navigation';
 import type { Metadata } from 'next';
 
-import { auth } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { listMessages, markConversationRead } from '@/lib/messages';
+import { requireAppShellContext } from '@/lib/app-shell/load-context';
 
 import { ChatThreadClient } from './thread-client';
 
@@ -18,14 +18,13 @@ type PageProps = {
 export default async function ChatThreadPage({ params }: PageProps) {
   const { conversationId } = await params;
 
-  const session = await auth();
-  if (!session?.user) redirect('/auth/signin');
+  const shell = await requireAppShellContext(`/chat/${conversationId}`);
+  if (shell.role !== 'footballer' && shell.role !== 'club') {
+    redirect('/dashboard');
+  }
 
-  const userId = session.user.id;
-  const role = session.user.role;
+  const userId = shell.userId;
   const r2BaseUrl = process.env.R2_PUBLIC_BASE_URL ?? '';
-
-  if (role !== 'FOOTBALLER' && role !== 'CLUB') redirect('/dashboard');
 
   const conversation = await db.conversation.findUnique({
     where: { id: conversationId },
@@ -69,17 +68,8 @@ export default async function ChatThreadPage({ params }: PageProps) {
   // returned rows reflect post-read state for receipts UI.
   await markConversationRead(conversation.id, userId);
 
-  const [messages, userProfile, totalUnread] = await Promise.all([
+  const [messages, totalUnread] = await Promise.all([
     listMessages(conversation.id),
-    role === 'FOOTBALLER'
-      ? db.footballerProfile.findUnique({
-          where: { userId },
-          select: { firstName: true, lastName: true, avatarKey: true },
-        })
-      : db.clubProfile.findUnique({
-          where: { userId },
-          select: { name: true, logoKey: true },
-        }),
     db.message.count({
       where: {
         conversation: {
@@ -91,33 +81,7 @@ export default async function ChatThreadPage({ params }: PageProps) {
     }),
   ]);
 
-  if (!userProfile) redirect('/onboarding');
-
-  let currentUser: { name: string; initials: string; image?: string };
-  if (role === 'FOOTBALLER' && 'firstName' in userProfile) {
-    const fp = userProfile;
-    currentUser = {
-      name: `${fp.firstName} ${fp.lastName}`.trim(),
-      initials: [fp.firstName[0], fp.lastName[0]].filter(Boolean).join('').toUpperCase(),
-      image: fp.avatarKey ? `${r2BaseUrl}/${fp.avatarKey}` : undefined,
-    };
-  } else if (role === 'CLUB' && 'name' in userProfile) {
-    const cp = userProfile;
-    currentUser = {
-      name: cp.name,
-      initials: cp.name
-        .split(' ')
-        .slice(0, 2)
-        .map((w) => w[0])
-        .join('')
-        .toUpperCase(),
-      image: cp.logoKey ? `${r2BaseUrl}/${cp.logoKey}` : undefined,
-    };
-  } else {
-    redirect('/dashboard');
-  }
-
-  const isFootballer = role === 'FOOTBALLER';
+  const isFootballer = shell.role === 'footballer';
   const otherParty = isFootballer
     ? conversation.clubUser.clubProfile
     : conversation.footballerUser.footballerProfile;
@@ -155,8 +119,9 @@ export default async function ChatThreadPage({ params }: PageProps) {
       currentPath="/chats"
       userId={userId}
       role={isFootballer ? 'footballer' : 'club'}
-      user={currentUser}
-      sidebarStats={{ unreadMessages: totalUnread }}
+      user={shell.user}
+      unreadNotifications={shell.unreadNotifications}
+      sidebarStats={{ ...(shell.sidebarStats ?? {}), unreadMessages: totalUnread }}
       conversation={{
         id: conversation.id,
         clubUserId: conversation.clubUserId,
