@@ -103,7 +103,7 @@ export function FootballerDashboardClient({
       sidebarStats={stats}
       onSignOut={handleSignOut}
     >
-      <div className="space-y-8 max-w-3xl">
+      <div className="space-y-8">
         {!bannerDismissed && user.profileCompletion < 100 ? (
           <ProfileCompletionBanner
             percent={user.profileCompletion}

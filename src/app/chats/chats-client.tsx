@@ -118,7 +118,7 @@ export function ChatsClient({
       sidebarStats={sidebarStats}
       onSignOut={handleSignOut}
     >
-      <div className="mx-auto max-w-2xl space-y-6">
+      <div className="space-y-6">
         <div className="flex items-center justify-between gap-2">
           <h1 className="text-xl font-bold">ჩატები</h1>
           {conversations.length > 0 ? (
