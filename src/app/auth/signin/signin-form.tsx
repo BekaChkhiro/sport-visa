@@ -18,6 +18,15 @@ const QUERY_ERROR_MESSAGES: Record<string, string> = {
   'server-error': 'სერვერის შეცდომა. სცადე თავიდან.',
 };
 
+// Demo accounts seeded by `npm run db:seed:demo`. Listed here so the site can be
+// explored without knowing the credentials — clicking one fills the form.
+const DEMO_PASSWORD = 'Demo123!';
+const DEMO_ACCOUNTS: { label: string; email: string }[] = [
+  { label: 'ადმინი', email: 'admin@demo.ge' },
+  { label: 'კლუბი', email: 'club1@demo.ge' },
+  { label: 'ფეხბურთელი', email: 'player1@demo.ge' },
+];
+
 export function SigninForm({
   verified = false,
   passwordReset = false,
@@ -31,6 +40,13 @@ export function SigninForm({
   const [state, setState] = React.useState<SigninActionState>(initialState);
   const [showPassword, setShowPassword] = React.useState(false);
   const [pending, startTransition] = React.useTransition();
+  const [email, setEmail] = React.useState('');
+  const [password, setPassword] = React.useState('');
+
+  function fillDemo(demoEmail: string) {
+    setEmail(demoEmail);
+    setPassword(DEMO_PASSWORD);
+  }
 
   React.useEffect(() => {
     if (state.status === 'success') {
@@ -81,6 +97,8 @@ export function SigninForm({
             type="email"
             autoComplete="email"
             required
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
             aria-invalid={Boolean(error)}
           />
         </div>
@@ -102,6 +120,8 @@ export function SigninForm({
               type={showPassword ? 'text' : 'password'}
               autoComplete="current-password"
               required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
               aria-invalid={Boolean(error)}
             />
             <button
@@ -141,6 +161,31 @@ export function SigninForm({
           Google-ით შესვლა
         </Button>
       </form>
+
+      <div className="rounded-md border border-dashed border-border bg-muted/40 p-3 text-sm">
+        <p className="font-medium">სატესტო ანგარიშები</p>
+        <p className="mt-1 text-xs text-muted-foreground">
+          დააჭირე ღილაკს ფორმის ავტომატურად შესავსებად. პაროლი ყველასთვის:{' '}
+          <code className="rounded bg-background px-1 py-0.5 font-mono">{DEMO_PASSWORD}</code>
+        </p>
+        <div className="mt-2 flex flex-wrap gap-2">
+          {DEMO_ACCOUNTS.map((acc) => (
+            <Button
+              key={acc.email}
+              type="button"
+              variant="secondary"
+              size="sm"
+              onClick={() => fillDemo(acc.email)}
+            >
+              {acc.label}
+            </Button>
+          ))}
+        </div>
+        <p className="mt-2 text-xs text-muted-foreground">
+          არსებობს <code className="font-mono">club1–10@demo.ge</code> და{' '}
+          <code className="font-mono">player1–10@demo.ge</code> ანგარიშებიც.
+        </p>
+      </div>
     </div>
   );
 }
