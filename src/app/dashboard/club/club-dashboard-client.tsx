@@ -45,6 +45,16 @@ type DashboardPost = {
   createdAt: string;
 };
 
+type DashboardChat = {
+  id: string;
+  otherName: string;
+  otherInitials: string;
+  otherAvatarUrl?: string;
+  lastMessageBody: string | null;
+  lastMessageAt: string;
+  unreadCount: number;
+};
+
 type ClubDashboardUser = {
   name: string;
   initials: string;
@@ -61,6 +71,7 @@ type ClubDashboardClientProps = {
   unreadNotifications: number;
   recentShortlist: ShortlistedFootballer[];
   recentPosts: DashboardPost[];
+  recentChats: DashboardChat[];
 };
 
 function VerificationBanner({
@@ -140,6 +151,33 @@ function ShortlistCard({ footballer }: { footballer: ShortlistedFootballer }) {
         </Button>
       </div>
     </div>
+  );
+}
+
+function ChatCard({ chat }: { chat: DashboardChat }) {
+  return (
+    <Link
+      href={`/chat/${chat.id}`}
+      className="flex items-center gap-3 rounded-xl border border-border bg-card px-4 py-3 transition-colors hover:bg-muted/50"
+    >
+      <ProfileAvatar src={chat.otherAvatarUrl} fallback={chat.otherInitials} size="sm" />
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center justify-between gap-2">
+          <p className="truncate text-sm font-medium">{chat.otherName}</p>
+          <span className="shrink-0 text-xs text-muted-foreground">
+            {new Date(chat.lastMessageAt).toLocaleDateString('ka-GE')}
+          </span>
+        </div>
+        <p className="truncate text-xs text-muted-foreground">
+          {chat.lastMessageBody ?? 'საუბარი დაიწყო'}
+        </p>
+      </div>
+      {chat.unreadCount > 0 ? (
+        <span className="inline-flex min-w-5 shrink-0 items-center justify-center rounded-full bg-primary px-1.5 text-[10px] font-semibold text-primary-foreground">
+          {chat.unreadCount > 99 ? '99+' : chat.unreadCount}
+        </span>
+      ) : null}
+    </Link>
   );
 }
 
@@ -227,6 +265,7 @@ export function ClubDashboardClient({
   unreadNotifications,
   recentShortlist,
   recentPosts,
+  recentChats,
 }: ClubDashboardClientProps) {
   const router = useRouter();
   const [bannerDismissed, setBannerDismissed] = React.useState(false);
@@ -315,12 +354,20 @@ export function ClubDashboardClient({
               </Link>
             </Button>
           </div>
-          <div className="rounded-xl border border-border bg-card">
-            <EmptyState
-              title="ჩატები არ არის"
-              description="ფეხბურთელთან კომუნიკაციისთვის პირველი ჩატი გახსენი."
-            />
-          </div>
+          {recentChats.length > 0 ? (
+            <div className="flex flex-col gap-2">
+              {recentChats.map((chat) => (
+                <ChatCard key={chat.id} chat={chat} />
+              ))}
+            </div>
+          ) : (
+            <div className="rounded-xl border border-border bg-card">
+              <EmptyState
+                title="ჩატები არ არის"
+                description="ფეხბურთელთან კომუნიკაციისთვის პირველი ჩატი გახსენი."
+              />
+            </div>
+          )}
         </section>
 
         <section aria-labelledby="news-heading">

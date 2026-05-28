@@ -3,6 +3,7 @@ import type { Metadata } from 'next';
 
 import { auth } from '@/lib/auth';
 import { db } from '@/lib/db';
+import { countUnreadMessages } from '@/lib/messages';
 import type { VerificationStatus } from '@/components/verification-badge';
 import { PostEditClient } from './post-edit-client';
 
@@ -28,7 +29,7 @@ export default async function PostEditPage({ params }: Props) {
   const userId = session.user.id;
   const r2BaseUrl = process.env.R2_PUBLIC_BASE_URL ?? '';
 
-  const [profile, unreadNotifications] = await Promise.all([
+  const [profile, unreadNotifications, unreadMessages] = await Promise.all([
     db.clubProfile.findUnique({
       where: { userId },
       select: {
@@ -42,6 +43,7 @@ export default async function PostEditPage({ params }: Props) {
       },
     }),
     db.notification.count({ where: { userId, read: false } }),
+    countUnreadMessages(userId, 'club'),
   ]);
 
   if (!profile) redirect('/onboarding');
@@ -75,7 +77,7 @@ export default async function PostEditPage({ params }: Props) {
       stats={{
         views: profile.profileViewCount,
         shortlistCount: profile._count.shortlistedPlayers,
-        unreadMessages: 0,
+        unreadMessages,
       }}
       unreadNotifications={unreadNotifications}
     />

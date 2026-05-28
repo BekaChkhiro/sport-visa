@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation';
 
 import { auth } from '@/lib/auth';
 import { db } from '@/lib/db';
+import { countUnreadMessages } from '@/lib/messages';
 import { computeFootballerProfileCompletion } from '@/lib/footballer-profile/completion';
 import type {
   AppSidebarAdminBadges,
@@ -79,7 +80,7 @@ export async function loadAppShellContext(): Promise<AppShellContext | AppShellG
   }
 
   if (role === 'FOOTBALLER') {
-    const [profile, unreadNotifications] = await Promise.all([
+    const [profile, unreadNotifications, unreadMessages] = await Promise.all([
       db.footballerProfile.findUnique({
         where: { userId },
         include: {
@@ -87,6 +88,7 @@ export async function loadAppShellContext(): Promise<AppShellContext | AppShellG
         },
       }),
       db.notification.count({ where: { userId, read: false } }),
+      countUnreadMessages(userId, 'footballer'),
     ]);
 
     if (!profile) {
@@ -117,13 +119,14 @@ export async function loadAppShellContext(): Promise<AppShellContext | AppShellG
       sidebarStats: {
         views: profile.profileViewCount,
         saves: profile._count.shortlistedBy,
+        unreadMessages,
       },
       unreadNotifications,
     };
   }
 
   // CLUB
-  const [profile, unreadNotifications] = await Promise.all([
+  const [profile, unreadNotifications, unreadMessages] = await Promise.all([
     db.clubProfile.findUnique({
       where: { userId },
       select: {
@@ -131,10 +134,12 @@ export async function loadAppShellContext(): Promise<AppShellContext | AppShellG
         city: true,
         logoKey: true,
         verificationStatus: true,
+        profileViewCount: true,
         _count: { select: { shortlistedPlayers: true } },
       },
     }),
     db.notification.count({ where: { userId, read: false } }),
+    countUnreadMessages(userId, 'club'),
   ]);
 
   if (!profile) {
@@ -158,7 +163,11 @@ export async function loadAppShellContext(): Promise<AppShellContext | AppShellG
       verificationStatus: toUiVerificationStatus(profile.verificationStatus),
       email: session.user.email ?? undefined,
     },
-    sidebarStats: { shortlistCount: profile._count.shortlistedPlayers },
+    sidebarStats: {
+      shortlistCount: profile._count.shortlistedPlayers,
+      views: profile.profileViewCount,
+      unreadMessages,
+    },
     unreadNotifications,
   };
 }

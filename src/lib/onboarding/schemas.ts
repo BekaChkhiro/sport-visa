@@ -145,7 +145,10 @@ export type FootballerOnboardingInput = z.infer<typeof footballerOnboardingSchem
 
 export const clubOnboardingSchema = z.object({
   name: z.string().trim().min(1, 'კლუბის სახელი სავალდებულოა').max(200),
-  foundedYear: z.preprocess(toOptInt, z.number().int().min(1850).max(2030).optional()),
+  foundedYear: z.preprocess(
+    toOptInt,
+    z.number().int().min(1800).max(new Date().getFullYear()).optional(),
+  ),
   country: z.preprocess(
     toOptStr,
     z
@@ -155,14 +158,14 @@ export const clubOnboardingSchema = z.object({
       .optional(),
   ),
   city: z.preprocess(toOptStr, z.string().trim().max(100).optional()),
-  league: z.preprocess(toOptStr, z.string().max(100).optional()),
+  league: z.preprocess(toOptStr, z.string().max(200).optional()),
   stadiumName: z.preprocess(toOptStr, z.string().max(200).optional()),
   stadiumCapacity: z.preprocess(toOptInt, z.number().int().min(0).optional()),
   officialWebsite: z.preprocess(
     toOptStr,
     z.string().url('სწორი URL შეიყვანო (https://...)').max(300).optional(),
   ),
-  bio: z.preprocess(toOptStr, z.string().max(1000).optional()),
+  bio: z.preprocess(toOptStr, z.string().max(2000).optional()),
 });
 
 export type ClubOnboardingInput = z.infer<typeof clubOnboardingSchema>;

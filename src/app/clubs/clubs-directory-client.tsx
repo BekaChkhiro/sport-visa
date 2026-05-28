@@ -175,6 +175,12 @@ export function ClubsDirectoryClient({
   // search/filter local state (controlled inputs; apply on submit or select)
   const [searchDraft, setSearchDraft] = React.useState(initialSearch ?? '');
 
+  // Keep the search box in sync with the applied search after navigation
+  // (filter/sort/page changes) so the input never shows a stale, unapplied query.
+  React.useEffect(() => {
+    setSearchDraft(initialSearch ?? '');
+  }, [initialSearch]);
+
   React.useEffect(() => {
     setSubscribedIds(new Set(items.filter((c) => c.isSubscribed).map((c) => c.id)));
   }, [items]);

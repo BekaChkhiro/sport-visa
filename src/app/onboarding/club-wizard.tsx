@@ -233,8 +233,8 @@ function Step1({
             value={form.foundedYear}
             onChange={(e) => onChange('foundedYear', e.target.value)}
             placeholder="1925"
-            min={1850}
-            max={2030}
+            min={1800}
+            max={new Date().getFullYear()}
           />
         </Field>
 
@@ -297,12 +297,12 @@ function Step1({
         </Field>
       </div>
 
-      <Field label={`კლუბის აღწერა (${form.bio.length}/1000)`} error={errors.bio}>
+      <Field label={`კლუბის აღწერა (${form.bio.length}/2000)`} error={errors.bio}>
         <Textarea
           value={form.bio}
           onChange={(e) => onChange('bio', e.target.value)}
           placeholder="კლუბის ისტორია, მიზნები..."
-          maxLength={1000}
+          maxLength={2000}
           rows={4}
         />
       </Field>
@@ -374,10 +374,16 @@ function Field({
   children: React.ReactNode;
   className?: string;
 }) {
+  const generatedId = React.useId();
+  const control =
+    React.isValidElement(children) && !(children.props as { id?: string }).id
+      ? React.cloneElement(children as React.ReactElement<{ id?: string }>, { id: generatedId })
+      : children;
+
   return (
     <div className={cn('space-y-1.5', className)}>
-      <Label>{label}</Label>
-      {children}
+      <Label htmlFor={generatedId}>{label}</Label>
+      {control}
       {error && <p className="text-sm text-destructive">{error}</p>}
     </div>
   );

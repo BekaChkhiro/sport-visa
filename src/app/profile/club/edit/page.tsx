@@ -3,6 +3,7 @@ import type { Metadata } from 'next';
 
 import { auth } from '@/lib/auth';
 import { db } from '@/lib/db';
+import { countUnreadMessages } from '@/lib/messages';
 import type { VerificationStatus } from '@/components/verification-badge';
 import { ClubProfileEditClient } from './club-profile-edit-client';
 
@@ -30,34 +31,39 @@ export default async function ClubProfileEditPage() {
   const userId = session.user.id;
   const r2BaseUrl = process.env.R2_PUBLIC_BASE_URL ?? '';
 
-  const profile = await db.clubProfile.findUnique({
-    where: { userId },
-    select: {
-      name: true,
-      foundedYear: true,
-      country: true,
-      city: true,
-      league: true,
-      stadiumName: true,
-      stadiumCapacity: true,
-      officialWebsite: true,
-      logoKey: true,
-      coverKey: true,
-      bio: true,
-      isVisible: true,
-      verificationStatus: true,
-      profileViewCount: true,
-      _count: { select: { shortlistedPlayers: true } },
-      historyEvents: {
-        select: { id: true, year: true, title: true, description: true },
-        orderBy: [{ year: 'asc' }, { orderIndex: 'asc' }],
+  const [profile, unreadMessages] = await Promise.all([
+    db.clubProfile.findUnique({
+      where: { userId },
+      select: {
+        name: true,
+        foundedYear: true,
+        country: true,
+        city: true,
+        league: true,
+        stadiumName: true,
+        stadiumCapacity: true,
+        stadiumAddress: true,
+        stadiumMapUrl: true,
+        officialWebsite: true,
+        logoKey: true,
+        coverKey: true,
+        bio: true,
+        isVisible: true,
+        verificationStatus: true,
+        profileViewCount: true,
+        _count: { select: { shortlistedPlayers: true } },
+        historyEvents: {
+          select: { id: true, year: true, title: true, description: true },
+          orderBy: [{ year: 'asc' }, { orderIndex: 'asc' }],
+        },
+        rosterEntries: {
+          select: { id: true, playerName: true, position: true, jerseyNumber: true },
+          orderBy: [{ orderIndex: 'asc' }, { createdAt: 'asc' }],
+        },
       },
-      rosterEntries: {
-        select: { id: true, playerName: true, position: true, jerseyNumber: true },
-        orderBy: [{ orderIndex: 'asc' }, { createdAt: 'asc' }],
-      },
-    },
-  });
+    }),
+    countUnreadMessages(userId, 'club'),
+  ]);
 
   if (!profile) {
     redirect('/onboarding');
@@ -83,7 +89,7 @@ export default async function ClubProfileEditPage() {
       stats={{
         views: profile.profileViewCount,
         shortlistCount: profile._count.shortlistedPlayers,
-        unreadMessages: 0,
+        unreadMessages,
       }}
       initialIdentity={{
         name: profile.name,
@@ -93,6 +99,8 @@ export default async function ClubProfileEditPage() {
         league: profile.league ?? '',
         stadiumName: profile.stadiumName ?? '',
         stadiumCapacity: profile.stadiumCapacity != null ? String(profile.stadiumCapacity) : '',
+        stadiumAddress: profile.stadiumAddress ?? '',
+        stadiumMapUrl: profile.stadiumMapUrl ?? '',
         officialWebsite: profile.officialWebsite ?? '',
       }}
       initialMedia={{

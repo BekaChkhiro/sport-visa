@@ -22,6 +22,22 @@ export type ConversationParticipants = {
 export const MESSAGE_BODY_MAX = 2000;
 
 /**
+ * Count unread messages addressed to a user across all their conversations.
+ * A message counts as unread for me when it's in one of my conversations, I'm
+ * not the sender, and `read` is still false. Used to drive the chats badge in
+ * the sidebar for both footballer and club roles.
+ */
+export function countUnreadMessages(userId: string, role: 'footballer' | 'club'): Promise<number> {
+  return db.message.count({
+    where: {
+      conversation: role === 'club' ? { clubUserId: userId } : { footballerUserId: userId },
+      senderUserId: { not: userId },
+      read: false,
+    },
+  });
+}
+
+/**
  * Load conversation participant ids, scoped to the caller. Throws NOT_FOUND
  * if the conversation does not exist OR the caller is not a participant —
  * the two cases are deliberately indistinguishable so we don't leak the

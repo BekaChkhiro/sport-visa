@@ -53,6 +53,8 @@ export async function updateClubIdentity(data: unknown): Promise<ClubActionState
       league: d.league ?? null,
       stadiumName: d.stadiumName ?? null,
       stadiumCapacity: d.stadiumCapacity ?? null,
+      stadiumAddress: d.stadiumAddress ?? null,
+      stadiumMapUrl: d.stadiumMapUrl ?? null,
       officialWebsite: d.officialWebsite ?? null,
     },
   });

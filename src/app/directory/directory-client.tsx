@@ -217,21 +217,28 @@ export function DirectoryClient({
     pushUrl({ sort, view: view === 'list' ? 'list' : undefined });
   }
 
+  // Sort / view / pagination must preserve the *applied* filters, not the
+  // in-progress sheet edits — otherwise changing the sort silently commits
+  // un-applied filter drafts.
   function handleSortChange(next: SortKey) {
     pushUrl({
-      ...filtersToParams(draftFilters),
+      ...filtersToParams(initialFilters),
       sort: next,
       view: view === 'list' ? 'list' : undefined,
     });
   }
 
   function handleViewToggle(next: ViewKey) {
-    pushUrl({ ...filtersToParams(draftFilters), sort, view: next === 'list' ? 'list' : undefined });
+    pushUrl({
+      ...filtersToParams(initialFilters),
+      sort,
+      view: next === 'list' ? 'list' : undefined,
+    });
   }
 
   function handlePageChange(p: number) {
     pushUrl({
-      ...filtersToParams(draftFilters),
+      ...filtersToParams(initialFilters),
       sort,
       view: view === 'list' ? 'list' : undefined,
       page: p > 1 ? String(p) : undefined,

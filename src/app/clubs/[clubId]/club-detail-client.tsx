@@ -26,6 +26,7 @@ import {
   HeartIcon,
 } from '@/components/icons';
 import { toggleSubscription } from '@/lib/clubs/actions';
+import { buildMapEmbedSrc } from '@/lib/club-profile/map-embed';
 import { cn } from '@/lib/utils';
 
 type RosterEntry = {
@@ -92,51 +93,11 @@ function toValidTab(raw: string | undefined): Tab {
 function clubInitials(name: string) {
   return name
     .split(/\s+/)
+    .filter(Boolean)
     .map((part) => part[0])
     .join('')
     .slice(0, 2)
     .toUpperCase();
-}
-
-function toGoogleMapsEmbedUrl(url: string): string | null {
-  const trimmed = url.trim();
-  if (!trimmed) return null;
-
-  // Already an embed URL
-  if (trimmed.includes('maps.google.com/maps?') && trimmed.includes('output=embed')) {
-    return trimmed;
-  }
-  if (trimmed.includes('google.com/maps/embed')) {
-    return trimmed;
-  }
-
-  // Coordinates: "41.7151,44.8271" or "41.7151 44.8271"
-  const coordMatch = trimmed.match(/^(-?\d+\.?\d*)[,\s]+(-?\d+\.?\d*)$/);
-  if (coordMatch) {
-    return `https://maps.google.com/maps?q=${coordMatch[1]},${coordMatch[2]}&output=embed`;
-  }
-
-  // Standard Google Maps URL — try to convert
-  if (trimmed.includes('google.com/maps') || trimmed.includes('maps.google.com')) {
-    try {
-      const u = new URL(trimmed);
-      // Extract @lat,lng from path
-      const atMatch = u.pathname.match(/@(-?\d+\.?\d*),(-?\d+\.?\d*)/);
-      if (atMatch) {
-        return `https://maps.google.com/maps?q=${atMatch[1]},${atMatch[2]}&output=embed`;
-      }
-      // Try q param
-      const q = u.searchParams.get('q');
-      if (q) {
-        return `https://maps.google.com/maps?q=${encodeURIComponent(q)}&output=embed`;
-      }
-    } catch {
-      // fall through
-    }
-  }
-
-  // Treat as a generic query (address string)
-  return `https://maps.google.com/maps?q=${encodeURIComponent(trimmed)}&output=embed`;
 }
 
 type ClubDetailClientProps = {
@@ -146,7 +107,7 @@ type ClubDetailClientProps = {
   sidebarStats?: AppSidebarStats;
   adminBadges?: AppSidebarAdminBadges;
   unreadNotifications: number;
-  viewerRole: string | null;
+  viewerRole: string;
   activeTab: string;
   club: ClubData;
   isSubscribed: boolean;
@@ -192,10 +153,7 @@ export function ClubDetailClient({
   }
 
   async function handleSubscribeToggle() {
-    if (!canSubscribe) {
-      router.push('/auth/signin');
-      return;
-    }
+    if (!canSubscribe) return;
     if (subscribePending) return;
     setSubscribePending(true);
     const next = !isSubscribed;
@@ -219,7 +177,7 @@ export function ClubDetailClient({
     club.foundedYear ? `${club.foundedYear} დაარ.` : null,
   ].filter(Boolean) as string[];
 
-  const embedUrl = club.stadiumMapUrl ? toGoogleMapsEmbedUrl(club.stadiumMapUrl) : null;
+  const embedUrl = buildMapEmbedSrc(club.stadiumMapUrl);
 
   return (
     <AppShell
@@ -304,7 +262,7 @@ export function ClubDetailClient({
                 </div>
 
                 <div className="flex flex-wrap gap-2">
-                  {(canSubscribe || viewerRole === null) && (
+                  {canSubscribe && (
                     <Button
                       type="button"
                       variant={isSubscribed ? 'default' : 'outline'}

@@ -122,6 +122,8 @@ export function ShortlistClient({
     } else {
       setItems((prev) => prev.filter((item) => item.id !== footballerId));
       showToast('სიიდან ამოიშალა');
+      // Resync the server-rendered sidebar shortlist count.
+      router.refresh();
     }
     setRemovingIds((prev) => {
       const next = new Set(prev);

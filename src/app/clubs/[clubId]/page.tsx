@@ -109,6 +109,15 @@ export default async function ClubDetailPage({ params, searchParams }: Props) {
 
   const viewerRole = shell.role.toUpperCase();
 
+  // Count a profile view when a footballer opens the page (best-effort; never
+  // blocks rendering). Clubs viewing their own/another profile and admins are
+  // excluded so the counter reflects genuine audience interest.
+  if (viewerRole === 'FOOTBALLER') {
+    db.clubProfile
+      .update({ where: { id: club.id }, data: { profileViewCount: { increment: 1 } } })
+      .catch(() => {});
+  }
+
   let isSubscribed = false;
   if (viewerRole === 'FOOTBALLER') {
     const footballer = await db.footballerProfile.findUnique({

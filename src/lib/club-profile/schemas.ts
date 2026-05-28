@@ -34,6 +34,8 @@ export const updateClubIdentitySchema = z.object({
   league: z.preprocess(toOptStr, z.string().max(200).optional()),
   stadiumName: z.preprocess(toOptStr, z.string().max(200).optional()),
   stadiumCapacity: z.preprocess(toOptInt, z.number().int().min(0).optional()),
+  stadiumAddress: z.preprocess(toOptStr, z.string().max(300).optional()),
+  stadiumMapUrl: z.preprocess(toOptStr, z.string().max(500).optional()),
   officialWebsite: z.preprocess(toOptStr, z.string().url('სწორი URL შეიყვანო').max(300).optional()),
 });
 

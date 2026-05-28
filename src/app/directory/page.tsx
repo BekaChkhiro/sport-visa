@@ -26,15 +26,17 @@ function parseSort(raw: string | undefined): SortKey {
 }
 
 function sortToOrderBy(sort: SortKey) {
+  // Nullable columns (dateOfBirth, height) sort last in both directions so
+  // profiles missing the value don't lead the list on an ascending sort.
   switch (sort) {
     case 'age-asc':
-      return { dateOfBirth: 'desc' as const };
+      return { dateOfBirth: { sort: 'desc' as const, nulls: 'last' as const } };
     case 'age-desc':
-      return { dateOfBirth: 'asc' as const };
+      return { dateOfBirth: { sort: 'asc' as const, nulls: 'last' as const } };
     case 'height-asc':
-      return { height: 'asc' as const };
+      return { height: { sort: 'asc' as const, nulls: 'last' as const } };
     case 'height-desc':
-      return { height: 'desc' as const };
+      return { height: { sort: 'desc' as const, nulls: 'last' as const } };
     default:
       return { updatedAt: 'desc' as const };
   }

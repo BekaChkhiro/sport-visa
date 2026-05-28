@@ -3,6 +3,7 @@ import type { Metadata } from 'next';
 
 import { auth } from '@/lib/auth';
 import { db } from '@/lib/db';
+import { countUnreadMessages } from '@/lib/messages';
 import type { VerificationStatus } from '@/components/verification-badge';
 import { ClubDashboardClient } from './club-dashboard-client';
 
@@ -30,7 +31,7 @@ export default async function ClubDashboardPage() {
   const userId = session.user.id;
   const r2BaseUrl = process.env.R2_PUBLIC_BASE_URL ?? '';
 
-  const [profile, unreadNotifications] = await Promise.all([
+  const [profile, unreadNotifications, unreadMessages, rawConversations] = await Promise.all([
     db.clubProfile.findUnique({
       where: { userId },
       select: {
@@ -74,6 +75,31 @@ export default async function ClubDashboardPage() {
       },
     }),
     db.notification.count({ where: { userId, read: false } }),
+    countUnreadMessages(userId, 'club'),
+    db.conversation.findMany({
+      where: { clubUserId: userId },
+      orderBy: { updatedAt: 'desc' },
+      take: 5,
+      select: {
+        id: true,
+        updatedAt: true,
+        footballerUser: {
+          select: {
+            footballerProfile: {
+              select: { firstName: true, lastName: true, avatarKey: true },
+            },
+          },
+        },
+        messages: {
+          orderBy: { createdAt: 'desc' },
+          take: 1,
+          select: { body: true, createdAt: true },
+        },
+        _count: {
+          select: { messages: { where: { read: false, senderUserId: { not: userId } } } },
+        },
+      },
+    }),
   ]);
 
   if (!profile) {
@@ -107,6 +133,25 @@ export default async function ClubDashboardPage() {
     createdAt: p.createdAt.toISOString(),
   }));
 
+  const recentChats = rawConversations
+    .map((c) => {
+      const fp = c.footballerUser.footballerProfile;
+      if (!fp) return null;
+      const name = `${fp.firstName} ${fp.lastName}`.trim();
+      const initials = [fp.firstName[0], fp.lastName[0]].filter(Boolean).join('').toUpperCase();
+      const lastMsg = c.messages[0];
+      return {
+        id: c.id,
+        otherName: name,
+        otherInitials: initials,
+        otherAvatarUrl: fp.avatarKey ? `${r2BaseUrl}/${fp.avatarKey}` : undefined,
+        lastMessageBody: lastMsg?.body ?? null,
+        lastMessageAt: (lastMsg?.createdAt ?? c.updatedAt).toISOString(),
+        unreadCount: c._count.messages,
+      };
+    })
+    .filter((c): c is NonNullable<typeof c> => c !== null);
+
   return (
     <ClubDashboardClient
       currentPath="/dashboard/club"
@@ -121,11 +166,12 @@ export default async function ClubDashboardPage() {
       stats={{
         views: profile.profileViewCount,
         shortlistCount: profile._count.shortlistedPlayers,
-        unreadMessages: 0,
+        unreadMessages,
       }}
       unreadNotifications={unreadNotifications}
       recentShortlist={recentShortlist}
       recentPosts={recentPosts}
+      recentChats={recentChats}
     />
   );
 }

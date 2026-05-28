@@ -57,7 +57,8 @@ export function PostComposerClient({ user, stats, unreadNotifications }: PostCom
       return;
     }
 
-    router.push(`/dashboard/club`);
+    router.push('/dashboard/club');
+    router.refresh();
   }
 
   return (

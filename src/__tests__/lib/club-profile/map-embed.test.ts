@@ -11,12 +11,16 @@ describe('buildMapEmbedSrc', () => {
     expect(buildMapEmbedSrc('')).toBeNull();
   });
 
-  it('returns null for an unrecognised URL', () => {
-    expect(buildMapEmbedSrc('https://example.com/somewhere')).toBeNull();
+  it('embeds an unrecognised URL as a generic maps query', () => {
+    const result = buildMapEmbedSrc('https://example.com/somewhere');
+    expect(result).toContain('output=embed');
+    expect(result).toContain(encodeURIComponent('https://example.com/somewhere'));
   });
 
-  it('returns null for plain text', () => {
-    expect(buildMapEmbedSrc('თბილისი')).toBeNull();
+  it('embeds plain text as a maps search query', () => {
+    const result = buildMapEmbedSrc('თბილისი');
+    expect(result).toContain('output=embed');
+    expect(result).toContain(encodeURIComponent('თბილისი'));
   });
 
   // ── Already-embed URLs ──────────────────────────────────────────────────────
@@ -77,7 +81,9 @@ describe('buildMapEmbedSrc', () => {
     expect(result).toBe('https://www.google.com/maps?q=41,44&output=embed');
   });
 
-  it('returns null for a string that looks like coords but has extra text', () => {
-    expect(buildMapEmbedSrc('41.6938,44.8015 extra')).toBeNull();
+  it('embeds a coords-like string with extra text as a generic query', () => {
+    const result = buildMapEmbedSrc('41.6938,44.8015 extra');
+    expect(result).toContain('output=embed');
+    expect(result).toContain(encodeURIComponent('41.6938,44.8015 extra'));
   });
 });

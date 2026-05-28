@@ -265,12 +265,19 @@ function ClubSidebar({
       </nav>
 
       <hr className="my-4 border-border" />
-      <GroupHeading>შერჩეულები</GroupHeading>
-      <div className="flex items-center gap-2 px-3 text-sm">
-        <UsersIcon className="size-4 text-muted-foreground" />
-        <span className="font-semibold">{stats?.shortlistCount ?? 0}</span>
-        <span className="text-xs text-muted-foreground">მოთამაშე</span>
-      </div>
+      <GroupHeading>სტატისტიკა</GroupHeading>
+      <ul className="flex flex-col gap-2 px-3">
+        <li className="flex items-center gap-2 text-sm">
+          <EyeIcon className="size-4 text-muted-foreground" />
+          <span className="font-semibold">{stats?.views ?? 0}</span>
+          <span className="text-xs text-muted-foreground">ნახვები</span>
+        </li>
+        <li className="flex items-center gap-2 text-sm">
+          <UsersIcon className="size-4 text-muted-foreground" />
+          <span className="font-semibold">{stats?.shortlistCount ?? 0}</span>
+          <span className="text-xs text-muted-foreground">შერჩ. მოთამაშე</span>
+        </li>
+      </ul>
     </>
   );
 }

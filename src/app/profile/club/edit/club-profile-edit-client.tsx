@@ -44,6 +44,8 @@ type IdentityForm = {
   league: string;
   stadiumName: string;
   stadiumCapacity: string;
+  stadiumAddress: string;
+  stadiumMapUrl: string;
   officialWebsite: string;
 };
 
@@ -172,6 +174,8 @@ function IdentitySection({ initialData }: { initialData: IdentityForm }) {
       league: form.league || undefined,
       stadiumName: form.stadiumName || undefined,
       stadiumCapacity: form.stadiumCapacity || undefined,
+      stadiumAddress: form.stadiumAddress || undefined,
+      stadiumMapUrl: form.stadiumMapUrl || undefined,
       officialWebsite: form.officialWebsite || undefined,
     });
 
@@ -271,6 +275,30 @@ function IdentitySection({ initialData }: { initialData: IdentityForm }) {
               onChange={(e) => set('stadiumCapacity', e.target.value)}
               placeholder="55000"
               min={0}
+            />
+          </Field>
+
+          <Field
+            label="სტადიონის მისამართი"
+            error={errors.stadiumAddress}
+            className="sm:col-span-2"
+          >
+            <Input
+              value={form.stadiumAddress}
+              onChange={(e) => set('stadiumAddress', e.target.value)}
+              placeholder="თბილისი, აკ. წერეთლის გამზ. 2"
+            />
+          </Field>
+
+          <Field
+            label="რუკის ბმული / კოორდინატები"
+            error={errors.stadiumMapUrl}
+            className="sm:col-span-2"
+          >
+            <Input
+              value={form.stadiumMapUrl}
+              onChange={(e) => set('stadiumMapUrl', e.target.value)}
+              placeholder="https://maps.google.com/... ან 41.7233,44.7906"
             />
           </Field>
 
@@ -796,11 +824,14 @@ function HistoryTimelineSection({ initialEvents }: { initialEvents: HistoryEvent
 
   async function handleDelete(id: string) {
     setDeletingId(id);
+    setFormError('');
     const result = await deleteClubHistoryEvent(id);
     setDeletingId(null);
     if (result.status === 'success') {
       setEvents((prev) => prev.filter((e) => e.id !== id));
       flashSaved();
+    } else {
+      setFormError(result.message);
     }
   }
 
@@ -892,6 +923,12 @@ function HistoryTimelineSection({ initialEvents }: { initialEvents: HistoryEvent
             </div>
           ),
         )}
+
+        {formError && !addingNew && !editingId ? (
+          <p role="alert" className="text-sm text-destructive">
+            {formError}
+          </p>
+        ) : null}
 
         {savedMessage && !addingNew && !editingId ? (
           <p className="text-sm text-emerald-600 dark:text-emerald-400 text-right">✓ შენახულია</p>
@@ -1104,11 +1141,14 @@ function RosterSection({ initialEntries }: { initialEntries: RosterEntry[] }) {
 
   async function handleDelete(id: string) {
     setDeletingId(id);
+    setFormError('');
     const result = await deleteClubRosterEntry(id);
     setDeletingId(null);
     if (result.status === 'success') {
       setEntries((prev) => prev.filter((e) => e.id !== id));
       flashSaved();
+    } else {
+      setFormError(result.message);
     }
   }
 
@@ -1205,6 +1245,12 @@ function RosterSection({ initialEntries }: { initialEntries: RosterEntry[] }) {
             </div>
           ),
         )}
+
+        {formError && !addingNew && !editingId ? (
+          <p role="alert" className="text-sm text-destructive">
+            {formError}
+          </p>
+        ) : null}
 
         {savedMessage && !addingNew && !editingId ? (
           <p className="text-sm text-emerald-600 dark:text-emerald-400 text-right">✓ შენახულია</p>
@@ -1306,10 +1352,19 @@ function Field({
   children: React.ReactNode;
   className?: string;
 }) {
+  const generatedId = React.useId();
+  // Associate the label with its control so clicking the label focuses the
+  // field and screen readers announce it. We clone the single child to inject
+  // the id rather than asking every call site to pass one.
+  const control =
+    React.isValidElement(children) && !(children.props as { id?: string }).id
+      ? React.cloneElement(children as React.ReactElement<{ id?: string }>, { id: generatedId })
+      : children;
+
   return (
     <div className={cn('space-y-1.5', className)}>
-      <Label>{label}</Label>
-      {children}
+      <Label htmlFor={generatedId}>{label}</Label>
+      {control}
       {error ? <p className="text-sm text-destructive">{error}</p> : null}
     </div>
   );
