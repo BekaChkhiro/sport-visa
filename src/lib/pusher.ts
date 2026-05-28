@@ -100,6 +100,7 @@ export function isChannelAllowedForUser(channelName: string, userId: string): bo
   return false;
 }
 
-// Re-export channel helpers and event names from the client-safe module so
-// server code can import them from here without a second source of truth.
-export { channels, events } from './pusher-client';
+// Re-export channel/event helpers from the isomorphic module (NOT pusher-client,
+// which is 'use client' — importing its exports server-side yields client
+// references and `channels.chat(...)` throws "is not a function" in the build).
+export { channels, events } from './pusher-channels';
