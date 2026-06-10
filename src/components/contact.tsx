@@ -19,8 +19,8 @@ export function Contact() {
     state.status === 'validation' ? state.errors[field]?.[0] : undefined;
 
   return (
-    <section className="bg-ink-900/50 px-4 py-16 sm:py-20">
-      <div className="container mx-auto">
+    <section className="bg-ink-900/50 py-16 sm:py-20">
+      <div className="mx-auto max-w-[1200px] px-4 sm:px-8">
         <div className="grid gap-12 lg:grid-cols-2 lg:items-start">
           {/* Left — copy */}
           <div className="flex flex-col gap-6">

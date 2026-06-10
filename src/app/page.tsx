@@ -323,7 +323,7 @@ export default function HomePage() {
           className="pointer-events-none absolute -left-40 -top-32 h-[420px] w-[420px] rounded-full bg-brand-400/10 blur-[120px]"
         />
 
-        <div className="container relative z-10 mx-auto grid grid-cols-1 items-center gap-8 px-4 py-10 sm:py-14 lg:grid-cols-[1.05fr_0.95fr] lg:gap-12">
+        <div className="relative z-10 mx-auto grid w-full max-w-[1200px] grid-cols-1 items-center gap-8 px-4 py-10 sm:px-8 sm:py-14 lg:grid-cols-[1.05fr_0.95fr] lg:gap-12">
           {/* Copy */}
           <div className="flex flex-col gap-5">
             <h1 className="text-[36px] font-bold leading-[1.05] tracking-tight text-ink-50 sm:text-[48px]">
@@ -574,7 +574,7 @@ export default function HomePage() {
 
       {/* ── DUAL PATH ─────────────────────────────────────────────── */}
       <section>
-        <div className="container mx-auto px-4 py-16 sm:py-20">
+        <div className="mx-auto max-w-[1200px] px-4 py-16 sm:px-8 sm:py-20">
           <div className="max-w-xl">
             <h2 className="text-[28px] font-bold leading-[1.1] tracking-tight text-ink-50 sm:text-[32px]">
               ორი მხარე, ერთი მიზანი — სწორი დამთხვევა
@@ -705,7 +705,7 @@ export default function HomePage() {
 
       {/* ── FLOW / STEPS ──────────────────────────────────────────── */}
       <section className="border-t border-ink-800/80 bg-ink-950/40">
-        <div className="container mx-auto px-4 py-16 sm:py-20">
+        <div className="mx-auto max-w-[1200px] px-4 py-16 sm:px-8 sm:py-20">
           <div className="max-w-xl">
             <h2 className="text-[28px] font-bold leading-[1.1] tracking-tight text-ink-50 sm:text-[32px]">
               ნაბიჯ-ნაბიჯ — ნიჭიდან კონტრაქტამდე
@@ -808,7 +808,7 @@ export default function HomePage() {
 
       {/* ── FEATURES GRID ─────────────────────────────────────────── */}
       <section>
-        <div className="container mx-auto px-4 py-16 sm:py-20">
+        <div className="mx-auto max-w-[1200px] px-4 py-16 sm:px-8 sm:py-20">
           <div className="max-w-xl">
             <h2 className="text-[28px] font-bold leading-[1.1] tracking-tight text-ink-50 sm:text-[32px]">
               ყველაფერი, რაც სკაუტინგისთვის გჭირდება
@@ -959,8 +959,8 @@ export default function HomePage() {
       </section>
 
       {/* ── STATS STRIP ───────────────────────────────────────────── */}
-      <section className="border-y border-ink-800 bg-ink-900/50 px-4 py-12">
-        <div className="container mx-auto">
+      <section className="border-y border-ink-800 bg-ink-900/50 py-12">
+        <div className="mx-auto max-w-[1200px] px-4 sm:px-8">
           <StatStrip stats={STATS} className="mx-auto max-w-lg" />
         </div>
       </section>
@@ -973,7 +973,7 @@ export default function HomePage() {
 
       {/* ── CTA ───────────────────────────────────────────────────── */}
       <section>
-        <div className="container mx-auto px-4 pb-16 sm:pb-20">
+        <div className="mx-auto max-w-[1200px] px-4 pb-16 sm:px-8 sm:pb-20">
           <div className="relative overflow-hidden rounded-card border border-brand-400/25 bg-ink-900 px-8 py-14 text-center md:py-20">
             <div
               aria-hidden

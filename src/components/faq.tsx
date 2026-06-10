@@ -46,8 +46,8 @@ const FAQ_ITEMS = [
 
 export function FAQ() {
   return (
-    <section className="border-t border-ink-800/80 bg-ink-950/40 px-4 py-16 sm:py-20">
-      <div className="container mx-auto">
+    <section className="border-t border-ink-800/80 bg-ink-950/40 py-16 sm:py-20">
+      <div className="mx-auto max-w-[1200px] px-4 sm:px-8">
         <div className="grid grid-cols-1 gap-12 lg:grid-cols-[0.9fr_1.1fr]">
           {/* Left — heading + sub-copy */}
           <div>
