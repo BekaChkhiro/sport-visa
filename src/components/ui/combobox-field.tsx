@@ -64,16 +64,16 @@ function ComboboxField({
           disabled={disabled}
           data-slot="combobox-trigger"
           className={cn(
-            'border-input flex h-11 w-full items-center justify-between gap-2 rounded-md border bg-transparent px-3 py-1 text-left text-base shadow-xs transition-[color,box-shadow] outline-none md:h-10 md:text-sm',
-            'focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]',
-            'aria-invalid:border-destructive aria-invalid:ring-destructive/20',
+            'border-ink-700 flex h-11 w-full items-center justify-between gap-2 rounded-field border bg-ink-950 px-3 py-1 text-left text-[13.5px] text-ink-100 transition-[color,box-shadow] outline-none',
+            'focus-visible:border-brand-400/60 focus-visible:ring-4 focus-visible:ring-brand-400/15',
+            'aria-invalid:border-danger-500 aria-invalid:ring-danger-500/20',
             'disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50',
-            !selected && 'text-muted-foreground',
+            !selected && 'text-ink-500',
             className,
           )}
         >
           <span className="truncate">{selected ? selected.label : placeholder}</span>
-          <span className="flex items-center gap-1 text-muted-foreground">
+          <span className="flex items-center gap-1 text-ink-500">
             {selected && !disabled ? (
               <CloseIcon
                 role="button"
@@ -84,7 +84,7 @@ function ComboboxField({
                   onSelect(null);
                   setQuery('');
                 }}
-                className="size-4 cursor-pointer hover:text-foreground"
+                className="size-4 cursor-pointer hover:text-ink-100"
               />
             ) : null}
             <ChevronDownIcon className="size-4" />
@@ -98,18 +98,18 @@ function ComboboxField({
         className="w-[var(--radix-popover-trigger-width)] max-h-[260px] overflow-hidden p-0"
       >
         <div className="flex items-center gap-2 border-b border-border px-3 py-2 text-sm">
-          <SearchIcon className="size-4 text-muted-foreground" />
+          <SearchIcon className="size-4 text-ink-500" />
           <input
             autoFocus
             value={query}
             onChange={(event) => setQuery(event.target.value)}
             placeholder={searchPlaceholder}
-            className="flex-1 bg-transparent outline-none placeholder:text-muted-foreground"
+            className="flex-1 bg-transparent outline-none placeholder:text-ink-500 text-ink-100 text-[13.5px]"
           />
         </div>
         <ul role="listbox" className="max-h-[200px] overflow-y-auto py-1">
           {filtered.length === 0 ? (
-            <li className="px-3 py-2 text-sm text-muted-foreground">{emptyText}</li>
+            <li className="px-3 py-2 text-sm text-ink-400">{emptyText}</li>
           ) : (
             filtered.map((option) => {
               const isSelected = option.value === value;
@@ -125,12 +125,12 @@ function ComboboxField({
                       setQuery('');
                     }}
                     className={cn(
-                      'flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-sm transition-colors hover:bg-accent hover:text-accent-foreground',
-                      isSelected && 'bg-accent text-accent-foreground',
+                      'flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-sm text-ink-100 transition-colors hover:bg-ink-800 hover:text-ink-100',
+                      isSelected && 'bg-ink-800 text-ink-100',
                     )}
                   >
                     <span className="truncate">{option.label}</span>
-                    {isSelected ? <CheckCircleIcon className="size-4 text-primary" /> : null}
+                    {isSelected ? <CheckCircleIcon className="size-4 text-brand-400" /> : null}
                   </button>
                 </li>
               );

@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import { signOut } from 'next-auth/react';
 
 import { AppShell } from '@/components/app-shell';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -82,27 +81,35 @@ function buildUrl(
   return qs ? `${base}?${qs}` : base;
 }
 
-function StatusBadge({ status }: { status: ServiceRequestRow['status'] }) {
-  if (status === 'RESOLVED') {
-    return (
-      <span className="inline-flex items-center gap-1 text-xs text-emerald-600 dark:text-emerald-400">
-        <CheckCircleIcon className="size-3" />
-        შეს.
-      </span>
-    );
-  }
-  if (status === 'REJECTED') {
-    return (
-      <span className="inline-flex items-center gap-1 text-xs text-destructive">
-        <XCircleIcon className="size-3" />
-        უარყ.
-      </span>
-    );
-  }
+const STATUS_STYLES: Record<
+  ServiceRequestRow['status'],
+  { label: string; cls: string; dot: string }
+> = {
+  PENDING: {
+    label: 'მოლოდინში',
+    cls: 'text-warning-300 border-warning-400/30 bg-warning-400/10',
+    dot: 'bg-warning-400',
+  },
+  RESOLVED: {
+    label: 'მოგვარდა',
+    cls: 'text-success-300 border-success-400/30 bg-success-400/10',
+    dot: 'bg-success-400',
+  },
+  REJECTED: {
+    label: 'უარყოფილი',
+    cls: 'text-danger-300 border-danger-400/30 bg-danger-400/10',
+    dot: 'bg-danger-400',
+  },
+};
+
+function StatusPill({ status }: { status: ServiceRequestRow['status'] }) {
+  const s = STATUS_STYLES[status];
   return (
-    <span className="inline-flex items-center gap-1 text-xs text-amber-600 dark:text-amber-400">
-      <ClockIcon className="size-3" />
-      ახ.
+    <span
+      className={`inline-flex w-fit items-center gap-1.5 rounded-pill border px-2.5 py-1 text-[11px] font-semibold ${s.cls}`}
+    >
+      <span className={`h-1.5 w-1.5 rounded-full ${s.dot}`} />
+      {s.label}
     </span>
   );
 }
@@ -209,26 +216,24 @@ function RequestCard({
     <div
       data-slot="service-request-row"
       data-request-id={row.id}
-      className={`flex flex-col gap-3 rounded-lg border bg-card p-4 sm:flex-row sm:items-center ${!isPending ? 'opacity-70' : ''}`}
+      className={`flex flex-col gap-3 rounded-card border border-ink-800 bg-ink-900 p-4 shadow-card transition-colors hover:border-ink-700 sm:flex-row sm:items-center ${!isPending ? 'opacity-70' : ''}`}
     >
       <div className="flex flex-col min-w-0 flex-1">
         <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-sm font-mono font-medium text-muted-foreground">
+          <span className="font-mono text-[12.5px] font-semibold text-ink-200 tabular-nums">
             {row.requestCode}
           </span>
-          <Badge variant="outline" className="text-[10px]">
+          <span className="rounded-pill border border-ink-700 bg-ink-800/60 px-2 py-0.5 text-[10.5px] font-medium text-ink-300">
             {row.categoryName}
-          </Badge>
-          <StatusBadge status={row.status} />
-        </div>
-        <span className="text-xs text-muted-foreground truncate mt-0.5">{label}</span>
-        {row.adminNote ? (
-          <span className="text-xs text-muted-foreground italic mt-0.5 truncate">
-            {row.adminNote}
           </span>
+          <StatusPill status={row.status} />
+        </div>
+        <span className="text-[12px] text-ink-500 truncate mt-0.5">{label}</span>
+        {row.adminNote ? (
+          <span className="text-xs text-ink-500 italic mt-0.5 truncate">{row.adminNote}</span>
         ) : null}
       </div>
-      <div className="flex flex-col gap-1 sm:items-end text-xs text-muted-foreground sm:min-w-[90px]">
+      <div className="flex flex-col gap-1 sm:items-end text-xs text-ink-500 sm:min-w-[90px]">
         <span className="flex items-center gap-1">
           <ClockIcon className="size-3" />
           {formatDate(row.createdAt)}
@@ -240,7 +245,18 @@ function RequestCard({
         ) : null}
       </div>
       {isPending ? (
-        <div className="flex items-center gap-2 sm:justify-end flex-wrap">
+        <div className="flex items-center gap-1.5 sm:justify-end flex-wrap">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => onReject(row.id, `${row.requestCode} · ${row.categoryName}`)}
+            disabled={pending}
+            className="border-ink-700 text-danger-300 hover:bg-danger-400/10 hover:border-danger-400/40"
+          >
+            <XCircleIcon className="size-3.5" />
+            უარყ.
+          </Button>
           <Button
             type="button"
             variant="default"
@@ -250,16 +266,6 @@ function RequestCard({
           >
             <CheckCircleIcon className="size-3.5" />
             ჩამ.
-          </Button>
-          <Button
-            type="button"
-            variant="destructive"
-            size="sm"
-            onClick={() => onReject(row.id, `${row.requestCode} · ${row.categoryName}`)}
-            disabled={pending}
-          >
-            <XCircleIcon className="size-3.5" />
-            უარყ.
           </Button>
         </div>
       ) : null}
@@ -362,66 +368,85 @@ export function ServiceRequestsClient({
       onSignOut={handleSignOut}
     >
       <div className="space-y-6">
-        <div className="flex flex-col gap-1">
+        {/* Page header */}
+        <div className="space-y-1">
           <div className="flex items-center gap-2">
-            <FileTextIcon className="size-5 text-muted-foreground" />
-            <h1 className="text-xl font-semibold">სერვ. მოთხოვნები</h1>
+            <FileTextIcon className="size-5 text-ink-400" />
+            <h1 className="font-display text-[26px] font-bold tracking-tight text-ink-50">
+              სერვ. მოთხოვნები
+            </h1>
           </div>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-[13.5px] text-ink-400">
             ფეხბურთელების სერვისის მოთხოვნების განხილვა და შესრულება.
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2" role="tablist" aria-label="სტატუსი">
-          {tabs.map((t) => (
-            <button
-              key={t.value}
-              type="button"
-              role="tab"
-              aria-selected={status === t.value}
-              onClick={() => setStatus(t.value)}
-              className={`inline-flex items-center gap-2 rounded-md border px-3 py-1.5 text-sm transition-colors ${
-                status === t.value
-                  ? 'border-primary bg-primary/10 text-foreground'
-                  : 'border-border bg-card text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              {t.label}
-              {t.count !== undefined ? (
-                <Badge variant={t.count > 0 ? 'destructive' : 'secondary'} className="text-[10px]">
-                  {t.count}
-                </Badge>
-              ) : null}
-            </button>
-          ))}
+        {/* Filter tabs */}
+        <div className="flex flex-wrap items-center gap-3">
+          <div
+            className="inline-flex rounded-btn border border-ink-700 bg-ink-900 p-1"
+            role="tablist"
+            aria-label="სტატუსი"
+          >
+            {tabs.map((t) => (
+              <button
+                key={t.value}
+                type="button"
+                role="tab"
+                aria-selected={status === t.value}
+                onClick={() => setStatus(t.value)}
+                className={`flex items-center gap-2 rounded-[8px] px-3.5 py-2 text-[13px] font-medium transition-colors ${
+                  status === t.value ? 'bg-ink-800 text-ink-50' : 'text-ink-400 hover:text-ink-100'
+                }`}
+              >
+                {t.label}
+                {t.count !== undefined ? (
+                  <span
+                    className={`flex h-[18px] min-w-[18px] items-center justify-center rounded-full px-1 text-[10.5px] font-bold ${
+                      status === t.value
+                        ? 'bg-brand-400/20 text-brand-300'
+                        : 'bg-ink-800 text-ink-500'
+                    }`}
+                  >
+                    {t.count}
+                  </span>
+                ) : null}
+              </button>
+            ))}
+          </div>
+
+          <form
+            onSubmit={submitSearch}
+            className="relative ml-auto hidden sm:flex max-w-[260px] flex-1"
+          >
+            <SearchIcon className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 size-4 text-ink-500" />
+            <Input
+              type="search"
+              placeholder="კოდი, ელ.ფოსტა ან სერვ. ტიპი…"
+              value={searchValue}
+              onChange={(e) => setSearchValue(e.target.value)}
+              className="pl-9 h-10 border-ink-700 bg-ink-950 text-ink-100 placeholder:text-ink-600 focus:border-brand-400/50 focus:ring-brand-400/15"
+              aria-label="ძიება"
+            />
+          </form>
         </div>
 
-        <form onSubmit={submitSearch} className="relative max-w-sm">
-          <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
-          <Input
-            type="search"
-            placeholder="კოდი, ელ.ფოსტა ან სერვ. ტიპი…"
-            value={searchValue}
-            onChange={(e) => setSearchValue(e.target.value)}
-            className="pl-9"
-            aria-label="ძიება"
-          />
-        </form>
-
+        {/* Feedback */}
         {feedback ? (
           <div
             role="status"
             aria-live="polite"
-            className={`rounded-md border px-4 py-2 text-sm ${
+            className={`rounded-card border px-4 py-2 text-sm ${
               feedback.kind === 'success'
-                ? 'border-emerald-300 bg-emerald-50 text-emerald-900 dark:border-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-200'
-                : 'border-destructive/40 bg-destructive/10 text-destructive'
+                ? 'border-success-400/30 bg-success-400/10 text-success-300'
+                : 'border-danger-400/30 bg-danger-400/10 text-danger-300'
             }`}
           >
             {feedback.message}
           </div>
         ) : null}
 
+        {/* Request list */}
         <div className="flex flex-col gap-3">
           {requestsPage.items.length === 0 ? (
             <EmptyState
@@ -445,18 +470,23 @@ export function ServiceRequestsClient({
           )}
         </div>
 
+        {/* Pagination */}
         {requestsPage.pageCount > 1 ? (
-          <nav aria-label="გვერდები" className="flex items-center justify-between border-t pt-4">
-            <span className="text-xs text-muted-foreground">
+          <nav
+            aria-label="გვერდები"
+            className="flex items-center justify-between border-t border-ink-800 pt-4"
+          >
+            <span className="text-[12.5px] text-ink-500">
               გვერდი {page} / {requestsPage.pageCount} ({requestsPage.total} მოთხ.)
             </span>
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-1.5">
               <Button
                 type="button"
                 variant="outline"
                 size="sm"
                 onClick={() => setPage(page - 1)}
                 disabled={page <= 1}
+                className="border-ink-800 text-ink-400 hover:bg-ink-800 hover:text-ink-100"
               >
                 <ChevronLeftIcon className="size-4" />
                 წინა
@@ -467,6 +497,7 @@ export function ServiceRequestsClient({
                 size="sm"
                 onClick={() => setPage(page + 1)}
                 disabled={page >= requestsPage.pageCount}
+                className="border-ink-800 text-ink-400 hover:bg-ink-800 hover:text-ink-100"
               >
                 შემდეგი
                 <ChevronRightIcon className="size-4" />

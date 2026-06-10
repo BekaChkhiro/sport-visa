@@ -6,7 +6,6 @@ import { signOut } from 'next-auth/react';
 
 import { AppShell } from '@/components/app-shell';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -230,29 +229,29 @@ function FootballerCard({
   return (
     <div
       data-slot="verification-row"
-      className="flex flex-col gap-3 rounded-lg border bg-card p-4 sm:flex-row sm:items-center"
+      className="flex flex-wrap items-center gap-4 rounded-card border border-ink-800 bg-ink-900 p-4 shadow-card transition-colors hover:border-ink-700"
     >
-      <div className="flex items-center gap-3 min-w-0 flex-1">
-        <Avatar className="size-10 shrink-0">
-          {row.avatarUrl ? <AvatarImage src={row.avatarUrl} alt={fullName} /> : null}
-          <AvatarFallback className="bg-muted text-xs font-semibold text-muted-foreground">
-            {initialsOf(fullName)}
-          </AvatarFallback>
-        </Avatar>
-        <div className="flex flex-col min-w-0">
-          <span className="text-sm font-medium truncate">{fullName}</span>
-          <span className="text-xs text-muted-foreground truncate">{row.email ?? '—'}</span>
-          {meta ? <span className="text-xs text-muted-foreground truncate">{meta}</span> : null}
+      <Avatar className="size-[52px] shrink-0">
+        {row.avatarUrl ? <AvatarImage src={row.avatarUrl} alt={fullName} /> : null}
+        <AvatarFallback className="bg-gradient-to-br from-brand-400 to-brand-600 text-ink-950 font-bold">
+          {initialsOf(fullName)}
+        </AvatarFallback>
+      </Avatar>
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-2">
+          <span className="text-[15px] font-semibold text-ink-50">{fullName}</span>
+          <span className="rounded-pill border border-warning-400/30 bg-warning-400/10 px-2 py-0.5 text-[10px] font-bold uppercase text-warning-300">
+            მოლოდინში
+          </span>
         </div>
+        <span className="mt-0.5 block text-[12.5px] text-ink-500">{row.email ?? '—'}</span>
+        {meta ? <span className="mt-1.5 block text-[11.5px] text-ink-400">{meta}</span> : null}
       </div>
-      <div className="flex flex-col gap-1 sm:items-end text-xs text-muted-foreground sm:min-w-[100px]">
+      <div className="flex flex-col gap-1 sm:items-end text-xs text-ink-600 sm:min-w-[100px]">
         <span className="flex items-center gap-1">
           <ClockIcon className="size-3" />
           {formatDate(row.createdAt)}
         </span>
-        <Badge variant="secondary" className="text-[10px]">
-          მოლოდინი
-        </Badge>
       </div>
       <div className="flex items-center gap-2 sm:justify-end flex-wrap">
         <Button
@@ -296,29 +295,29 @@ function ClubCard({
   return (
     <div
       data-slot="verification-row"
-      className="flex flex-col gap-3 rounded-lg border bg-card p-4 sm:flex-row sm:items-center"
+      className="flex flex-wrap items-center gap-4 rounded-card border border-ink-800 bg-ink-900 p-4 shadow-card transition-colors hover:border-ink-700"
     >
-      <div className="flex items-center gap-3 min-w-0 flex-1">
-        <Avatar className="size-10 shrink-0 rounded-md">
-          {row.logoUrl ? <AvatarImage src={row.logoUrl} alt={row.name} /> : null}
-          <AvatarFallback className="bg-muted text-xs font-semibold text-muted-foreground rounded-md">
-            {initialsOf(row.name)}
-          </AvatarFallback>
-        </Avatar>
-        <div className="flex flex-col min-w-0">
-          <span className="text-sm font-medium truncate">{row.name}</span>
-          <span className="text-xs text-muted-foreground truncate">{row.email ?? '—'}</span>
-          {meta ? <span className="text-xs text-muted-foreground truncate">{meta}</span> : null}
+      <Avatar className="size-[52px] shrink-0 rounded-[13px]">
+        {row.logoUrl ? <AvatarImage src={row.logoUrl} alt={row.name} /> : null}
+        <AvatarFallback className="rounded-[13px] bg-accent-400/15 text-accent-300 font-bold">
+          {initialsOf(row.name)}
+        </AvatarFallback>
+      </Avatar>
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-2">
+          <span className="text-[15px] font-semibold text-ink-50">{row.name}</span>
+          <span className="rounded-pill border border-warning-400/30 bg-warning-400/10 px-2 py-0.5 text-[10px] font-bold uppercase text-warning-300">
+            მოლოდინში
+          </span>
         </div>
+        <span className="mt-0.5 block text-[12.5px] text-ink-500">{row.email ?? '—'}</span>
+        {meta ? <span className="mt-1.5 block text-[11.5px] text-ink-400">{meta}</span> : null}
       </div>
-      <div className="flex flex-col gap-1 sm:items-end text-xs text-muted-foreground sm:min-w-[100px]">
+      <div className="flex flex-col gap-1 sm:items-end text-xs text-ink-600 sm:min-w-[100px]">
         <span className="flex items-center gap-1">
           <ClockIcon className="size-3" />
           {formatDate(row.createdAt)}
         </span>
-        <Badge variant="secondary" className="text-[10px]">
-          მოლოდინი
-        </Badge>
       </div>
       <div className="flex items-center gap-2 sm:justify-end flex-wrap">
         <Button
@@ -453,72 +452,75 @@ export function VerificationQueueClient({
       onSignOut={handleSignOut}
     >
       <div className="space-y-6">
-        <div className="flex flex-col gap-1">
+        {/* Page header */}
+        <div className="space-y-1">
           <div className="flex items-center gap-2">
-            <ShieldIcon className="size-5 text-muted-foreground" />
-            <h1 className="text-xl font-semibold">ვერიფიკაციის რიგი</h1>
+            <ShieldIcon className="size-5 text-ink-400" />
+            <h1 className="font-display text-[26px] font-bold tracking-tight text-ink-50">
+              ვერიფიკაციის რიგი
+            </h1>
           </div>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-[13.5px] text-ink-400">
             ფეხბურთელებისა და კლუბების ახალი პროფილების განხილვა.
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2" role="tablist" aria-label="ვერიფიკაცია">
-          <button
-            type="button"
-            role="tab"
-            aria-selected={tab === 'footballers'}
-            onClick={() => setTab('footballers')}
-            className={`inline-flex items-center gap-2 rounded-md border px-3 py-1.5 text-sm transition-colors ${
-              tab === 'footballers'
-                ? 'border-primary bg-primary/10 text-foreground'
-                : 'border-border bg-card text-muted-foreground hover:text-foreground'
-            }`}
+        {/* Tabs + controls */}
+        <div className="flex flex-wrap items-center gap-3">
+          <div
+            className="inline-flex rounded-btn border border-ink-800 bg-ink-900 p-1"
+            role="tablist"
+            aria-label="ვერიფიკაცია"
           >
-            ფეხბურთელები
-            <Badge
-              variant={counts.footballers > 0 ? 'destructive' : 'secondary'}
-              className="text-[10px]"
-            >
-              {counts.footballers}
-            </Badge>
-          </button>
-          <button
-            type="button"
-            role="tab"
-            aria-selected={tab === 'clubs'}
-            onClick={() => setTab('clubs')}
-            className={`inline-flex items-center gap-2 rounded-md border px-3 py-1.5 text-sm transition-colors ${
-              tab === 'clubs'
-                ? 'border-primary bg-primary/10 text-foreground'
-                : 'border-border bg-card text-muted-foreground hover:text-foreground'
-            }`}
-          >
-            კლუბები
-            <Badge variant={counts.clubs > 0 ? 'destructive' : 'secondary'} className="text-[10px]">
-              {counts.clubs}
-            </Badge>
-          </button>
-        </div>
+            {(
+              [
+                ['footballers', 'ფეხბურთელები', counts.footballers],
+                ['clubs', 'კლუბები', counts.clubs],
+              ] as const
+            ).map(([id, label, count]) => (
+              <button
+                key={id}
+                type="button"
+                role="tab"
+                aria-selected={tab === id}
+                onClick={() => setTab(id)}
+                className={`flex items-center gap-2 rounded-[8px] px-4 py-2 text-[13px] font-medium transition-colors ${
+                  tab === id ? 'bg-ink-800 text-ink-50' : 'text-ink-400 hover:text-ink-100'
+                }`}
+              >
+                {label}
+                <span
+                  className={`flex h-[18px] min-w-[18px] items-center justify-center rounded-full px-1 text-[10.5px] font-bold ${
+                    tab === id ? 'bg-flame-400/20 text-flame-300' : 'bg-ink-800 text-ink-500'
+                  }`}
+                >
+                  {count}
+                </span>
+              </button>
+            ))}
+          </div>
 
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <form onSubmit={submitSearch} className="relative flex-1 max-w-sm">
-            <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
+          <form
+            onSubmit={submitSearch}
+            className="relative ml-auto hidden sm:flex flex-1 max-w-[260px]"
+          >
+            <SearchIcon className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 size-4 text-ink-500" />
             <Input
               type="search"
               placeholder="ძიება სახელით ან ელ.ფოსტით…"
               value={searchValue}
               onChange={(e) => setSearchValue(e.target.value)}
-              className="pl-9"
+              className="pl-9 h-10 border-ink-700 bg-ink-950 text-ink-100 placeholder:text-ink-600 focus:border-brand-400/50 focus:ring-brand-400/15"
               aria-label="ძიება"
             />
           </form>
+
           <div className="flex items-center gap-2">
-            <Label htmlFor="sort" className="text-xs text-muted-foreground">
-              დახარისხება
+            <Label htmlFor="sort" className="text-xs text-ink-500">
+              დახარ.
             </Label>
             <Select value={sort} onValueChange={(v) => setSort(v as Sort)}>
-              <SelectTrigger id="sort" className="w-[160px]">
+              <SelectTrigger id="sort" className="w-[160px] border-ink-700 bg-ink-900 text-ink-200">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -529,20 +531,22 @@ export function VerificationQueueClient({
           </div>
         </div>
 
+        {/* Feedback banner */}
         {feedback ? (
           <div
             role="status"
             aria-live="polite"
-            className={`rounded-md border px-4 py-2 text-sm ${
+            className={`rounded-card border px-4 py-2 text-sm ${
               feedback.kind === 'success'
-                ? 'border-emerald-300 bg-emerald-50 text-emerald-900 dark:border-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-200'
-                : 'border-destructive/40 bg-destructive/10 text-destructive'
+                ? 'border-success-400/30 bg-success-400/10 text-success-300'
+                : 'border-danger-400/30 bg-danger-400/10 text-danger-300'
             }`}
           >
             {feedback.message}
           </div>
         ) : null}
 
+        {/* Queue list */}
         <div className="flex flex-col gap-3">
           {tab === 'footballers' && footballerPage ? (
             footballerPage.items.length === 0 ? (
@@ -595,18 +599,24 @@ export function VerificationQueueClient({
           ) : null}
         </div>
 
+        {/* Pagination */}
         {activePageCount > 1 ? (
-          <nav aria-label="გვერდები" className="flex items-center justify-between border-t pt-4">
-            <span className="text-xs text-muted-foreground">
-              გვერდი {page} / {activePageCount} ({activeTotal} ჩანაწერი)
-            </span>
-            <div className="flex items-center gap-1">
+          <nav
+            aria-label="გვერდები"
+            className="flex items-center justify-between pt-4 border-t border-ink-800"
+          >
+            <p className="text-[12.5px] text-ink-500">
+              ნაჩვენებია <b className="font-mono tabular-nums text-ink-300">{activeTotal}</b>{' '}
+              ჩანაწერი · გვ. {page}/{activePageCount}
+            </p>
+            <div className="flex items-center gap-1.5">
               <Button
                 type="button"
                 variant="outline"
                 size="sm"
                 onClick={() => setPage(page - 1)}
                 disabled={page <= 1}
+                className="border-ink-800 text-ink-400 hover:bg-ink-800 hover:text-ink-100"
               >
                 <ChevronLeftIcon className="size-4" />
                 წინა
@@ -617,6 +627,7 @@ export function VerificationQueueClient({
                 size="sm"
                 onClick={() => setPage(page + 1)}
                 disabled={page >= activePageCount}
+                className="border-ink-800 text-ink-400 hover:bg-ink-800 hover:text-ink-100"
               >
                 შემდეგი
                 <ChevronRightIcon className="size-4" />

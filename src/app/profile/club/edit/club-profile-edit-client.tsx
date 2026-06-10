@@ -32,6 +32,7 @@ import {
   deleteClubRosterEntry,
 } from '@/lib/club-profile/actions';
 import { ROSTER_POSITIONS } from '@/lib/club-profile/schemas';
+import { CheckCircleIcon, PlusIcon, EditIcon, DeleteIcon } from '@/components/icons';
 import { cn } from '@/lib/utils';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -135,7 +136,17 @@ export function ClubProfileEditClient({
       onSignOut={handleSignOut}
     >
       <div className="mx-auto max-w-2xl space-y-8">
-        <h1 className="text-2xl font-semibold">კლუბის პროფილის რედაქტირება</h1>
+        <div>
+          <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-ink-500">
+            კლუბის პროფილი
+          </p>
+          <h1 className="mt-1.5 text-[26px] font-bold tracking-tight text-ink-50">
+            პროფილის რედაქტირება
+          </h1>
+          <p className="mt-1 text-[13.5px] text-ink-400">
+            სრული პროფილი ნდობას უმაღლებს კლუბს ფეხბურთელების თვალში.
+          </p>
+        </div>
 
         <IdentitySection initialData={initialIdentity} />
         <MediaSection initialData={initialMedia} />
@@ -197,16 +208,16 @@ function IdentitySection({ initialData }: { initialData: IdentityForm }) {
 
   return (
     <section aria-labelledby="identity-heading">
-      <div className="mb-4">
+      <div className="mb-3">
         <h2
           id="identity-heading"
-          className="text-xs font-semibold uppercase tracking-widest text-muted-foreground"
+          className="text-[10px] font-bold uppercase tracking-[0.16em] text-ink-500"
         >
           ვინაობა
         </h2>
       </div>
 
-      <div className="rounded-xl border border-border bg-card p-6 space-y-5">
+      <div className="overflow-hidden rounded-card border border-ink-800 bg-ink-900 shadow-card p-6 space-y-5">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field label="კლუბის სახელი ★" error={errors.name} className="sm:col-span-2">
             <Input
@@ -313,20 +324,19 @@ function IdentitySection({ initialData }: { initialData: IdentityForm }) {
         </div>
 
         {errorMessage ? (
-          <p role="alert" className="text-sm text-destructive">
+          <p role="alert" className="text-[12px] text-danger-300">
             {errorMessage}
           </p>
         ) : null}
 
-        <div className="flex items-center justify-end gap-3">
+        <div className="flex items-center justify-end gap-3 border-t border-ink-800 pt-4">
           {status === 'saved' ? (
-            <p className="text-sm text-emerald-600 dark:text-emerald-400">✓ შენახულია</p>
+            <p className="flex items-center gap-1.5 text-[13px] text-success-300">
+              <CheckCircleIcon className="size-4" />
+              შენახულია
+            </p>
           ) : null}
-          <Button
-            onClick={handleSave}
-            disabled={status === 'saving'}
-            className={cn(status === 'error' && 'border-destructive')}
-          >
+          <Button onClick={handleSave} disabled={status === 'saving'}>
             {status === 'saving' ? 'შენახვა...' : 'შენახვა'}
           </Button>
         </div>
@@ -442,16 +452,16 @@ function MediaSection({ initialData }: { initialData: MediaState }) {
 
   return (
     <section aria-labelledby="media-heading">
-      <div className="mb-4">
+      <div className="mb-3">
         <h2
           id="media-heading"
-          className="text-xs font-semibold uppercase tracking-widest text-muted-foreground"
+          className="text-[10px] font-bold uppercase tracking-[0.16em] text-ink-500"
         >
           მედია
         </h2>
       </div>
 
-      <div className="rounded-xl border border-border bg-card p-6 space-y-6">
+      <div className="overflow-hidden rounded-card border border-ink-800 bg-ink-900 shadow-card p-6 space-y-6">
         {/* Logo */}
         <div className="space-y-3">
           <Label>ლოგო (სავალდებულო)</Label>
@@ -478,7 +488,7 @@ function MediaSection({ initialData }: { initialData: MediaState }) {
             </div>
           </div>
           {logoError ? (
-            <p role="alert" className="text-sm text-destructive">
+            <p role="alert" className="text-[12px] text-danger-300">
               {logoError}
             </p>
           ) : null}
@@ -529,7 +539,7 @@ function MediaSection({ initialData }: { initialData: MediaState }) {
             </Button>
           </div>
           {coverError ? (
-            <p role="alert" className="text-sm text-destructive">
+            <p role="alert" className="text-[12px] text-danger-300">
               {coverError}
             </p>
           ) : null}
@@ -568,20 +578,20 @@ function VisibilitySection({ initialVisible }: { initialVisible: boolean }) {
 
   return (
     <section aria-labelledby="visibility-heading">
-      <div className="mb-4">
+      <div className="mb-3">
         <h2
           id="visibility-heading"
-          className="text-xs font-semibold uppercase tracking-widest text-muted-foreground"
+          className="text-[10px] font-bold uppercase tracking-[0.16em] text-ink-500"
         >
           ხილვადობა
         </h2>
       </div>
 
-      <div className="rounded-xl border border-border bg-card p-6 space-y-3">
+      <div className="overflow-hidden rounded-card border border-ink-800 bg-ink-900 shadow-card p-6 space-y-3">
         <div className="flex items-center justify-between gap-4">
           <div>
-            <p className="text-sm font-medium">კლუბი ხილულია Directory-ში</p>
-            <p className="text-xs text-muted-foreground mt-0.5">
+            <p className="text-[14px] font-medium text-ink-100">კლუბი ხილულია Directory-ში</p>
+            <p className="text-[12px] text-ink-500 mt-0.5">
               გამორთვისას კლუბი მოიხსნება Directory-ს სიიდან, მაგრამ პირდაპირი ლინკი ხელმისაწვდომი
               დარჩება.
             </p>
@@ -593,20 +603,20 @@ function VisibilitySection({ initialVisible }: { initialVisible: boolean }) {
             onClick={toggle}
             disabled={saving}
             className={cn(
-              'relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50',
-              visible ? 'bg-primary' : 'bg-input',
+              'relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400/60 disabled:opacity-50',
+              visible ? 'bg-brand-400' : 'bg-ink-700',
             )}
           >
             <span
               className={cn(
-                'pointer-events-none inline-block size-5 rounded-full bg-background shadow-lg ring-0 transition-transform',
+                'pointer-events-none inline-block size-5 rounded-full bg-ink-50 shadow-lg ring-0 transition-transform',
                 visible ? 'translate-x-5' : 'translate-x-0',
               )}
             />
           </button>
         </div>
         {error ? (
-          <p role="alert" className="text-sm text-destructive">
+          <p role="alert" className="text-[12px] text-danger-300">
             {error}
           </p>
         ) : null}
@@ -637,16 +647,16 @@ function BioSection({ initialBio }: { initialBio: string }) {
 
   return (
     <section aria-labelledby="bio-heading">
-      <div className="mb-4">
+      <div className="mb-3">
         <h2
           id="bio-heading"
-          className="text-xs font-semibold uppercase tracking-widest text-muted-foreground"
+          className="text-[10px] font-bold uppercase tracking-[0.16em] text-ink-500"
         >
           ისტ. / ბიო
         </h2>
       </div>
 
-      <div className="rounded-xl border border-border bg-card p-6 space-y-4">
+      <div className="overflow-hidden rounded-card border border-ink-800 bg-ink-900 shadow-card p-6 space-y-4">
         <div className="space-y-1.5">
           <Label htmlFor="bio-textarea">კლუბის ისტ. / ბიო</Label>
           <textarea
@@ -659,13 +669,13 @@ function BioSection({ initialBio }: { initialBio: string }) {
             placeholder="კლუბის ისტორია და ბიო..."
             maxLength={2000}
             rows={6}
-            className="flex min-h-[120px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 resize-y"
+            className="flex min-h-[120px] w-full rounded-field border border-ink-700 bg-ink-950/60 px-3 py-2 text-[14px] text-ink-100 ring-offset-transparent placeholder:text-ink-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400/50 disabled:cursor-not-allowed disabled:opacity-50 resize-y"
           />
           <div className="flex justify-end">
             <span
               className={cn(
-                'text-xs',
-                bio.length > 1900 ? 'text-amber-500' : 'text-muted-foreground',
+                'font-mono text-[11px] tabular-nums',
+                bio.length > 1900 ? 'text-warning-400' : 'text-ink-600',
               )}
             >
               {bio.length}/2000
@@ -674,14 +684,17 @@ function BioSection({ initialBio }: { initialBio: string }) {
         </div>
 
         {errorMessage ? (
-          <p role="alert" className="text-sm text-destructive">
+          <p role="alert" className="text-[12px] text-danger-300">
             {errorMessage}
           </p>
         ) : null}
 
-        <div className="flex items-center justify-end gap-3">
+        <div className="flex items-center justify-end gap-3 border-t border-ink-800 pt-4">
           {status === 'saved' ? (
-            <p className="text-sm text-emerald-600 dark:text-emerald-400">✓ შენახულია</p>
+            <p className="flex items-center gap-1.5 text-[13px] text-success-300">
+              <CheckCircleIcon className="size-4" />
+              შენახულია
+            </p>
           ) : null}
           <Button onClick={handleSave} disabled={status === 'saving'}>
             {status === 'saving' ? 'შენახვა...' : 'შენახვა'}
@@ -837,21 +850,22 @@ function HistoryTimelineSection({ initialEvents }: { initialEvents: HistoryEvent
 
   return (
     <section aria-labelledby="history-timeline-heading">
-      <div className="mb-4 flex items-center justify-between">
+      <div className="mb-3 flex items-center justify-between">
         <h2
           id="history-timeline-heading"
-          className="text-xs font-semibold uppercase tracking-widest text-muted-foreground"
+          className="text-[10px] font-bold uppercase tracking-[0.16em] text-ink-500"
         >
           ისტ. მოვლენები
         </h2>
         {!addingNew && !editingId ? (
           <Button type="button" variant="outline" size="sm" onClick={openAdd}>
-            + მოვლენის დამატება
+            <PlusIcon className="size-3.5" />
+            მოვლენის დამატება
           </Button>
         ) : null}
       </div>
 
-      <div className="rounded-xl border border-border bg-card p-6 space-y-3">
+      <div className="overflow-hidden rounded-card border border-ink-800 bg-ink-900 shadow-card p-6 space-y-3">
         {addingNew ? (
           <EventForm
             draft={draft}
@@ -865,7 +879,7 @@ function HistoryTimelineSection({ initialEvents }: { initialEvents: HistoryEvent
         ) : null}
 
         {events.length === 0 && !addingNew ? (
-          <p className="text-sm text-muted-foreground text-center py-4">
+          <p className="text-[13px] text-ink-500 text-center py-4">
             ჯერ არ არის მოვლენები. დაამატე პირველი.
           </p>
         ) : null}
@@ -885,16 +899,16 @@ function HistoryTimelineSection({ initialEvents }: { initialEvents: HistoryEvent
           ) : (
             <div
               key={event.id}
-              className="flex items-start justify-between gap-2 rounded-lg border border-border px-4 py-3"
+              className="flex items-start justify-between gap-2 rounded-[10px] border border-ink-800 bg-ink-950/40 px-4 py-3 transition-colors hover:border-ink-700"
             >
               <div className="min-w-0">
-                <p className="text-sm font-medium">
-                  <span className="text-muted-foreground">{event.year}</span>
+                <p className="text-[13.5px] font-medium text-ink-100">
+                  <span className="font-mono tabular-nums text-ink-400">{event.year}</span>
                   {' · '}
                   {event.title}
                 </p>
                 {event.description ? (
-                  <p className="mt-0.5 text-xs text-muted-foreground line-clamp-2">
+                  <p className="mt-0.5 text-[12px] text-ink-500 line-clamp-2">
                     {event.description}
                   </p>
                 ) : null}
@@ -907,16 +921,18 @@ function HistoryTimelineSection({ initialEvents }: { initialEvents: HistoryEvent
                   onClick={() => openEdit(event)}
                   disabled={deletingId === event.id}
                 >
+                  <EditIcon className="size-3.5" />
                   რედ.
                 </Button>
                 <Button
                   type="button"
                   variant="ghost"
                   size="sm"
-                  className="text-destructive hover:text-destructive"
+                  className="text-danger-400 hover:text-danger-300"
                   onClick={() => handleDelete(event.id)}
                   disabled={deletingId === event.id}
                 >
+                  <DeleteIcon className="size-3.5" />
                   {deletingId === event.id ? '...' : 'წაშ.'}
                 </Button>
               </div>
@@ -925,13 +941,16 @@ function HistoryTimelineSection({ initialEvents }: { initialEvents: HistoryEvent
         )}
 
         {formError && !addingNew && !editingId ? (
-          <p role="alert" className="text-sm text-destructive">
+          <p role="alert" className="text-[12px] text-danger-300">
             {formError}
           </p>
         ) : null}
 
         {savedMessage && !addingNew && !editingId ? (
-          <p className="text-sm text-emerald-600 dark:text-emerald-400 text-right">✓ შენახულია</p>
+          <p className="flex items-center justify-end gap-1.5 text-[13px] text-success-300">
+            <CheckCircleIcon className="size-4" />
+            შენახულია
+          </p>
         ) : null}
       </div>
     </section>
@@ -958,7 +977,7 @@ function EventForm({
   onCancel: () => void;
 }) {
   return (
-    <div className="rounded-lg border border-border bg-muted/30 p-4 space-y-3">
+    <div className="rounded-[10px] border border-ink-700 bg-ink-950/60 p-4 space-y-3">
       <div className="grid grid-cols-3 gap-3">
         <Field label="წელი ★" error={errors.year}>
           <Input
@@ -985,11 +1004,11 @@ function EventForm({
           placeholder="მოვლენის დამატებითი ინფ."
           maxLength={500}
           rows={2}
-          className="flex min-h-[60px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 resize-none"
+          className="flex min-h-[60px] w-full rounded-field border border-ink-700 bg-ink-950/60 px-3 py-2 text-[14px] text-ink-100 placeholder:text-ink-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400/50 resize-none"
         />
       </Field>
       {errorMessage ? (
-        <p role="alert" className="text-sm text-destructive">
+        <p role="alert" className="text-[12px] text-danger-300">
           {errorMessage}
         </p>
       ) : null}

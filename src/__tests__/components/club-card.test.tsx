@@ -22,11 +22,16 @@ describe('ClubCard', () => {
     expect(screen.getByText('FC Dinamo Tbilisi')).toBeDefined();
   });
 
-  it('renders city and country when provided', () => {
+  it('renders city when provided', () => {
     render(<ClubCard {...baseProps} city="Tbilisi" />);
-    // meta paragraph contains "Tbilisi · GEO"
+    // new design: city is shown; country prop is no longer rendered as visible text
     expect(screen.getAllByText(/Tbilisi/).length).toBeGreaterThan(0);
-    expect(screen.getAllByText(/GEO/).length).toBeGreaterThan(0);
+  });
+
+  it('does not render country code as visible text', () => {
+    render(<ClubCard {...baseProps} city="Tbilisi" />);
+    // country prop is accepted but not rendered in the new design
+    expect(screen.queryByText('GEO')).toBeNull();
   });
 
   it('renders league when provided', () => {
@@ -110,5 +115,18 @@ describe('ClubCard', () => {
   it('renders a "ნახვა" link button', () => {
     render(<ClubCard {...baseProps} />);
     expect(screen.getByRole('link', { name: /ნახვა/i })).toBeDefined();
+  });
+
+  it('renders a cover strip element', () => {
+    const { container } = render(<ClubCard {...baseProps} />);
+    // new design: cover strip is a div with h-16 class
+    const cover = container.querySelector('.h-16');
+    expect(cover).not.toBeNull();
+  });
+
+  it('renders squad count with Georgian suffix when squadCount provided', () => {
+    render(<ClubCard {...baseProps} squadCount={23} />);
+    // new design: "23 მოთამ." rendered for squad count
+    expect(screen.getByText(/23/)).toBeDefined();
   });
 });

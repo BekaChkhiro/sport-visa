@@ -5,25 +5,26 @@ import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '@/lib/utils';
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 [&_svg]:shrink-0 outline-none focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 aria-invalid:border-destructive",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-btn text-sm font-medium transition-colors disabled:pointer-events-none disabled:opacity-40 disabled:cursor-not-allowed [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 [&_svg]:shrink-0 outline-none focus-visible:ring-4 focus-visible:ring-brand-400/25 aria-invalid:ring-destructive/20 aria-invalid:border-destructive",
   {
     variants: {
       variant: {
-        default: 'bg-primary text-primary-foreground shadow-xs hover:bg-primary/90',
+        default:
+          'bg-primary text-primary-foreground hover:bg-brand-300 active:bg-brand-500 font-semibold',
         destructive:
-          'bg-destructive text-destructive-foreground shadow-xs hover:bg-destructive/90 focus-visible:ring-destructive/20',
+          'bg-danger-500 text-white hover:bg-danger-400 font-semibold focus-visible:ring-danger-500/25',
         outline:
-          'border border-input bg-background shadow-xs hover:bg-accent hover:text-accent-foreground',
-        secondary: 'bg-secondary text-secondary-foreground shadow-xs hover:bg-secondary/80',
-        ghost: 'hover:bg-accent hover:text-accent-foreground',
-        link: 'text-primary underline-offset-4 hover:underline',
+          'bg-ink-900 text-ink-100 border border-ink-700 hover:bg-ink-800 hover:border-ink-600 font-medium',
+        secondary: 'bg-ink-800 text-ink-100 hover:bg-ink-700 font-medium',
+        ghost: 'text-ink-300 hover:bg-ink-800 hover:text-ink-100 font-medium',
+        link: 'text-brand-400 underline-offset-4 hover:underline',
       },
       size: {
-        default: 'h-10 px-4 py-2 has-[>svg]:px-3',
-        sm: 'h-9 rounded-md gap-1.5 px-3 has-[>svg]:px-2.5',
-        lg: 'h-11 rounded-md px-6 has-[>svg]:px-4',
-        icon: 'size-10',
-        'icon-lg': 'size-11',
+        default: 'h-11 px-5 text-sm gap-2 has-[>svg]:px-4',
+        sm: 'h-9 rounded-btn px-3.5 text-[13px] gap-1.5 has-[>svg]:px-3',
+        lg: 'h-12 rounded-btn px-6 text-[15px] gap-2 has-[>svg]:px-5',
+        icon: 'size-10 rounded-btn',
+        'icon-lg': 'size-11 rounded-btn',
       },
     },
     defaultVariants: {

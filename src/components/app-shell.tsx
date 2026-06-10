@@ -69,7 +69,7 @@ function AppShell({
 
   return (
     <div data-slot="app-shell" className="flex min-h-screen flex-col">
-      <header className="sticky top-0 z-40 flex h-14 items-center justify-between border-b border-border bg-background/80 px-4 backdrop-blur supports-[backdrop-filter]:bg-background/60 md:h-16 md:px-6">
+      <header className="sticky top-0 z-40 flex h-16 items-center justify-between border-b border-ink-800 bg-ink-900/85 px-4 backdrop-blur-xl md:px-6">
         <div className="flex items-center gap-2">
           <Button
             type="button"
@@ -77,7 +77,7 @@ function AppShell({
             size="icon"
             aria-label="მენიუს გახსნა"
             onClick={() => setDrawerOpen(true)}
-            className="lg:hidden"
+            className="lg:hidden text-ink-400 hover:bg-ink-800 hover:text-ink-200"
           >
             <MenuIcon className="size-5" />
           </Button>

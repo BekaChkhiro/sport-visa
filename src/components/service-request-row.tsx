@@ -42,19 +42,19 @@ function ServiceRequestRow({ id, type, status, requestedAt, className }: Service
       data-slot="service-request-row"
       data-request-id={id}
       className={cn(
-        'flex items-center justify-between gap-3 border-b border-border px-4 py-3 last:border-b-0',
+        'flex items-center justify-between gap-3 border-b border-ink-800 bg-ink-900 px-4 py-3 transition-colors last:border-b-0 hover:bg-ink-800/50',
         className,
       )}
     >
       <div className="flex items-center gap-3 min-w-0">
-        <Icon size={16} className="shrink-0 text-muted-foreground" />
-        <span className="truncate text-sm leading-relaxed">{label}</span>
+        <Icon size={16} className="shrink-0 text-ink-400" />
+        <span className="truncate text-sm leading-relaxed text-ink-200">{label}</span>
       </div>
       <div className="flex items-center gap-3 shrink-0">
         <StatusPill status={status} />
         <time
           dateTime={requestedAt.toISOString()}
-          className="hidden text-xs text-muted-foreground sm:inline"
+          className="hidden font-mono text-xs text-ink-500 sm:inline"
         >
           {formatDate(requestedAt)}
         </time>

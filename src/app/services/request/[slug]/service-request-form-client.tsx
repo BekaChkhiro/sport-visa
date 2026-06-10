@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { ArrowLeftIcon } from '@/components/icons';
+import { ArrowLeftIcon, CheckCircleIcon } from '@/components/icons';
 import type { AppSidebarStats } from '@/components/app-sidebar';
 import type { VerificationStatus } from '@/components/verification-badge';
 
@@ -161,37 +161,29 @@ export function ServiceRequestFormClient({
         sidebarStats={stats}
         onSignOut={handleSignOut}
       >
-        <div className="flex max-w-md flex-col items-center justify-center py-12 text-center">
-          <div className="mb-6 flex size-16 items-center justify-center rounded-full bg-green-100 text-green-600">
-            <svg
-              className="size-8"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth={2}
-              viewBox="0 0 24 24"
-              aria-hidden="true"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-            </svg>
-          </div>
+        {/* Success state */}
+        <div className="flex max-w-md flex-col items-center py-12 text-center">
+          <span className="flex h-14 w-14 items-center justify-center rounded-full bg-success-400/15 text-success-300">
+            <CheckCircleIcon className="size-7" aria-hidden="true" />
+          </span>
+          <h1 className="mt-4 font-display text-[22px] font-bold text-ink-50">
+            მოთხოვნა გაიგზავნა!
+          </h1>
 
-          <h1 className="mb-2 text-2xl font-bold tracking-tight">მოთხოვნა გაიგზავნა!</h1>
-
-          <div className="mb-6 w-full rounded-xl border border-border bg-card p-5 text-left">
-            <p className="mb-1 text-base font-semibold">{result.categoryName}</p>
-            <p className="mb-1 text-sm text-muted-foreground">
+          <div className="mt-6 w-full rounded-card border border-ink-800 bg-ink-900 p-5 text-left shadow-card">
+            <p className="text-[14px] font-semibold text-ink-100">{result.categoryName}</p>
+            <p className="mt-1 font-mono text-[12px] text-ink-500">
               ID: <span className="font-mono">{result.requestCode}</span>
             </p>
-            <p className="mb-4 text-sm text-muted-foreground">სტატუსი: ⏳ განხილვაში</p>
-            <p className="text-sm text-muted-foreground">
+            <p className="mt-1 text-[12.5px] text-ink-400">სტატუსი: ⏳ განხილვაში</p>
+            <p className="mt-3 text-[12.5px] leading-relaxed text-ink-400">
               ადმინი განიხილავს მოთხოვნას 24–48 საათში.
               <br />
-              პასუხი მოვა ელ. ფოსტაზე:{' '}
-              <span className="font-medium text-foreground">{userEmail}</span>
+              პასუხი მოვა ელ. ფოსტაზე: <span className="font-medium text-ink-200">{userEmail}</span>
             </p>
           </div>
 
-          <div className="flex w-full flex-col gap-3">
+          <div className="mt-5 flex w-full flex-col gap-2.5">
             <Button variant="default" asChild className="w-full">
               <Link href="/dashboard">Dashboard-ზე დაბრუნება</Link>
             </Button>
@@ -218,6 +210,7 @@ export function ServiceRequestFormClient({
       onSignOut={handleSignOut}
     >
       <div className="mx-auto max-w-2xl space-y-6">
+        {/* Header */}
         <div>
           <Button variant="ghost" size="sm" asChild className="-ml-2 mb-4">
             <Link href="/services/request">
@@ -226,17 +219,21 @@ export function ServiceRequestFormClient({
             </Link>
           </Button>
 
-          <h1 className="text-2xl font-bold tracking-tight">{category.name} — დეტალები</h1>
-          <p className="mt-1 text-sm text-muted-foreground">ნაბიჯი 2 / 2</p>
+          <h1 className="font-display text-[24px] font-bold tracking-tight text-ink-50">
+            {category.name} — დეტალები
+          </h1>
+          <p className="mt-1 text-[10px] font-bold uppercase tracking-[0.16em] text-ink-500">
+            ნაბიჯი 2 / 2
+          </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="rounded-xl border border-border bg-card p-6 space-y-5">
+        <form onSubmit={handleSubmit} className="space-y-5">
+          <div className="rounded-card border border-ink-800 bg-ink-900 p-6 shadow-card space-y-5">
             {/* Subject field — only for "other" category */}
             {isOther(category.slug) && (
-              <div className="space-y-2">
-                <Label htmlFor="subject">
-                  თემა <span className="text-destructive">★</span>
+              <div className="space-y-1.5">
+                <Label htmlFor="subject" className="text-[12px] font-medium text-ink-300">
+                  თემა <span className="text-danger-400">★</span>
                 </Label>
                 <Input
                   id="subject"
@@ -251,13 +248,13 @@ export function ServiceRequestFormClient({
 
             {/* Duration / Period — not shown for "other" */}
             {showDates(category.slug) && (
-              <div className="space-y-2">
-                <p className="text-sm font-medium">
-                  პერიოდი <span className="text-destructive">★</span>
+              <div className="space-y-1.5">
+                <p className="text-[12px] font-medium text-ink-300">
+                  პერიოდი <span className="text-danger-400">★</span>
                 </p>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1">
-                    <Label htmlFor="startDate" className="text-xs text-muted-foreground">
+                    <Label htmlFor="startDate" className="text-[11px] text-ink-500">
                       დაწყების თარიღი
                     </Label>
                     <Input
@@ -269,7 +266,7 @@ export function ServiceRequestFormClient({
                     />
                   </div>
                   <div className="space-y-1">
-                    <Label htmlFor="endDate" className="text-xs text-muted-foreground">
+                    <Label htmlFor="endDate" className="text-[11px] text-ink-500">
                       დამთავრების თარიღი
                     </Label>
                     <Input
@@ -286,9 +283,9 @@ export function ServiceRequestFormClient({
 
             {/* Plan type — only for meal-plan */}
             {isMealPlan(category.slug) && (
-              <div className="space-y-2">
-                <p className="text-sm font-medium">
-                  კვების ტიპი <span className="text-destructive">★</span>
+              <div className="space-y-1.5">
+                <p className="text-[12px] font-medium text-ink-300">
+                  კვების ტიპი <span className="text-danger-400">★</span>
                 </p>
                 <div className="flex flex-wrap gap-4">
                   {PLAN_TYPE_OPTIONS.map((opt) => (
@@ -301,7 +298,7 @@ export function ServiceRequestFormClient({
                         onChange={() => setPlanType(opt.value)}
                         className="accent-primary"
                       />
-                      <span className="text-sm">{opt.label}</span>
+                      <span className="text-[13px] text-ink-200">{opt.label}</span>
                     </label>
                   ))}
                 </div>
@@ -310,8 +307,11 @@ export function ServiceRequestFormClient({
 
             {/* Dietary restrictions — only for meal-plan */}
             {isMealPlan(category.slug) && (
-              <div className="space-y-2">
-                <p className="text-sm font-medium">დიეტური შეზღუდვები</p>
+              <div className="space-y-1.5">
+                <p className="text-[12px] font-medium text-ink-300">
+                  დიეტური შეზღუდვები{' '}
+                  <span className="font-normal text-ink-600">· არასავალდებულო</span>
+                </p>
                 <div className="flex flex-wrap gap-4">
                   {DIETARY_OPTIONS.map((opt) => (
                     <label key={opt.value} className="flex cursor-pointer items-center gap-2">
@@ -322,7 +322,7 @@ export function ServiceRequestFormClient({
                         onChange={() => toggleDietary(opt.value)}
                         className="accent-primary"
                       />
-                      <span className="text-sm">{opt.label}</span>
+                      <span className="text-[13px] text-ink-200">{opt.label}</span>
                     </label>
                   ))}
                 </div>
@@ -330,12 +330,12 @@ export function ServiceRequestFormClient({
             )}
 
             {/* Notes / special requests */}
-            <div className="space-y-2">
-              <Label htmlFor="notes">
+            <div className="space-y-1.5">
+              <Label htmlFor="notes" className="text-[12px] font-medium text-ink-300">
                 {isOther(category.slug)
                   ? 'დეტალები'
                   : 'დამატებითი შენიშვნები / სპეციალური მოთხოვნები'}{' '}
-                <span className="text-xs text-muted-foreground">(მაქს. 500)</span>
+                <span className="font-normal text-ink-600 text-[11px]">(მაქს. 500)</span>
               </Label>
               <Textarea
                 id="notes"
@@ -349,44 +349,69 @@ export function ServiceRequestFormClient({
                     : 'ნებისმიერი დამატებითი ინფორმაცია...'
                 }
               />
-              <p className="text-right text-xs text-muted-foreground">{notes.length}/500</p>
+              <p className="text-right text-[11px] text-ink-600">{notes.length}/500</p>
             </div>
 
             {/* Contact preference */}
-            <div className="space-y-2">
-              <p className="text-sm font-medium">საკონტაქტო პრეფერენცია</p>
-              <div className="flex flex-wrap gap-4">
+            <div className="space-y-1.5">
+              <p className="text-[12px] font-medium text-ink-300">საკონტაქტო პრეფერენცია</p>
+              <div
+                className="inline-flex rounded-field border border-ink-700 bg-ink-950 p-1"
+                role="group"
+                aria-label="საკონტაქტო პრეფერენცია"
+              >
                 {CONTACT_PREF_OPTIONS.map((opt) => (
-                  <label key={opt.value} className="flex cursor-pointer items-center gap-2">
+                  <label key={opt.value} className="cursor-pointer">
                     <input
                       type="radio"
                       name="contactPref"
                       value={opt.value}
                       checked={contactPref === opt.value}
                       onChange={() => setContactPref(opt.value)}
-                      className="accent-primary"
                     />
-                    <span className="text-sm">{opt.label}</span>
+                    <span
+                      className={`block rounded-[8px] px-3.5 py-2 text-[12.5px] font-medium transition-colors ${
+                        contactPref === opt.value
+                          ? 'bg-brand-400 text-ink-950'
+                          : 'text-ink-300 hover:text-ink-100'
+                      }`}
+                    >
+                      {opt.label}
+                    </span>
                   </label>
                 ))}
               </div>
             </div>
 
             {/* Info note */}
-            <div className="rounded-lg bg-muted/50 px-4 py-3">
-              <p className="text-sm text-muted-foreground">
+            <div className="flex gap-2.5 rounded-card border border-ink-800 bg-ink-950/50 px-3.5 py-2.5">
+              <svg
+                width={16}
+                height={16}
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth={2}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="mt-0.5 shrink-0 text-accent-400"
+                aria-hidden="true"
+              >
+                <path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z" />
+              </svg>
+              <p className="text-[12.5px] leading-relaxed text-ink-300">
                 ℹ მოთხოვნა განიხილება ადმინისტრატორის მიერ და მოგეწოდებათ პასუხი 48 საათში.
               </p>
             </div>
           </div>
 
           {error && (
-            <p role="alert" className="text-sm text-destructive">
+            <p role="alert" className="text-[13px] text-danger-300">
               {error}
             </p>
           )}
 
-          <div className="flex justify-between gap-4">
+          <div className="flex items-center justify-between gap-4">
             <Button variant="outline" asChild>
               <Link href="/services/request">
                 <ArrowLeftIcon className="size-4" />

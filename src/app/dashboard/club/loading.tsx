@@ -1,42 +1,71 @@
 import { AppShellSkeleton } from '@/components/app-shell-skeleton';
 import { Skeleton } from '@/components/ui/skeleton';
 
-// Mirrors ClubDashboardClient: verification banner + shortlist rows + chats
-// placeholder + post cards. Wrapped in the club AppShell skeleton so the
-// sidebar and header stay visible while loading.
+// Mirrors ClubDashboardClient redesign:
+// greeting header + verification banner + 3-col KPI strip +
+// two-column: shortlist rows + posts management | active chats.
+// Wrapped in AppShellSkeleton so the sidebar and header stay visible while loading.
 
-function FootballerRowSkeleton() {
+function KpiCardSkeleton() {
   return (
-    <div className="flex items-center gap-3 rounded-xl border border-border bg-card px-4 py-3">
-      <Skeleton className="size-10 shrink-0 rounded-full" />
+    <div className="rounded-card border border-ink-800 bg-ink-900 p-4 shadow-card">
+      <div className="flex items-start justify-between">
+        <Skeleton className="h-9 w-9 rounded-[10px] bg-ink-800" />
+        <Skeleton className="h-5 w-14 rounded-pill bg-ink-800" />
+      </div>
+      <Skeleton className="mt-3 h-8 w-16 bg-ink-800" />
+      <Skeleton className="mt-1.5 h-3 w-28 bg-ink-800" />
+    </div>
+  );
+}
+
+function ShortlistRowSkeleton() {
+  return (
+    <div className="flex items-center gap-4 rounded-card border border-ink-800 bg-ink-900 p-4 shadow-card">
+      <Skeleton className="size-10 shrink-0 rounded-full bg-ink-800" />
       <div className="min-w-0 flex-1 space-y-1.5">
-        <Skeleton className="h-4 w-40" />
-        <Skeleton className="h-3 w-56" />
+        <div className="flex items-center gap-2">
+          <Skeleton className="h-4 w-32 bg-ink-800" />
+          <Skeleton className="h-4 w-8 rounded-pill bg-ink-800" />
+        </div>
+        <Skeleton className="h-3 w-40 bg-ink-800" />
+        <Skeleton className="h-3 w-28 bg-ink-800" />
       </div>
-      <Skeleton className="h-6 w-14 shrink-0 rounded-full" />
-    </div>
-  );
-}
-
-function PostCardSkeleton() {
-  return (
-    <div className="rounded-xl border border-border bg-card p-4">
-      <Skeleton className="mb-2 h-4 w-3/4" />
-      <Skeleton className="mb-1 h-3 w-full" />
-      <Skeleton className="mb-3 h-3 w-5/6" />
-      <div className="flex items-center gap-3">
-        <Skeleton className="h-3 w-12" />
-        <Skeleton className="h-3 w-20" />
+      <div className="flex shrink-0 gap-2">
+        <Skeleton className="h-9 w-20 rounded-btn bg-ink-800" />
+        <Skeleton className="h-9 w-16 rounded-btn bg-ink-800" />
       </div>
     </div>
   );
 }
 
-function SectionHeading() {
+function PostRowSkeleton() {
   return (
-    <div className="mb-3 flex items-center justify-between">
-      <Skeleton className="h-3 w-44" />
-      <Skeleton className="h-8 w-20 rounded-md" />
+    <div className="flex items-center gap-3 px-4 py-3.5">
+      <Skeleton className="h-9 w-9 shrink-0 rounded-[10px] bg-ink-800" />
+      <div className="flex-1 space-y-1.5">
+        <Skeleton className="h-4 w-3/4 bg-ink-800" />
+        <Skeleton className="h-3 w-32 bg-ink-800" />
+      </div>
+      <div className="flex gap-1">
+        <Skeleton className="h-8 w-8 rounded-btn bg-ink-800" />
+        <Skeleton className="h-8 w-8 rounded-btn bg-ink-800" />
+      </div>
+    </div>
+  );
+}
+
+function ChatRowSkeleton() {
+  return (
+    <div className="flex items-start gap-3 px-4 py-3.5">
+      <Skeleton className="size-8 shrink-0 rounded-full bg-ink-800" />
+      <div className="min-w-0 flex-1 space-y-1.5">
+        <div className="flex items-center justify-between gap-2">
+          <Skeleton className="h-4 w-28 bg-ink-800" />
+          <Skeleton className="h-3 w-12 bg-ink-800" />
+        </div>
+        <Skeleton className="h-3 w-full bg-ink-800" />
+      </div>
     </div>
   );
 }
@@ -44,45 +73,89 @@ function SectionHeading() {
 export default function ClubDashboardLoading() {
   return (
     <AppShellSkeleton variant="club">
-      <div className="space-y-8">
-        {/* Verification banner */}
-        <div className="rounded-xl border border-border bg-card p-4">
-          <Skeleton className="mb-2 h-4 w-48" />
-          <Skeleton className="h-3 w-3/4" />
+      {/* Greeting */}
+      <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
+        <div className="space-y-1.5">
+          <Skeleton className="h-3 w-32 bg-ink-800" />
+          <Skeleton className="h-7 w-44 bg-ink-800" />
+        </div>
+        <Skeleton className="h-11 w-44 rounded-btn bg-ink-800" />
+      </div>
+
+      {/* Verification banner */}
+      <div className="mb-6 rounded-card border border-ink-800 bg-ink-900 p-4 shadow-card">
+        <div className="flex items-center gap-4">
+          <Skeleton className="h-10 w-10 shrink-0 rounded-[12px] bg-ink-800" />
+          <div className="flex-1 space-y-1.5">
+            <Skeleton className="h-4 w-40 bg-ink-800" />
+            <Skeleton className="h-3 w-3/4 bg-ink-800" />
+          </div>
+        </div>
+      </div>
+
+      {/* KPI strip */}
+      <div className="mb-7 grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <KpiCardSkeleton />
+        <KpiCardSkeleton />
+        <KpiCardSkeleton />
+      </div>
+
+      {/* Two-column */}
+      <div className="grid gap-7 xl:grid-cols-[1fr_336px]">
+        {/* Left: shortlist + posts */}
+        <div className="space-y-8">
+          {/* Shortlist */}
+          <section>
+            <div className="mb-4 flex items-end justify-between">
+              <Skeleton className="h-3 w-48 bg-ink-800" />
+              <Skeleton className="h-4 w-24 bg-ink-800" />
+            </div>
+            <div className="space-y-3">
+              <ShortlistRowSkeleton />
+              <ShortlistRowSkeleton />
+              <ShortlistRowSkeleton />
+            </div>
+            <Skeleton className="mt-4 h-10 w-full rounded-card bg-ink-800" />
+          </section>
+
+          {/* Posts */}
+          <section>
+            <div className="mb-4 flex items-end justify-between">
+              <Skeleton className="h-3 w-36 bg-ink-800" />
+              <Skeleton className="h-4 w-14 bg-ink-800" />
+            </div>
+            <div className="overflow-hidden rounded-card border border-ink-800 bg-ink-900 shadow-card">
+              <div className="divide-y divide-ink-800">
+                <PostRowSkeleton />
+                <PostRowSkeleton />
+                <PostRowSkeleton />
+              </div>
+              <div className="border-t border-ink-800 py-3 flex justify-center">
+                <Skeleton className="h-4 w-40 bg-ink-800" />
+              </div>
+            </div>
+          </section>
         </div>
 
-        {/* Recent shortlist */}
-        <section>
-          <SectionHeading />
-          <div className="flex flex-col gap-2">
-            {Array.from({ length: 3 }).map((_, i) => (
-              <FootballerRowSkeleton key={i} />
-            ))}
-            <Skeleton className="h-8 w-44 self-start rounded-md" />
-          </div>
-        </section>
-
-        {/* Active chats */}
-        <section>
-          <SectionHeading />
-          <div className="rounded-xl border border-border bg-card p-6">
-            <div className="flex flex-col items-center gap-2 py-6">
-              <Skeleton className="size-10 rounded-full" />
-              <Skeleton className="h-4 w-32" />
-              <Skeleton className="h-3 w-56" />
+        {/* Right: chats */}
+        <div className="space-y-7">
+          <section>
+            <div className="mb-4 flex items-end justify-between">
+              <Skeleton className="h-3 w-28 bg-ink-800" />
+              <Skeleton className="h-4 w-12 bg-ink-800" />
             </div>
-          </div>
-        </section>
-
-        {/* Recent posts */}
-        <section>
-          <SectionHeading />
-          <div className="space-y-3">
-            {Array.from({ length: 3 }).map((_, i) => (
-              <PostCardSkeleton key={i} />
-            ))}
-          </div>
-        </section>
+            <div className="overflow-hidden rounded-card border border-ink-800 bg-ink-900 shadow-card">
+              <div className="divide-y divide-ink-800">
+                <ChatRowSkeleton />
+                <ChatRowSkeleton />
+                <ChatRowSkeleton />
+              </div>
+              <div className="border-t border-ink-800 py-3 flex justify-center">
+                <Skeleton className="h-4 w-24 bg-ink-800" />
+              </div>
+            </div>
+          </section>
+        </div>
       </div>
     </AppShellSkeleton>
   );

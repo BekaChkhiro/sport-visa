@@ -126,6 +126,7 @@ export function MyRequestsClient({
       onSignOut={handleSignOut}
     >
       <div className="space-y-6">
+        {/* Page header */}
         <div>
           <Button variant="ghost" size="sm" asChild className="-ml-2 mb-4">
             <Link href="/dashboard">
@@ -136,14 +137,16 @@ export function MyRequestsClient({
 
           <div className="flex items-center justify-between gap-4">
             <div>
-              <h1 className="text-2xl font-bold tracking-tight">ჩემი სერვ. მოთხოვნები</h1>
-              <p className="mt-1 text-sm text-muted-foreground">
+              <h1 className="font-display text-[26px] font-bold tracking-tight text-ink-50">
+                ჩემი სერვ. მოთხოვნები
+              </h1>
+              <p className="mt-1 text-[13.5px] text-ink-400">
                 {requests.length === 0
                   ? 'სერვისის მოთხოვნა ჯერ არ გამოგიგზავნია.'
                   : `სულ ${requests.length} მოთხოვნა`}
               </p>
             </div>
-            <Button variant="default" size="sm" asChild>
+            <Button variant="default" size="sm" asChild className="shrink-0">
               <Link href="/services/request">
                 <PlusIcon className="size-4" />
                 ახ. მოთხ.
@@ -154,7 +157,10 @@ export function MyRequestsClient({
 
         {/* Filter tabs */}
         {requests.length > 0 && (
-          <div className="flex gap-1 rounded-lg bg-muted p-1" role="tablist">
+          <div
+            className="flex gap-1 rounded-field border border-ink-800 bg-ink-900 p-1"
+            role="tablist"
+          >
             {TABS.map((tab) => {
               const count =
                 tab.id === 'all'
@@ -167,10 +173,10 @@ export function MyRequestsClient({
                   aria-selected={activeTab === tab.id}
                   onClick={() => setActiveTab(tab.id)}
                   className={cn(
-                    'flex flex-1 items-center justify-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors',
+                    'flex flex-1 items-center justify-center gap-1.5 rounded-[8px] px-3 py-1.5 text-[12.5px] font-medium transition-colors',
                     activeTab === tab.id
-                      ? 'bg-background text-foreground shadow-sm'
-                      : 'text-muted-foreground hover:text-foreground',
+                      ? 'bg-brand-400 text-ink-950'
+                      : 'text-ink-400 hover:text-ink-100',
                   )}
                 >
                   {tab.label}
@@ -179,8 +185,8 @@ export function MyRequestsClient({
                       className={cn(
                         'inline-flex min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-semibold',
                         activeTab === tab.id
-                          ? 'bg-primary text-primary-foreground'
-                          : 'bg-muted-foreground/20 text-muted-foreground',
+                          ? 'bg-ink-950/30 text-ink-950'
+                          : 'bg-ink-800 text-ink-400',
                       )}
                     >
                       {count}
@@ -192,53 +198,92 @@ export function MyRequestsClient({
           </div>
         )}
 
+        {/* Section label + count */}
+        {requests.length > 0 && (
+          <div className="flex items-center justify-between">
+            <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-ink-500">
+              ჩემი მოთხოვნები
+            </p>
+            <span className="font-mono text-[12px] tabular-nums text-ink-600">
+              {filtered.length} ჩანაწერი
+            </span>
+          </div>
+        )}
+
         {/* Request list */}
         {requests.length === 0 ? (
-          <div className="rounded-xl border border-border bg-card">
+          <div className="rounded-card border border-ink-800 bg-ink-900 shadow-card">
             <EmptyState
               title="მოთხოვნები არ არის"
               description="სერვისის მოთხოვნა ჯერ არ გამოგიგზავნია."
             />
           </div>
         ) : filtered.length === 0 ? (
-          <div className="rounded-xl border border-border bg-card">
+          <div className="rounded-card border border-ink-800 bg-ink-900 shadow-card">
             <EmptyState title="ამ კატეგორიაში მოთხოვნა არ არის" description="სხვა ფილტრი სცადეთ." />
           </div>
         ) : (
-          <div className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-card">
-            {filtered.map((req) => {
-              const Icon = categoryIcon(req.category.slug, req.category.icon);
-              const pillStatus = toStatusPill(req.status);
-              return (
-                <div key={req.id} className="flex items-start justify-between gap-4 px-4 py-4">
-                  <div className="flex min-w-0 items-start gap-3">
-                    <div className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10">
-                      <Icon className="size-4 text-primary" aria-hidden="true" />
-                    </div>
-                    <div className="min-w-0">
-                      <p className="truncate text-sm font-medium">{req.category.name}</p>
-                      <p className="font-mono text-xs text-muted-foreground">{req.requestCode}</p>
-                      {req.notes && (
-                        <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">
-                          {req.notes}
+          <div className="overflow-hidden rounded-card border border-ink-800 bg-ink-900 shadow-card">
+            <div className="divide-y divide-ink-800">
+              {filtered.map((req) => {
+                const Icon = categoryIcon(req.category.slug, req.category.icon);
+                const pillStatus = toStatusPill(req.status);
+                return (
+                  <div key={req.id} className="px-5 py-4 transition-colors hover:bg-ink-800/30">
+                    <div className="flex items-center gap-3.5">
+                      {/* Category icon chip */}
+                      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[11px] bg-ink-800 text-ink-300">
+                        <Icon className="size-4.5" aria-hidden="true" />
+                      </span>
+
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-[14px] font-medium text-ink-100">
+                          {req.category.name}
                         </p>
-                      )}
-                      {req.adminNote && (
-                        <p className="mt-1 line-clamp-2 text-xs text-foreground/80">
-                          💬 {req.adminNote}
+                        <p className="truncate font-mono text-[11.5px] tabular-nums text-ink-500">
+                          <span>{req.requestCode}</span>
+                          {' · '}
+                          <time dateTime={req.createdAt}>{formatDate(req.createdAt)}</time>
                         </p>
-                      )}
+                      </div>
+
+                      <StatusPill status={pillStatus} className="shrink-0" />
                     </div>
+
+                    {/* Admin note */}
+                    {req.adminNote && (
+                      <div className="mt-3 flex gap-2.5 rounded-card border border-ink-800 bg-ink-950/50 px-3.5 py-2.5">
+                        <svg
+                          width={15}
+                          height={15}
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth={2}
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          className="mt-0.5 shrink-0 text-accent-400"
+                          aria-hidden="true"
+                        >
+                          <path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z" />
+                        </svg>
+                        <p className="text-[12.5px] leading-relaxed text-ink-300">
+                          <span className="font-semibold text-ink-200">ადმინის პასუხი:</span>{' '}
+                          {req.adminNote}
+                        </p>
+                      </div>
+                    )}
+
+                    {/* User notes (shown when no admin note) */}
+                    {req.notes && !req.adminNote && (
+                      <p className="mt-1.5 line-clamp-2 pl-[54px] text-[12px] text-ink-500">
+                        {req.notes}
+                      </p>
+                    )}
                   </div>
-                  <div className="flex shrink-0 flex-col items-end gap-1.5">
-                    <StatusPill status={pillStatus} />
-                    <time dateTime={req.createdAt} className="text-xs text-muted-foreground">
-                      {formatDate(req.createdAt)}
-                    </time>
-                  </div>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
         )}
       </div>

@@ -10,7 +10,7 @@ const notoSansGeorgian = Noto_Sans_Georgian({
   subsets: ['georgian', 'latin'],
   display: 'swap',
   variable: '--font-noto-sans-georgian',
-  weight: ['400', '500', '600', '700'],
+  weight: ['400', '500', '600', '700', '800', '900'],
 });
 
 const siteUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
@@ -58,10 +58,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#ffffff' },
-    { media: '(prefers-color-scheme: dark)', color: '#0a0a0a' },
-  ],
+  themeColor: '#15171c',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -70,8 +67,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="min-h-screen flex flex-col antialiased">
         <ThemeProvider
           attribute="class"
-          defaultTheme="system"
-          enableSystem
+          defaultTheme="dark"
+          forcedTheme="dark"
           disableTransitionOnChange
         >
           <MarketingChrome>{children}</MarketingChrome>

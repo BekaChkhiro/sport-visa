@@ -39,6 +39,17 @@ import {
   POSITION_LABELS,
   POSITION_VALUES,
 } from '@/lib/onboarding/schemas';
+import {
+  UserIcon,
+  PlusIcon,
+  CloseIcon,
+  CheckCircleIcon,
+  CameraIcon,
+  UploadIcon,
+  DeleteIcon,
+  InfoIcon,
+  EditIcon,
+} from '@/components/icons';
 import { cn } from '@/lib/utils';
 
 type PersonalInfo = {
@@ -143,7 +154,16 @@ export function ProfileEditClient({
       onSignOut={handleSignOut}
     >
       <div className="mx-auto max-w-2xl space-y-8">
-        <h1 className="text-2xl font-semibold">პროფილის რედაქტირება</h1>
+        {/* Page header */}
+        <div>
+          <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-ink-500">პროფილი</p>
+          <h1 className="mt-1.5 text-[26px] font-bold tracking-tight text-ink-50">
+            პროფილის რედაქტირება
+          </h1>
+          <p className="mt-1 text-[13.5px] text-ink-400">
+            სრული პროფილი 3x მეტ ნახვას იღებს სკაუტებისგან — შეავსე ყველა სექცია.
+          </p>
+        </div>
 
         <AvatarSection initialAvatar={initialAvatar} />
         <CoverSection initialCover={initialCover} />
@@ -154,6 +174,26 @@ export function ProfileEditClient({
         <AgentInfoSection initialData={initialAgentInfo} />
       </div>
     </AppShell>
+  );
+}
+
+// ── Shared section card wrapper ────────────────────────────────────────────────
+
+function SectionCard({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <section aria-labelledby={`sec-${label}`}>
+      <div className="mb-3 flex items-center gap-2">
+        <h2
+          id={`sec-${label}`}
+          className="text-[10px] font-bold uppercase tracking-[0.16em] text-ink-500"
+        >
+          {label}
+        </h2>
+      </div>
+      <div className="overflow-hidden rounded-card border border-ink-800 bg-ink-900 shadow-card">
+        {children}
+      </div>
+    </section>
   );
 }
 
@@ -196,17 +236,8 @@ function PersonalInfoSection({ initialData }: { initialData: PersonalInfo }) {
   }
 
   return (
-    <section aria-labelledby="personal-info-heading">
-      <div className="mb-4">
-        <h2
-          id="personal-info-heading"
-          className="text-xs font-semibold uppercase tracking-widest text-muted-foreground"
-        >
-          პირადი ინფორმაცია
-        </h2>
-      </div>
-
-      <div className="rounded-xl border border-border bg-card p-6 space-y-5">
+    <SectionCard label="პირადი ინფორმაცია">
+      <div className="p-6 space-y-5">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field label="სახელი ★" error={errors.firstName}>
             <Input
@@ -295,29 +326,42 @@ function PersonalInfoSection({ initialData }: { initialData: PersonalInfo }) {
         </Field>
 
         {errorMessage ? (
-          <p role="alert" className="text-sm text-destructive">
+          <p role="alert" className="text-sm text-danger-300">
             {errorMessage}
           </p>
         ) : null}
 
-        <div className="flex items-center justify-end gap-3">
+        <div className="flex items-center justify-end gap-3 border-t border-ink-800 pt-4">
           {status === 'saved' ? (
-            <p className="text-sm text-emerald-600 dark:text-emerald-400">✓ შენახულია</p>
+            <p className="flex items-center gap-1.5 text-[13px] text-success-300">
+              <CheckCircleIcon className="size-4" />
+              შენახულია
+            </p>
           ) : null}
-          <Button
-            onClick={handleSave}
-            disabled={status === 'saving'}
-            className={cn(status === 'error' && 'border-destructive')}
-          >
+          <Button onClick={handleSave} disabled={status === 'saving'}>
             {status === 'saving' ? 'შენახვა...' : 'შენახვა'}
           </Button>
         </div>
       </div>
-    </section>
+    </SectionCard>
   );
 }
 
 // ── Sport info section ────────────────────────────────────────────────────────
+
+const POS_TONE: Record<string, string> = {
+  GK: 'bg-flame-400/15 text-flame-300 border-flame-400/30',
+  CB: 'bg-accent-400/15 text-accent-300 border-accent-400/30',
+  LB: 'bg-accent-400/15 text-accent-300 border-accent-400/30',
+  RB: 'bg-accent-400/15 text-accent-300 border-accent-400/30',
+  DM: 'bg-iris-400/15 text-iris-300 border-iris-400/30',
+  CM: 'bg-iris-400/15 text-iris-300 border-iris-400/30',
+  AM: 'bg-iris-400/15 text-iris-300 border-iris-400/30',
+  LW: 'bg-brand-400/15 text-brand-300 border-brand-400/30',
+  RW: 'bg-brand-400/15 text-brand-300 border-brand-400/30',
+  CF: 'bg-brand-400/15 text-brand-300 border-brand-400/30',
+  ST: 'bg-brand-400/15 text-brand-300 border-brand-400/30',
+};
 
 function SportInfoSection({ initialData }: { initialData: SportInfo }) {
   const [form, setForm] = React.useState<SportInfo>(initialData);
@@ -375,25 +419,18 @@ function SportInfoSection({ initialData }: { initialData: SportInfo }) {
   }
 
   return (
-    <section aria-labelledby="sport-info-heading">
-      <div className="mb-4">
-        <h2
-          id="sport-info-heading"
-          className="text-xs font-semibold uppercase tracking-widest text-muted-foreground"
-        >
-          სპორტული ინფორმაცია
-        </h2>
-      </div>
-
-      <div className="rounded-xl border border-border bg-card p-6 space-y-5">
-        <div className="space-y-1.5">
-          <Label>
-            პოზიცია ★ <span className="text-muted-foreground font-normal text-xs">(მაქს. 2)</span>
+    <SectionCard label="სპორტული ინფორმაცია">
+      <div className="p-6 space-y-5">
+        {/* Positions */}
+        <div className="space-y-2">
+          <Label className="text-[12px] font-medium text-ink-300">
+            პოზიცია ★ <span className="font-normal text-ink-600">(მაქს. 2)</span>
           </Label>
           <div className="flex flex-wrap gap-2">
             {POSITION_VALUES.map((pos) => {
               const selected = form.positions.includes(pos);
               const disabled = !selected && form.positions.length >= 2;
+              const tone = POS_TONE[pos] ?? 'bg-ink-800 text-ink-300 border-ink-700';
               return (
                 <button
                   key={pos}
@@ -403,23 +440,28 @@ function SportInfoSection({ initialData }: { initialData: SportInfo }) {
                   aria-pressed={selected}
                   disabled={disabled}
                   className={cn(
-                    'h-9 w-12 rounded border text-xs font-medium transition-colors',
+                    'inline-flex items-center gap-1 rounded-pill border px-3 py-1.5 text-[12.5px] font-medium transition-colors',
                     selected
-                      ? 'border-primary bg-primary text-primary-foreground'
-                      : 'border-input hover:border-muted-foreground/40 disabled:opacity-40',
+                      ? tone
+                      : 'border-ink-700 bg-ink-950 text-ink-400 hover:border-ink-600 hover:text-ink-200 disabled:opacity-40',
                   )}
                 >
-                  {pos}
+                  <span className="font-mono text-[11px] font-bold">{pos}</span>
+                  {POSITION_LABELS[pos]}
+                  {selected && <CheckCircleIcon className="size-3.5 ml-0.5" />}
                 </button>
               );
             })}
           </div>
-          {errors.positions ? <p className="text-sm text-destructive">{errors.positions}</p> : null}
+          {errors.positions ? (
+            <p className="text-[12px] text-danger-300">{errors.positions}</p>
+          ) : null}
         </div>
 
-        <div className="space-y-1.5">
-          <Label>ძირითადი ფეხი ★</Label>
-          <div className="flex gap-3">
+        {/* Dominant foot */}
+        <div className="space-y-2">
+          <Label className="text-[12px] font-medium text-ink-300">ძირითადი ფეხი ★</Label>
+          <div className="inline-flex rounded-field border border-ink-700 bg-ink-950 p-1">
             {DOMINANT_FOOT_VALUES.map((foot) => (
               <button
                 key={foot}
@@ -427,10 +469,10 @@ function SportInfoSection({ initialData }: { initialData: SportInfo }) {
                 onClick={() => set('dominantFoot', foot)}
                 aria-pressed={form.dominantFoot === foot}
                 className={cn(
-                  'flex-1 h-9 rounded border text-sm font-medium transition-colors',
+                  'rounded-[8px] px-4 py-2 text-[13px] font-medium transition-colors',
                   form.dominantFoot === foot
-                    ? 'border-primary bg-primary/5 text-primary'
-                    : 'border-input hover:border-muted-foreground/40',
+                    ? 'bg-brand-400 text-ink-950'
+                    : 'text-ink-300 hover:text-ink-100',
                 )}
               >
                 {DOMINANT_FOOT_LABELS[foot]}
@@ -438,7 +480,7 @@ function SportInfoSection({ initialData }: { initialData: SportInfo }) {
             ))}
           </div>
           {errors.dominantFoot ? (
-            <p className="text-sm text-destructive">{errors.dominantFoot}</p>
+            <p className="text-[12px] text-danger-300">{errors.dominantFoot}</p>
           ) : null}
         </div>
 
@@ -511,25 +553,24 @@ function SportInfoSection({ initialData }: { initialData: SportInfo }) {
         </Field>
 
         {errorMessage ? (
-          <p role="alert" className="text-sm text-destructive">
+          <p role="alert" className="text-sm text-danger-300">
             {errorMessage}
           </p>
         ) : null}
 
-        <div className="flex items-center justify-end gap-3">
+        <div className="flex items-center justify-end gap-3 border-t border-ink-800 pt-4">
           {status === 'saved' ? (
-            <p className="text-sm text-emerald-600 dark:text-emerald-400">✓ შენახულია</p>
+            <p className="flex items-center gap-1.5 text-[13px] text-success-300">
+              <CheckCircleIcon className="size-4" />
+              შენახულია
+            </p>
           ) : null}
-          <Button
-            onClick={handleSave}
-            disabled={status === 'saving'}
-            className={cn(status === 'error' && 'border-destructive')}
-          >
+          <Button onClick={handleSave} disabled={status === 'saving'}>
             {status === 'saving' ? 'შენახვა...' : 'შენახვა'}
           </Button>
         </div>
       </div>
-    </section>
+    </SectionCard>
   );
 }
 
@@ -632,72 +673,99 @@ function SingleImageSection({
   }
 
   return (
-    <section className="space-y-3">
-      <div className="space-y-1">
-        <h2 className="text-sm font-medium uppercase tracking-wide text-muted-foreground">
-          {title}
-        </h2>
-        <p className="text-xs text-muted-foreground">{description}</p>
-      </div>
+    <SectionCard label={title}>
+      <div className="p-5">
+        <p className="mb-4 text-[12.5px] text-ink-500">{description}</p>
 
-      {image ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={image.url}
-          alt={title}
-          className={cn(
-            'border border-border bg-muted object-cover',
-            shape === 'circle' ? 'size-32 rounded-full' : 'h-40 w-full rounded-lg',
+        <div className="flex flex-wrap items-center gap-5 rounded-card border border-ink-800 bg-ink-950/40 p-4">
+          {shape === 'circle' ? (
+            <div className="relative">
+              <div
+                className={cn(
+                  'flex items-center justify-center overflow-hidden border-2 border-ink-700 bg-ink-800',
+                  'h-20 w-20 rounded-full',
+                )}
+              >
+                {image ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={image.url} alt={title} className="h-full w-full object-cover" />
+                ) : (
+                  <UserIcon className="size-8 text-ink-500" />
+                )}
+              </div>
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploading}
+                aria-label="ფოტოს შეცვლა"
+                className="absolute -bottom-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full bg-brand-400 text-ink-950 ring-2 ring-ink-900 transition-colors hover:bg-brand-300 disabled:opacity-50"
+              >
+                <CameraIcon className="size-3.5" />
+              </button>
+            </div>
+          ) : (
+            <div
+              className={cn(
+                'overflow-hidden rounded-card border border-ink-700 bg-ink-800',
+                'h-28 w-full',
+              )}
+            >
+              {image ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={image.url} alt={title} className="h-full w-full object-cover" />
+              ) : (
+                <div className="flex h-full w-full items-center justify-center text-[12px] text-ink-600">
+                  ბანერი არ არის
+                </div>
+              )}
+            </div>
           )}
-        />
-      ) : (
-        <div
-          className={cn(
-            'flex items-center justify-center border border-dashed border-border bg-muted/40 text-xs text-muted-foreground',
-            shape === 'circle' ? 'size-32 rounded-full' : 'h-40 w-full rounded-lg',
-          )}
-        >
-          ფოტო არ არის
+
+          <div className="min-w-0 flex-1">
+            <p className="text-[13.5px] font-semibold text-ink-100">{title}</p>
+            <p className="mt-0.5 text-[12px] text-ink-500">JPG ან PNG, მაქს. 10MB.</p>
+          </div>
+
+          <div className="flex gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploading}
+            >
+              <UploadIcon className="size-3.5" />
+              {uploading ? 'მუშავდება…' : image ? 'შეცვლა' : 'ატვირთვა'}
+            </Button>
+            {image ? (
+              <button
+                type="button"
+                onClick={handleRemove}
+                disabled={uploading}
+                aria-label="წაშლა"
+                className="flex h-9 w-9 items-center justify-center rounded-btn text-ink-500 transition-colors hover:bg-danger-400/10 hover:text-danger-300 disabled:opacity-50"
+              >
+                <DeleteIcon className="size-4" />
+              </button>
+            ) : null}
+          </div>
         </div>
-      )}
 
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept={AVATAR_ALLOWED.join(',')}
-        className="hidden"
-        onChange={handleFileSelect}
-      />
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept={AVATAR_ALLOWED.join(',')}
+          className="hidden"
+          onChange={handleFileSelect}
+        />
 
-      <div className="flex gap-2">
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={() => fileInputRef.current?.click()}
-          disabled={uploading}
-        >
-          {uploading ? 'მუშავდება…' : image ? 'შეცვლა' : 'ფოტოს არჩევა'}
-        </Button>
-        {image ? (
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={handleRemove}
-            disabled={uploading}
-          >
-            წაშლა
-          </Button>
-        ) : null}
+        {error && (
+          <p role="alert" className="mt-3 text-[12px] text-danger-300">
+            {error}
+          </p>
+        )}
       </div>
-
-      {error && (
-        <p role="alert" className="text-sm text-destructive">
-          {error}
-        </p>
-      )}
-    </section>
+    </SectionCard>
   );
 }
 
@@ -820,18 +888,16 @@ function PhotoGallerySection({ initialPhotos }: { initialPhotos: GalleryPhoto[] 
   }
 
   return (
-    <section aria-labelledby="photo-gallery-heading">
-      <div className="mb-4">
-        <h2
-          id="photo-gallery-heading"
-          className="text-xs font-semibold uppercase tracking-widest text-muted-foreground"
-        >
-          ფოტო გალერეა
-        </h2>
-      </div>
+    <SectionCard label="ფოტო გალერეა">
+      <div className="p-5 space-y-4">
+        {/* Info bar */}
+        <div className="flex items-center gap-2 rounded-card border border-info-400/25 bg-info-400/8 px-3.5 py-2.5 text-[12.5px] text-info-200">
+          <InfoIcon className="size-4 shrink-0" />
+          ატვირთული {photos.length} / {MAX_GALLERY_PHOTOS} ფოტო. პირველი ფოტო გამოჩნდება როგორც
+          მთავარი.
+        </div>
 
-      <div className="rounded-xl border border-border bg-card p-6 space-y-4">
-        <div className="grid grid-cols-4 gap-2">
+        <div className="grid grid-cols-3 gap-3 sm:grid-cols-4">
           {photos.map((photo, idx) => (
             <div
               key={photo.id}
@@ -841,24 +907,25 @@ function PhotoGallerySection({ initialPhotos }: { initialPhotos: GalleryPhoto[] 
               onDrop={() => handleDrop(photo.id)}
               onDragEnd={() => setDraggingId(null)}
               className={cn(
-                'relative aspect-square rounded-lg overflow-hidden border border-border cursor-grab',
-                draggingId === photo.id && 'opacity-50 border-primary',
+                'group relative aspect-[4/3] overflow-hidden rounded-card border border-ink-800 cursor-grab',
+                draggingId === photo.id && 'opacity-50 border-brand-400/40',
               )}
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={photo.url} alt={`ფოტო ${idx + 1}`} className="w-full h-full object-cover" />
+              <img src={photo.url} alt={`ფოტო ${idx + 1}`} className="h-full w-full object-cover" />
+              <div className="absolute inset-0 bg-gradient-to-t from-ink-950/70 to-transparent opacity-0 transition-opacity group-hover:opacity-100" />
               {idx === 0 && (
-                <span className="absolute top-1 left-1 text-[10px] leading-none bg-primary/80 text-primary-foreground px-1 py-0.5 rounded">
-                  გარეკ.
+                <span className="absolute left-2 top-2 rounded-pill bg-brand-400 px-2 py-0.5 text-[10px] font-bold text-ink-950">
+                  მთავარი
                 </span>
               )}
               <button
                 type="button"
                 onClick={() => handleDelete(photo)}
-                className="absolute top-1 right-1 h-5 w-5 rounded-full bg-background/80 text-foreground hover:bg-destructive hover:text-destructive-foreground flex items-center justify-center text-xs leading-none transition-colors"
                 aria-label="ფოტოს წაშლა"
+                className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-ink-950/70 text-ink-200 opacity-0 backdrop-blur transition-opacity hover:bg-danger-500 hover:text-white group-hover:opacity-100"
               >
-                ×
+                <CloseIcon className="size-3.5" />
               </button>
             </div>
           ))}
@@ -868,33 +935,19 @@ function PhotoGallerySection({ initialPhotos }: { initialPhotos: GalleryPhoto[] 
               type="button"
               onClick={() => fileInputRef.current?.click()}
               disabled={uploading}
-              className="aspect-square rounded-lg border-2 border-dashed border-border hover:border-primary flex items-center justify-center text-2xl text-muted-foreground hover:text-primary transition-colors disabled:opacity-50"
               aria-label="ფოტოს ატვირთვა"
+              className="flex aspect-[4/3] flex-col items-center justify-center gap-2 rounded-card border border-dashed border-ink-700 text-ink-500 transition-colors hover:border-brand-400/40 hover:text-brand-300 disabled:opacity-50"
             >
-              {uploading ? '…' : '+'}
+              <PlusIcon className="size-5" />
+              <span className="text-[12px] font-medium">
+                {uploading ? 'იტვირთება...' : 'ფოტოს დამატება'}
+              </span>
             </button>
           )}
         </div>
 
-        <div className="flex items-center justify-between">
-          <span className="text-sm text-muted-foreground">
-            {photos.length}/{MAX_GALLERY_PHOTOS} ფოტო
-          </span>
-          {photos.length < MAX_GALLERY_PHOTOS && (
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => fileInputRef.current?.click()}
-              disabled={uploading}
-            >
-              {uploading ? 'ატვირთვა...' : '+ ატვირთვა'}
-            </Button>
-          )}
-        </div>
-
         {uploadError ? (
-          <p role="alert" className="text-sm text-destructive">
+          <p role="alert" className="text-[12px] text-danger-300">
             {uploadError}
           </p>
         ) : null}
@@ -907,7 +960,7 @@ function PhotoGallerySection({ initialPhotos }: { initialPhotos: GalleryPhoto[] 
           onChange={handleFileSelect}
         />
       </div>
-    </section>
+    </SectionCard>
   );
 }
 
@@ -1037,25 +1090,14 @@ function CareerHistorySection({ initialEntries }: { initialEntries: CareerEntry[
   }
 
   return (
-    <section aria-labelledby="career-history-heading">
-      <div className="mb-4">
-        <h2
-          id="career-history-heading"
-          className="text-xs font-semibold uppercase tracking-widest text-muted-foreground"
-        >
-          კარიერის ისტორია
-        </h2>
-      </div>
-
-      <div className="rounded-xl border border-border bg-card p-6 space-y-4">
+    <SectionCard label="კარიერის ისტორია">
+      <div className="p-5 space-y-3">
         {entries.length === 0 && editingId === null ? (
-          <p className="text-sm text-muted-foreground">
-            კარიერის ჩანაწერი არ არის. დაამატე პირველი.
-          </p>
+          <p className="text-[13px] text-ink-500">კარიერის ჩანაწერი არ არის. დაამატე პირველი.</p>
         ) : null}
 
         <ul className="space-y-2">
-          {entries.map((entry) => (
+          {entries.map((entry, idx) => (
             <li key={entry.id}>
               {editingId === entry.id ? (
                 <CareerEntryFormRow
@@ -1068,32 +1110,33 @@ function CareerHistorySection({ initialEntries }: { initialEntries: CareerEntry[
                   onCancel={cancel}
                 />
               ) : (
-                <div className="flex items-center justify-between gap-2 py-1">
-                  <span className="text-sm">
-                    <span className="font-medium">{entry.clubName}</span>
-                    <span className="text-muted-foreground ml-2">
-                      {entry.startYear}–{entry.endYear ?? 'დღ.'}
-                    </span>
-                    {entry.position ? (
-                      <span className="text-muted-foreground ml-2">{entry.position}</span>
-                    ) : null}
+                <div className="flex items-center gap-3 rounded-card border border-ink-800 bg-ink-950/40 px-4 py-3 transition-colors hover:border-ink-700">
+                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-ink-800 font-mono text-[11px] text-ink-400">
+                    {idx + 1}
                   </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[13.5px] font-semibold text-ink-100">{entry.clubName}</p>
+                    <p className="text-[11.5px] text-ink-500">
+                      {entry.startYear}–{entry.endYear ?? 'დღ.'}
+                      {entry.position ? ` · ${entry.position}` : ''}
+                    </p>
+                  </div>
                   <div className="flex gap-1 shrink-0">
                     <button
                       type="button"
                       onClick={() => openEdit(entry)}
-                      className="h-7 w-7 rounded text-muted-foreground hover:text-foreground hover:bg-muted flex items-center justify-center text-sm transition-colors"
+                      className="flex h-8 w-8 items-center justify-center rounded-btn text-ink-500 transition-colors hover:bg-ink-800 hover:text-ink-100"
                       aria-label="რედაქტირება"
                     >
-                      ✏
+                      <EditIcon className="size-3.5" />
                     </button>
                     <button
                       type="button"
                       onClick={() => handleDelete(entry.id)}
-                      className="h-7 w-7 rounded text-muted-foreground hover:text-destructive hover:bg-destructive/10 flex items-center justify-center text-sm transition-colors"
+                      className="flex h-8 w-8 items-center justify-center rounded-btn text-ink-500 transition-colors hover:bg-danger-400/10 hover:text-danger-300"
                       aria-label="წაშლა"
                     >
-                      ×
+                      <DeleteIcon className="size-3.5" />
                     </button>
                   </div>
                 </div>
@@ -1116,13 +1159,14 @@ function CareerHistorySection({ initialEntries }: { initialEntries: CareerEntry[
           <button
             type="button"
             onClick={openAdd}
-            className="flex items-center gap-1 text-sm text-primary hover:underline"
+            className="flex w-full items-center justify-center gap-2 rounded-card border border-dashed border-ink-700 py-3.5 text-[13px] font-medium text-ink-400 transition-colors hover:border-brand-400/40 hover:text-brand-300"
           >
-            + კლუბის / გუნდის დამატება
+            <PlusIcon className="size-4" />
+            კლუბის / გუნდის დამატება
           </button>
         )}
       </div>
-    </section>
+    </SectionCard>
   );
 }
 
@@ -1144,7 +1188,7 @@ function CareerEntryFormRow({
   onCancel: () => void;
 }) {
   return (
-    <div className="border border-border rounded-lg p-4 space-y-3 bg-muted/30">
+    <div className="rounded-card border border-ink-800 bg-ink-950/40 p-4 space-y-3">
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <Field label="კლუბი / გუნდი ★" error={errors.clubName} className="sm:col-span-2">
           <Input
@@ -1196,7 +1240,7 @@ function CareerEntryFormRow({
       </div>
 
       {errorMessage ? (
-        <p role="alert" className="text-sm text-destructive">
+        <p role="alert" className="text-[12px] text-danger-300">
           {errorMessage}
         </p>
       ) : null}
@@ -1250,17 +1294,8 @@ function AgentInfoSection({ initialData }: { initialData: AgentInfo }) {
   }
 
   return (
-    <section aria-labelledby="agent-info-heading">
-      <div className="mb-4">
-        <h2
-          id="agent-info-heading"
-          className="text-xs font-semibold uppercase tracking-widest text-muted-foreground"
-        >
-          აგენტის ინფორმაცია
-        </h2>
-      </div>
-
-      <div className="rounded-xl border border-border bg-card p-6 space-y-5">
+    <SectionCard label="აგენტის ინფორმაცია">
+      <div className="p-6 space-y-5">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field label="აგენტის სახელი" error={errors.agentName} className="sm:col-span-2">
             <Input
@@ -1291,30 +1326,30 @@ function AgentInfoSection({ initialData }: { initialData: AgentInfo }) {
         </div>
 
         {errorMessage ? (
-          <p role="alert" className="text-sm text-destructive">
+          <p role="alert" className="text-sm text-danger-300">
             {errorMessage}
           </p>
         ) : null}
 
-        <div className="flex items-center justify-end gap-3">
+        <div className="flex items-center justify-end gap-3 border-t border-ink-800 pt-4">
           {status === 'saved' ? (
-            <p className="text-sm text-emerald-600 dark:text-emerald-400">✓ შენახულია</p>
+            <p className="flex items-center gap-1.5 text-[13px] text-success-300">
+              <CheckCircleIcon className="size-4" />
+              შენახულია
+            </p>
           ) : null}
-          <Button
-            onClick={handleSave}
-            disabled={status === 'saving'}
-            className={cn(status === 'error' && 'border-destructive')}
-          >
+          <Button onClick={handleSave} disabled={status === 'saving'}>
             {status === 'saving' ? 'შენახვა...' : 'შენახვა'}
           </Button>
         </div>
       </div>
-    </section>
+    </SectionCard>
   );
 }
 
 // ── Shared field wrapper ──────────────────────────────────────────────────────
 
+// local alias to avoid collision with imported Label
 function Field({
   label,
   error,
@@ -1328,9 +1363,9 @@ function Field({
 }) {
   return (
     <div className={cn('space-y-1.5', className)}>
-      <Label>{label}</Label>
+      <Label className="text-[12px] font-medium text-ink-300">{label}</Label>
       {children}
-      {error ? <p className="text-sm text-destructive">{error}</p> : null}
+      {error ? <p className="text-[12px] text-danger-300">{error}</p> : null}
     </div>
   );
 }

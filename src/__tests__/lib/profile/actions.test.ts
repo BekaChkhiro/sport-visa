@@ -1,5 +1,25 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+// Must mock @/lib/env and its dependents before any module that imports them
+// (@/lib/r2 → @/lib/api-error → @/lib/logger → @/lib/env). Without this the
+// env validation throws because DATABASE_URL is undefined in the test env.
+vi.mock('@/lib/env', () => ({
+  env: {
+    NODE_ENV: 'test',
+    DATABASE_URL: 'postgresql://test:test@localhost:5432/test',
+    NEXT_PUBLIC_APP_URL: 'http://localhost:3000',
+  },
+}));
+vi.mock('@/lib/logger', () => ({
+  logger: { info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn() },
+  childLogger: vi.fn(() => ({ info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn() })),
+}));
+vi.mock('@/lib/r2', () => ({
+  deleteObject: vi.fn().mockResolvedValue(undefined),
+  uploadObject: vi.fn().mockResolvedValue(undefined),
+  getSignedUploadUrl: vi.fn().mockResolvedValue('https://r2.example.com/signed'),
+}));
+
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }));
 
 const mockAuth = vi.hoisted(() => vi.fn());

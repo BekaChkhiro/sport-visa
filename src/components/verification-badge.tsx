@@ -21,17 +21,20 @@ const CONFIG: Record<
   verified: {
     label: 'ვერიფიცირებული',
     Icon: VerifiedBadgeIcon,
-    className: 'bg-success/10 text-success',
+    className:
+      'inline-flex items-center gap-1 rounded-pill border border-success-400/30 bg-success-400/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-success-300',
   },
   pending: {
     label: 'განხ. მოლოდინი',
     Icon: PendingBadgeIcon,
-    className: 'bg-warning/10 text-warning',
+    className:
+      'inline-flex items-center gap-1 rounded-pill border border-warning-400/30 bg-warning-400/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-warning-300',
   },
   rejected: {
     label: 'უარყოფილი',
     Icon: XCircleIcon,
-    className: 'bg-destructive/10 text-destructive',
+    className:
+      'inline-flex items-center gap-1 rounded-pill border border-danger-400/30 bg-danger-400/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-danger-300',
   },
 };
 
@@ -61,11 +64,7 @@ function VerificationBadge({
     <span
       data-slot="verification-badge"
       data-status={status}
-      className={cn(
-        'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium',
-        statusClass,
-        className,
-      )}
+      className={cn(statusClass, className)}
       {...props}
     >
       <Icon size={12} className="shrink-0" />

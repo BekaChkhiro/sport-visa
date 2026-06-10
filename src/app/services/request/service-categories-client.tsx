@@ -6,7 +6,6 @@ import { useRouter } from 'next/navigation';
 import { signOut } from 'next-auth/react';
 
 import { AppShell } from '@/components/app-shell';
-import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/empty-state';
 import {
   ArrowLeftIcon,
@@ -54,10 +53,31 @@ const ICON_MAP: Record<string, React.ComponentType<LucideProps>> = {
   other: OtherServicesIcon,
 };
 
+/** Tone per category slug — cycles through brand/accent/iris/flame */
+const TONE_MAP: Record<string, string> = {
+  'meal-plan': 'brand',
+  'personal-trainer': 'accent',
+  'team-doctor': 'iris',
+  other: 'flame',
+};
+
+const CHIP_TONE: Record<string, string> = {
+  brand: 'bg-brand-400/15 text-brand-300',
+  accent: 'bg-accent-400/15 text-accent-300',
+  iris: 'bg-iris-400/15 text-iris-300',
+  flame: 'bg-flame-400/15 text-flame-300',
+};
+
+const TONES = ['brand', 'accent', 'iris', 'flame'];
+
 function CategoryIcon({ slug, icon }: { slug: string; icon: string | null }) {
   const key = icon ?? slug;
   const Icon = ICON_MAP[key] ?? OtherServicesIcon;
-  return <Icon className="size-8 text-primary" aria-hidden="true" />;
+  return <Icon className="size-6" aria-hidden="true" />;
+}
+
+function getTone(slug: string, index: number): string {
+  return TONE_MAP[slug] ?? TONES[index % TONES.length] ?? 'brand';
 }
 
 export function ServiceCategoriesClient({
@@ -86,20 +106,31 @@ export function ServiceCategoriesClient({
       onSignOut={handleSignOut}
     >
       <div className="space-y-6">
+        {/* Page header */}
         <div>
-          <Button variant="ghost" size="sm" asChild className="-ml-2 mb-4">
-            <Link href="/dashboard">
-              <ArrowLeftIcon className="size-4" />
-              Dashboard-ზე დაბრუნება
-            </Link>
-          </Button>
+          <Link
+            href="/dashboard"
+            className="-ml-2 mb-4 inline-flex items-center gap-1.5 rounded-btn px-2 py-1 text-[13px] font-medium text-ink-400 transition-colors hover:bg-ink-800 hover:text-ink-100"
+          >
+            <ArrowLeftIcon className="size-4" aria-hidden="true" />
+            Dashboard-ზე დაბრუნება
+          </Link>
 
-          <h1 className="text-2xl font-bold tracking-tight">სერვისის მოთხოვნა</h1>
-          <p className="mt-1 text-sm text-muted-foreground">ნაბიჯი 1 / 2 — სერვისის ტიპის არჩევა</p>
+          <h1 className="font-display text-[26px] font-bold tracking-tight text-ink-50">
+            სერვისის მოთხოვნა
+          </h1>
+          <p className="mt-1 text-[10px] font-bold uppercase tracking-[0.16em] text-ink-500">
+            ნაბიჯი 1 / 2 — სერვისის ტიპის არჩევა
+          </p>
         </div>
 
+        {/* Section label */}
+        <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-ink-500">
+          ხელმისაწვდომი სერვისები
+        </p>
+
         {categories.length === 0 ? (
-          <div className="rounded-xl border border-border bg-card">
+          <div className="rounded-card border border-ink-800 bg-ink-900 shadow-card">
             <EmptyState
               title="სერვისები მიუწვდომელია"
               description="ამჟამად სერვისის კატეგორიები არ არის ხელმისაწვდომი. სცადეთ მოგვიანებით."
@@ -107,30 +138,50 @@ export function ServiceCategoriesClient({
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            {categories.map((cat) => (
-              <div
-                key={cat.id}
-                className="flex flex-col rounded-xl border border-border bg-card p-5 transition-colors hover:border-primary/40 hover:bg-accent/30"
-              >
-                <div className="mb-3 flex size-12 items-center justify-center rounded-lg bg-primary/10">
-                  <CategoryIcon slug={cat.slug} icon={cat.icon} />
-                </div>
+            {categories.map((cat, i) => {
+              const tone = getTone(cat.slug, i);
+              const chipClass = CHIP_TONE[tone] ?? CHIP_TONE.brand ?? '';
+              return (
+                <Link
+                  key={cat.id}
+                  href={`/services/request/${cat.slug}`}
+                  className="group flex items-start gap-4 rounded-card border border-ink-800 bg-ink-900 p-5 shadow-card transition-colors hover:border-ink-700"
+                >
+                  {/* Icon chip */}
+                  <span
+                    className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-[13px] ${chipClass}`}
+                  >
+                    <CategoryIcon slug={cat.slug} icon={cat.icon} />
+                  </span>
 
-                <h2 className="mb-1 text-base font-semibold leading-snug">{cat.name}</h2>
-
-                {cat.description && (
-                  <p className="mb-4 text-sm leading-relaxed text-muted-foreground">
-                    {cat.description}
-                  </p>
-                )}
-
-                <div className="mt-auto">
-                  <Button variant="default" size="sm" asChild className="w-full">
-                    <Link href={`/services/request/${cat.slug}`}>არჩევა</Link>
-                  </Button>
-                </div>
-              </div>
-            ))}
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[15px] font-semibold text-ink-50">{cat.name}</p>
+                    {cat.description && (
+                      <p className="mt-1 text-[12.5px] leading-relaxed text-ink-400">
+                        {cat.description}
+                      </p>
+                    )}
+                    <span className="mt-2.5 inline-flex items-center gap-1 text-[12.5px] font-medium text-brand-300">
+                      არჩევა
+                      <svg
+                        width={14}
+                        height={14}
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth={2}
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className="transition-transform group-hover:translate-x-0.5"
+                        aria-hidden="true"
+                      >
+                        <path d="M5 12h14M13 6l6 6-6 6" />
+                      </svg>
+                    </span>
+                  </div>
+                </Link>
+              );
+            })}
           </div>
         )}
       </div>

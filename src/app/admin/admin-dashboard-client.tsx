@@ -66,51 +66,50 @@ type AdminDashboardClientProps = {
   recentServiceRequests: PendingServiceRequest[];
 };
 
-type KpiCardVariant = 'default' | 'warning' | 'success';
+type KpiCardVariant = 'default' | 'warning' | 'success' | 'flame';
 
 function KpiCard({
   label,
   value,
   icon: Icon,
   variant = 'default',
+  sub,
 }: {
   label: string;
   value: number;
   icon: React.ComponentType<{ className?: string }>;
   variant?: KpiCardVariant;
+  sub?: string;
 }) {
   return (
     <div
       data-slot="kpi-card"
       className={cn(
-        'rounded-lg border bg-card p-5 flex items-start gap-4',
-        variant === 'warning' &&
-          'border-amber-200 bg-amber-50/50 dark:border-amber-800 dark:bg-amber-950/20',
-        variant === 'success' &&
-          'border-emerald-200 bg-emerald-50/50 dark:border-emerald-800 dark:bg-emerald-950/20',
+        'rounded-card border bg-ink-900 p-4 shadow-card transition-colors hover:border-ink-700',
+        variant === 'default' && 'border-ink-800',
+        variant === 'warning' && 'border-warning-400/30',
+        variant === 'success' && 'border-ink-800',
+        variant === 'flame' && 'border-ink-800',
       )}
     >
-      <div
-        className={cn(
-          'rounded-md p-2 shrink-0',
-          variant === 'default' && 'bg-muted',
-          variant === 'warning' && 'bg-amber-100 dark:bg-amber-900/40',
-          variant === 'success' && 'bg-emerald-100 dark:bg-emerald-900/40',
-        )}
-      >
-        <Icon
+      <div className="flex items-start justify-between">
+        <span
           className={cn(
-            'size-5',
-            variant === 'default' && 'text-muted-foreground',
-            variant === 'warning' && 'text-amber-600 dark:text-amber-400',
-            variant === 'success' && 'text-emerald-600 dark:text-emerald-400',
+            'flex h-9 w-9 items-center justify-center rounded-[10px]',
+            variant === 'default' && 'bg-ink-800 text-ink-300',
+            variant === 'warning' && 'bg-warning-400/15 text-warning-300',
+            variant === 'success' && 'bg-success-400/15 text-success-300',
+            variant === 'flame' && 'bg-flame-400/15 text-flame-300',
           )}
-        />
+        >
+          <Icon className="size-[17px]" />
+        </span>
       </div>
-      <div className="flex flex-col gap-0.5 min-w-0">
-        <span className="text-2xl font-semibold leading-tight tabular-nums">{value}</span>
-        <span className="text-xs text-muted-foreground">{label}</span>
-      </div>
+      <p className="mt-3 font-mono text-[26px] font-bold leading-none tracking-tight text-ink-50 tabular-nums">
+        {value}
+      </p>
+      <p className="mt-1.5 text-[12px] text-ink-400">{label}</p>
+      {sub && <p className="mt-0.5 text-[11px] font-medium text-warning-300">{sub}</p>}
     </div>
   );
 }
@@ -119,33 +118,41 @@ function SectionHeading({
   title,
   href,
   linkLabel,
+  icon: Icon,
+  badge,
 }: {
   title: string;
   href: string;
   linkLabel: string;
+  icon: React.ComponentType<{ className?: string }>;
+  badge?: number;
 }) {
   return (
-    <div className="flex items-center justify-between mb-3">
-      <h2 className="text-sm font-semibold text-foreground">{title}</h2>
+    <div className="flex items-center justify-between border-b border-ink-800 px-5 py-4">
+      <div className="flex items-center gap-2.5">
+        <span className="flex h-8 w-8 items-center justify-center rounded-[9px] bg-warning-400/15 text-warning-300">
+          <Icon className="size-4" />
+        </span>
+        <h2 className="font-display text-[15px] font-bold text-ink-50">{title}</h2>
+        {badge !== undefined && badge > 0 && (
+          <span className="rounded-pill bg-flame-400/15 px-2 py-0.5 text-[11px] font-bold text-flame-300">
+            {badge}
+          </span>
+        )}
+      </div>
       <Link
         href={href}
-        className="flex items-center gap-1 text-xs text-primary hover:underline underline-offset-4"
+        className="flex items-center gap-1 text-[12.5px] font-medium text-accent-300 transition-colors hover:text-accent-200"
       >
         {linkLabel}
-        <ArrowRightIcon className="size-3" />
+        <ArrowRightIcon className="size-3.5" />
       </Link>
     </div>
   );
 }
 
 function EmptyRow({ label }: { label: string }) {
-  return (
-    <tr>
-      <td colSpan={3} className="px-4 py-6 text-center text-sm text-muted-foreground">
-        {label}
-      </td>
-    </tr>
-  );
+  return <div className="px-5 py-6 text-center text-[13px] text-ink-500">{label}</div>;
 }
 
 export function AdminDashboardClient({
@@ -177,31 +184,32 @@ export function AdminDashboardClient({
       }}
       onSignOut={handleSignOut}
     >
-      <div className="space-y-8">
+      <div className="space-y-7">
         {/* Page header */}
         <div className="space-y-1">
-          <div className="flex items-center gap-2">
-            <ShieldIcon className="size-5 text-muted-foreground" />
-            <h1 className="text-xl font-semibold">Admin Dashboard</h1>
-          </div>
-          <p className="text-sm text-muted-foreground">პლატფორმის სტატისტიკა და მართვის ცენტრი</p>
+          <h1 className="font-display text-[26px] font-bold tracking-tight text-ink-50">
+            Admin Dashboard
+          </h1>
+          <p className="text-[13.5px] text-ink-400">პლატფორმის სტატისტიკა და მართვის ცენტრი</p>
         </div>
 
         {/* KPI grid */}
         <section aria-label="KPI სტატისტიკა">
-          <div className="grid gap-4 grid-cols-2 sm:grid-cols-3 lg:grid-cols-6">
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
             <KpiCard label="სულ მომხმარებელი" value={kpi.totalUsers} icon={UsersIcon} />
             <KpiCard
               label="მოლოდინი — ფეხბ."
               value={kpi.pendingFootballers}
               icon={ClockIcon}
               variant={kpi.pendingFootballers > 0 ? 'warning' : 'default'}
+              sub={kpi.pendingFootballers > 0 ? 'ვერიფიკაცია' : undefined}
             />
             <KpiCard
               label="მოლოდინი — კლუბი"
               value={kpi.pendingClubs}
               icon={ClockIcon}
               variant={kpi.pendingClubs > 0 ? 'warning' : 'default'}
+              sub={kpi.pendingClubs > 0 ? 'ვერიფიკაცია' : undefined}
             />
             <KpiCard
               label="დადასტ. ფეხბ."
@@ -219,148 +227,151 @@ export function AdminDashboardClient({
               label="სერვ. მოლოდინი"
               value={kpi.pendingServiceRequests}
               icon={AlertCircleIcon}
-              variant={kpi.pendingServiceRequests > 0 ? 'warning' : 'default'}
+              variant={kpi.pendingServiceRequests > 0 ? 'flame' : 'default'}
             />
           </div>
         </section>
 
-        {/* Verification queue summary */}
-        <section aria-label="ვერიფიკაციის რიგი">
-          <SectionHeading
-            title={`ვერიფიკაციის რიგი${totalPending > 0 ? ` (${totalPending})` : ''}`}
-            href="/admin/verification"
-            linkLabel="ყველა ნახვა"
-          />
+        {/* Queues grid */}
+        <div className="grid gap-6 xl:grid-cols-2">
+          {/* Verification queue summary */}
+          <section
+            aria-label="ვერიფიკაციის რიგი"
+            className="overflow-hidden rounded-card border border-ink-800 bg-ink-900 shadow-card"
+          >
+            <SectionHeading
+              title={`ვერიფიკაციის რიგი${totalPending > 0 ? ` (${totalPending})` : ''}`}
+              href="/admin/verification"
+              linkLabel="ყველა ნახვა"
+              icon={ShieldIcon}
+              badge={totalPending > 0 ? totalPending : undefined}
+            />
 
-          <div className="grid gap-4 md:grid-cols-2">
             {/* Pending footballers */}
-            <div className="rounded-lg border bg-card overflow-hidden">
-              <div className="flex items-center justify-between px-4 py-3 border-b bg-muted/40">
-                <span className="text-xs font-medium text-muted-foreground">ფეხბურთელები</span>
-                {kpi.pendingFootballers > 0 && (
-                  <Badge variant="secondary" className="text-xs">
-                    {kpi.pendingFootballers}
-                  </Badge>
+            <div>
+              <p className="px-5 pb-1.5 pt-3 text-[10px] font-bold uppercase tracking-[0.14em] text-ink-600">
+                ფეხბურთელები · {kpi.pendingFootballers}
+              </p>
+              <div className="divide-y divide-ink-800">
+                {recentPendingFootballers.length === 0 ? (
+                  <EmptyRow label="მოლოდინში არ არის" />
+                ) : (
+                  recentPendingFootballers.map((f) => (
+                    <div
+                      key={f.id}
+                      className="flex items-center gap-3 px-5 py-3 transition-colors hover:bg-ink-800/40"
+                    >
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-[13px] font-medium text-ink-100">
+                          {f.firstName} {f.lastName}
+                        </p>
+                        <p className="truncate text-[11.5px] text-ink-500">{f.email}</p>
+                      </div>
+                      <span className="flex items-center gap-1 text-[11px] text-ink-600">
+                        <ClockIcon className="size-3" />
+                        {formatRelativeTime(f.createdAt)}
+                      </span>
+                    </div>
+                  ))
                 )}
               </div>
-              <table className="w-full text-sm">
-                <tbody>
-                  {recentPendingFootballers.length === 0 ? (
-                    <EmptyRow label="მოლოდინში არ არის" />
-                  ) : (
-                    recentPendingFootballers.map((f) => (
-                      <tr
-                        key={f.id}
-                        className="border-b last:border-0 hover:bg-muted/30 transition-colors"
-                      >
-                        <td className="px-4 py-2.5 font-medium">
-                          {f.firstName} {f.lastName}
-                        </td>
-                        <td className="px-4 py-2.5 text-muted-foreground truncate max-w-[120px] hidden sm:table-cell">
-                          {f.email}
-                        </td>
-                        <td className="px-4 py-2.5 text-muted-foreground text-right whitespace-nowrap text-xs">
-                          {formatRelativeTime(f.createdAt)}
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
             </div>
 
             {/* Pending clubs */}
-            <div className="rounded-lg border bg-card overflow-hidden">
-              <div className="flex items-center justify-between px-4 py-3 border-b bg-muted/40">
-                <span className="text-xs font-medium text-muted-foreground">კლუბები</span>
-                {kpi.pendingClubs > 0 && (
-                  <Badge variant="secondary" className="text-xs">
-                    {kpi.pendingClubs}
-                  </Badge>
-                )}
-              </div>
-              <table className="w-full text-sm">
-                <tbody>
-                  {recentPendingClubs.length === 0 ? (
-                    <EmptyRow label="მოლოდინში არ არის" />
-                  ) : (
-                    recentPendingClubs.map((c) => (
-                      <tr
-                        key={c.id}
-                        className="border-b last:border-0 hover:bg-muted/30 transition-colors"
-                      >
-                        <td className="px-4 py-2.5 font-medium">{c.name}</td>
-                        <td className="px-4 py-2.5 text-muted-foreground truncate max-w-[120px] hidden sm:table-cell">
-                          {c.email}
-                        </td>
-                        <td className="px-4 py-2.5 text-muted-foreground text-right whitespace-nowrap text-xs">
-                          {formatRelativeTime(c.createdAt)}
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </section>
-
-        {/* Service requests summary */}
-        <section aria-label="სერვისის მოთხოვნები">
-          <SectionHeading
-            title={`სერვისის მოთხოვნები${kpi.pendingServiceRequests > 0 ? ` (${kpi.pendingServiceRequests})` : ''}`}
-            href="/admin/service-requests"
-            linkLabel="ყველა ნახვა"
-          />
-
-          <div className="rounded-lg border bg-card overflow-hidden">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b bg-muted/40">
-                  <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">
-                    კოდი
-                  </th>
-                  <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">
-                    კატეგორია
-                  </th>
-                  <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground hidden sm:table-cell">
-                    ელ-ფოსტა
-                  </th>
-                  <th className="px-4 py-2.5 text-right text-xs font-medium text-muted-foreground">
-                    თარიღი
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {recentServiceRequests.length === 0 ? (
+            <div className="border-t border-ink-800">
+              <p className="px-5 pb-1.5 pt-3 text-[10px] font-bold uppercase tracking-[0.14em] text-ink-600">
+                კლუბები · {kpi.pendingClubs}
+              </p>
+              <div className="divide-y divide-ink-800">
+                {recentPendingClubs.length === 0 ? (
                   <EmptyRow label="მოლოდინში არ არის" />
                 ) : (
-                  recentServiceRequests.map((r) => (
-                    <tr
-                      key={r.id}
-                      className="border-b last:border-0 hover:bg-muted/30 transition-colors"
+                  recentPendingClubs.map((c) => (
+                    <div
+                      key={c.id}
+                      className="flex items-center gap-3 px-5 py-3 transition-colors hover:bg-ink-800/40"
                     >
-                      <td className="px-4 py-2.5 font-mono text-xs text-muted-foreground">
-                        {r.requestCode}
-                      </td>
-                      <td className="px-4 py-2.5 font-medium">{r.categoryName}</td>
-                      <td className="px-4 py-2.5 text-muted-foreground truncate max-w-[140px] hidden sm:table-cell">
-                        {r.email}
-                      </td>
-                      <td className="px-4 py-2.5 text-muted-foreground text-right whitespace-nowrap text-xs">
-                        {formatRelativeTime(r.createdAt)}
-                      </td>
-                    </tr>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-[13px] font-medium text-ink-100">{c.name}</p>
+                        <p className="truncate text-[11.5px] text-ink-500">{c.email}</p>
+                      </div>
+                      <span className="flex items-center gap-1 text-[11px] text-ink-600">
+                        <ClockIcon className="size-3" />
+                        {formatRelativeTime(c.createdAt)}
+                      </span>
+                    </div>
                   ))
                 )}
-              </tbody>
-            </table>
-          </div>
-        </section>
+              </div>
+            </div>
+          </section>
 
-        {/* Quick actions */}
+          {/* Service requests summary */}
+          <section
+            aria-label="სერვისის მოთხოვნები"
+            className="overflow-hidden rounded-card border border-ink-800 bg-ink-900 shadow-card"
+          >
+            <div className="flex items-center justify-between border-b border-ink-800 px-5 py-4">
+              <div className="flex items-center gap-2.5">
+                <span className="flex h-8 w-8 items-center justify-center rounded-[9px] bg-flame-400/15 text-flame-300">
+                  <AlertCircleIcon className="size-4" />
+                </span>
+                <h2 className="font-display text-[15px] font-bold text-ink-50">
+                  {`სერვისის მოთხოვნები${kpi.pendingServiceRequests > 0 ? ` (${kpi.pendingServiceRequests})` : ''}`}
+                </h2>
+                {kpi.pendingServiceRequests > 0 && (
+                  <span className="rounded-pill bg-flame-400/15 px-2 py-0.5 text-[11px] font-bold text-flame-300">
+                    {kpi.pendingServiceRequests}
+                  </span>
+                )}
+              </div>
+              <Link
+                href="/admin/service-requests"
+                className="flex items-center gap-1 text-[12.5px] font-medium text-accent-300 transition-colors hover:text-accent-200"
+              >
+                ყველა ნახვა
+                <ArrowRightIcon className="size-3.5" />
+              </Link>
+            </div>
+
+            <div className="divide-y divide-ink-800">
+              {recentServiceRequests.length === 0 ? (
+                <EmptyRow label="მოლოდინში არ არის" />
+              ) : (
+                recentServiceRequests.map((r) => (
+                  <div
+                    key={r.id}
+                    className="flex items-center gap-3 px-5 py-3.5 transition-colors hover:bg-ink-800/40"
+                  >
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-[13px] font-medium text-ink-100">
+                        {r.categoryName}
+                      </p>
+                      <p className="truncate font-mono text-[11px] tabular-nums text-ink-500">
+                        <span>{r.requestCode}</span>
+                        <span className="text-ink-600"> · </span>
+                        <span>{r.email}</span>
+                      </p>
+                    </div>
+                    <span className="flex items-center gap-1 text-[11px] text-ink-600">
+                      <ClockIcon className="size-3" />
+                      {formatRelativeTime(r.createdAt)}
+                    </span>
+                    <span className="rounded-pill border border-warning-400/30 bg-warning-400/10 px-2 py-1 text-[10.5px] font-semibold text-warning-300">
+                      მოლოდინში
+                    </span>
+                  </div>
+                ))
+              )}
+            </div>
+          </section>
+        </div>
+
+        {/* Quick links */}
         <section aria-label="სწრაფი გადასვლები">
-          <h2 className="text-sm font-semibold mb-3">სექციები</h2>
+          <p className="mb-3 text-[10px] font-bold uppercase tracking-[0.16em] text-ink-500">
+            სექციები
+          </p>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             <QuickLink
               href="/admin/verification"
@@ -410,20 +421,20 @@ function QuickLink({
   return (
     <Link
       href={href}
-      className="group rounded-lg border bg-card p-4 flex items-center justify-between hover:border-primary/50 hover:bg-muted/30 transition-colors"
+      className="group flex items-center justify-between rounded-card border border-ink-800 bg-ink-900 p-4 shadow-card transition-colors hover:border-ink-700 hover:bg-ink-800/40"
     >
       <div className="space-y-0.5">
         <div className="flex items-center gap-2">
-          <span className="text-sm font-medium">{title}</span>
+          <span className="text-[13.5px] font-medium text-ink-100">{title}</span>
           {badge !== undefined && (
             <Badge variant="destructive" className="text-xs px-1.5 py-0">
               {badge}
             </Badge>
           )}
         </div>
-        <p className="text-xs text-muted-foreground">{description}</p>
+        <p className="text-[12px] text-ink-500">{description}</p>
       </div>
-      <ArrowRightIcon className="size-4 text-muted-foreground group-hover:text-foreground transition-colors shrink-0" />
+      <ArrowRightIcon className="size-4 text-ink-600 transition-colors group-hover:text-ink-300 shrink-0" />
     </Link>
   );
 }

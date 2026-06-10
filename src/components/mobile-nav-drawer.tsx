@@ -77,8 +77,11 @@ function MobileNavDrawer({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className={cn('flex w-80 flex-col gap-0 sm:max-w-sm', className)}>
-        <SheetHeader className="border-b border-border">
+      <SheetContent
+        side="right"
+        className={cn('flex w-80 flex-col gap-0 border-ink-800 bg-ink-950 sm:max-w-sm', className)}
+      >
+        <SheetHeader className="border-b border-ink-800">
           <SheetTitle className="flex items-center">
             <Logo size="md" showWordmark />
           </SheetTitle>
@@ -94,8 +97,10 @@ function MobileNavDrawer({
                     href={link.href}
                     onClick={() => onOpenChange(false)}
                     className={cn(
-                      'flex items-center px-6 py-4 text-xl leading-snug transition-colors',
-                      isActive ? 'font-semibold text-primary' : 'text-foreground hover:bg-muted',
+                      'flex items-center rounded-btn mx-2 px-4 py-3 text-xl leading-snug transition-colors',
+                      isActive
+                        ? 'bg-ink-800 font-semibold text-ink-50'
+                        : 'text-ink-400 hover:text-ink-200',
                     )}
                   >
                     {link.label}
@@ -106,10 +111,10 @@ function MobileNavDrawer({
           </ul>
         </nav>
 
-        <div className="border-t border-border p-4">
+        <div className="border-t border-ink-800 p-4">
           {user ? (
             <div className="flex flex-col gap-2">
-              <p className="text-sm font-medium">{user.name}</p>
+              <p className="text-sm font-medium text-ink-200">{user.name}</p>
               <Button variant="outline" size="sm" asChild>
                 <Link href={profilePathFor(role)} onClick={() => onOpenChange(false)}>
                   პროფილი

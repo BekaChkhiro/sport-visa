@@ -3,9 +3,140 @@
 
 @custom-variant dark (&:is(.dark *));
 
+@theme {
+  /* == Sport Visa design tokens — instrument-dark · lime brand + sky accent == */
+
+  /* Brand · lime */
+  --color-brand-50: #f7fce8;
+  --color-brand-100: #ecf8c4;
+  --color-brand-200: #ddf293;
+  --color-brand-300: #c9ea63;
+  --color-brand-400: #aede48;
+  --color-brand-500: #95c92f;
+  --color-brand-600: #75a31f;
+  --color-brand-700: #587a1b;
+  --color-brand-800: #46601c;
+  --color-brand-900: #3b4f1c;
+  --color-brand-950: #1f2a0b;
+
+  /* Accent · sky (ramp only — bare `accent` stays the semantic hover token) */
+  --color-accent-50: #e8f5fe;
+  --color-accent-100: #cae9fd;
+  --color-accent-200: #98d6fb;
+  --color-accent-300: #5dbef6;
+  --color-accent-400: #2ba7ef;
+  --color-accent-500: #128fd6;
+  --color-accent-600: #0f72ab;
+  --color-accent-700: #135c89;
+  --color-accent-800: #154c71;
+  --color-accent-900: #143f5e;
+  --color-accent-950: #0b273e;
+
+  /* Ink · neutrals */
+  --color-ink-50: #f6f7f8;
+  --color-ink-100: #e7e9ec;
+  --color-ink-200: #c9cdd2;
+  --color-ink-300: #a4aab2;
+  --color-ink-400: #7f858e;
+  --color-ink-500: #5d636c;
+  --color-ink-600: #454a53;
+  --color-ink-700: #343943;
+  --color-ink-800: #252932;
+  --color-ink-900: #1b1e24;
+  --color-ink-950: #15171c;
+
+  /* Status ramps */
+  --color-success-50: #e7f9f0;
+  --color-success-100: #c2efd9;
+  --color-success-200: #8fe0b7;
+  --color-success-300: #54cd92;
+  --color-success-400: #2cb675;
+  --color-success-500: #169a5e;
+  --color-success-600: #117c4d;
+  --color-success-700: #11623f;
+  --color-success-800: #114f34;
+  --color-success-900: #0c3f2a;
+  --color-success-950: #04210f;
+
+  --color-warning-50: #fdf6e7;
+  --color-warning-100: #f8e7be;
+  --color-warning-200: #f1d083;
+  --color-warning-300: #e9b647;
+  --color-warning-400: #dd9e1d;
+  --color-warning-500: #bd7f0b;
+  --color-warning-600: #956309;
+  --color-warning-700: #744d0d;
+  --color-warning-800: #5f4010;
+  --color-warning-900: #503611;
+  --color-warning-950: #2c1c04;
+
+  --color-danger-50: #fdeeec;
+  --color-danger-100: #fad0cb;
+  --color-danger-200: #f5a59d;
+  --color-danger-300: #ee746a;
+  --color-danger-400: #e44e40;
+  --color-danger-500: #cb3526;
+  --color-danger-600: #a3261a;
+  --color-danger-700: #801f16;
+  --color-danger-800: #691c18;
+  --color-danger-900: #58110d;
+  --color-danger-950: #2f0705;
+
+  --color-info-50: #e8f5fe;
+  --color-info-100: #cae9fd;
+  --color-info-200: #98d6fb;
+  --color-info-300: #5dbef6;
+  --color-info-400: #2ba7ef;
+  --color-info-500: #128fd6;
+  --color-info-600: #0f72ab;
+  --color-info-700: #135c89;
+  --color-info-800: #154c71;
+  --color-info-900: #143f5e;
+  --color-info-950: #0b273e;
+
+  /* Iris · midfield violet */
+  --color-iris-50: #efecfd;
+  --color-iris-100: #d9d0fb;
+  --color-iris-200: #b8a8f6;
+  --color-iris-300: #9579ef;
+  --color-iris-400: #7a53e6;
+  --color-iris-500: #6437d4;
+  --color-iris-600: #542bb0;
+  --color-iris-700: #46258c;
+  --color-iris-800: #3a2172;
+  --color-iris-900: #2f1c5c;
+  --color-iris-950: #1c0f3a;
+
+  /* Flame · keeper orange */
+  --color-flame-50: #fef0ea;
+  --color-flame-100: #fcd6c5;
+  --color-flame-200: #f9b49b;
+  --color-flame-300: #f48a64;
+  --color-flame-400: #ec6536;
+  --color-flame-500: #d84818;
+  --color-flame-600: #b23811;
+  --color-flame-700: #8e2e12;
+  --color-flame-800: #732815;
+  --color-flame-900: #5f2315;
+  --color-flame-950: #330f07;
+
+  /* Radii — design-system shapes */
+  --radius-field: 0.625rem; /* inputs */
+  --radius-btn: 0.625rem; /* buttons, nav items */
+  --radius-card: 0.875rem; /* cards, panels, bubbles */
+  --radius-pill: 9999px; /* pills, badges */
+
+  /* Elevation — tuned for the dark surface */
+  --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.35);
+  --shadow-card: 0 1px 2px 0 rgb(0 0 0 / 0.4), 0 4px 16px -6px rgb(0 0 0 / 0.35);
+  --shadow-pop: 0 4px 12px -2px rgb(0 0 0 / 0.5), 0 12px 32px -8px rgb(0 0 0 / 0.45);
+  --shadow-float: 0 8px 24px -4px rgb(0 0 0 / 0.55), 0 24px 56px -12px rgb(0 0 0 / 0.5);
+}
+
 @theme inline {
-  --font-sans: var(--font-noto-sans-georgian), ui-sans-serif, system-ui, sans-serif;
-  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  --font-sans: var(--font-noto-sans-georgian), 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-noto-sans-georgian), 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-noto-sans-georgian), ui-monospace, SFMono-Regular, Menlo, monospace;
 
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -44,76 +175,43 @@
   --radius-xl: 0.875rem;
 }
 
-:root {
-  /* Brand: Sport Visa — pitch green (#16a34a / oklch 0.527 0.154 148) */
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.527 0.154 148);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.962 0.044 157);
-  --secondary-foreground: oklch(0.393 0.095 153);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.962 0.044 157);
-  --accent-foreground: oklch(0.393 0.095 153);
-  --destructive: oklch(0.577 0.245 27.325);
-  --destructive-foreground: oklch(0.985 0 0);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.527 0.154 148);
+/* Single instrument-dark theme — the product ships dark-only.
+   `.dark` inherits the same values so existing dark: variants stay inert. */
+:root,
+.dark {
+  --background: #15171c; /* ink-950 */
+  --foreground: #f6f7f8; /* ink-50 */
+  --card: #1b1e24; /* ink-900 */
+  --card-foreground: #e7e9ec; /* ink-100 */
+  --popover: #1b1e24;
+  --popover-foreground: #e7e9ec;
+  --primary: #aede48; /* brand-400 */
+  --primary-foreground: #15171c; /* ink-950 */
+  --secondary: #252932; /* ink-800 */
+  --secondary-foreground: #e7e9ec;
+  --muted: #252932;
+  --muted-foreground: #7f858e; /* ink-400 */
+  --accent: #252932; /* hover surface */
+  --accent-foreground: #f6f7f8;
+  --destructive: #cb3526; /* danger-500 */
+  --destructive-foreground: #ffffff;
+  --border: #252932; /* ink-800 */
+  --input: #343943; /* ink-700 */
+  --ring: #aede48;
   --radius: 0.625rem;
   /* Semantic */
-  --success: oklch(0.527 0.154 148);
-  --success-foreground: oklch(0.985 0 0);
-  --warning: oklch(0.75 0.16 70);
-  --warning-foreground: oklch(0.145 0 0);
-  --info: oklch(0.54 0.14 250);
-  --info-foreground: oklch(0.985 0 0);
-  /* Chart — brand-harmonious palette for data visualisation */
-  --chart-1: oklch(0.527 0.154 148);
-  --chart-2: oklch(0.54 0.14 250);
-  --chart-3: oklch(0.75 0.16 70);
-  --chart-4: oklch(0.55 0.13 290);
-  --chart-5: oklch(0.55 0.12 185);
-}
-
-.dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.723 0.219 149);
-  --primary-foreground: oklch(0.145 0 0);
-  --secondary: oklch(0.254 0.044 153);
-  --secondary-foreground: oklch(0.962 0.044 157);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.254 0.044 153);
-  --accent-foreground: oklch(0.962 0.044 157);
-  --destructive: oklch(0.704 0.191 22.216);
-  --destructive-foreground: oklch(0.985 0 0);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.723 0.219 149);
-  /* Semantic dark variants */
-  --success: oklch(0.723 0.219 149);
-  --success-foreground: oklch(0.145 0 0);
-  --warning: oklch(0.82 0.16 70);
-  --warning-foreground: oklch(0.145 0 0);
-  --info: oklch(0.65 0.15 250);
-  --info-foreground: oklch(0.985 0 0);
-  /* Chart — brighter on dark backgrounds */
-  --chart-1: oklch(0.723 0.219 149);
-  --chart-2: oklch(0.65 0.15 250);
-  --chart-3: oklch(0.82 0.16 70);
-  --chart-4: oklch(0.68 0.14 290);
-  --chart-5: oklch(0.68 0.13 185);
+  --success: #2cb675; /* success-400 */
+  --success-foreground: #04210f;
+  --warning: #dd9e1d; /* warning-400 */
+  --warning-foreground: #2c1c04;
+  --info: #2ba7ef; /* accent-400 */
+  --info-foreground: #0b273e;
+  /* Chart — position-family palette */
+  --chart-1: #aede48; /* brand */
+  --chart-2: #2ba7ef; /* sky */
+  --chart-3: #7a53e6; /* iris */
+  --chart-4: #ec6536; /* flame */
+  --chart-5: #2cb675; /* success */
 }
 
 @layer base {

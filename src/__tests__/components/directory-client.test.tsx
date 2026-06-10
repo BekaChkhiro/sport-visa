@@ -76,7 +76,9 @@ function renderDirectory(
 describe('DirectoryClient — rendering', () => {
   it('renders total result count', () => {
     renderDirectory([makeFootballer()]);
-    expect(screen.getByText(/1 შედეგი/)).toBeDefined();
+    // The count digit lives in its own <span>, so match on the parent's full text.
+    const counter = screen.getByText(/ფეხბურთელი მოიძებნა/);
+    expect(counter.textContent?.replace(/\s+/g, ' ')).toContain('1 ფეხბურთელი მოიძებნა');
   });
 
   it('renders footballer names in grid view', () => {

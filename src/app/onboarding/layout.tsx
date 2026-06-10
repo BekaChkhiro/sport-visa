@@ -35,8 +35,11 @@ export default async function OnboardingLayout({ children }: { children: React.R
   }
 
   return (
-    <div className="min-h-[calc(100vh-9rem)] py-8 px-4">
-      <div className="max-w-2xl mx-auto">{children}</div>
+    <div className="relative min-h-screen bg-ink-950 text-ink-200">
+      {/* Ambient glows */}
+      <div className="pointer-events-none absolute -left-40 -top-32 h-[420px] w-[420px] rounded-full bg-brand-400/8 blur-[130px]" />
+      <div className="pointer-events-none absolute right-0 top-40 h-[360px] w-[360px] rounded-full bg-iris-400/6 blur-[130px]" />
+      {children}
     </div>
   );
 }

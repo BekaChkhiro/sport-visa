@@ -35,6 +35,24 @@ const BADGE_OFFSET: Record<ProfileAvatarSize, string> = {
   xl: '-bottom-1 -right-1',
 };
 
+/**
+ * Picks a gradient family from the name hash so each person gets a consistent
+ * fallback colour across sessions.
+ */
+function gradientForName(name: string): string {
+  const families = [
+    'from-brand-400 to-brand-600',
+    'from-accent-400 to-accent-600',
+    'from-iris-400 to-iris-600',
+    'from-flame-400 to-flame-600',
+  ];
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) {
+    hash = (hash * 31 + name.charCodeAt(i)) >>> 0;
+  }
+  return families[hash % families.length]!;
+}
+
 function ProfileAvatar({
   src,
   fallback,
@@ -47,13 +65,14 @@ function ProfileAvatar({
   rounded = 'full',
 }: ProfileAvatarProps) {
   const roundedClass = rounded === 'full' ? 'rounded-full' : 'rounded-md';
+  const gradient = gradientForName(fallback);
 
   return (
     <div data-slot="profile-avatar" className={cn('relative inline-block', className)}>
-      <Avatar className={cn(SIZE_CLASS[size], roundedClass, 'shadow-sm')}>
+      <Avatar className={cn(SIZE_CLASS[size], roundedClass, 'ring-2 ring-ink-900 shadow-xs')}>
         {src ? <AvatarImage src={src} alt={alt ?? fallback} className={roundedClass} /> : null}
         <AvatarFallback
-          className={cn('bg-muted text-muted-foreground font-semibold', roundedClass)}
+          className={cn('bg-gradient-to-br font-bold text-ink-950', gradient, roundedClass)}
         >
           {fallback}
         </AvatarFallback>
@@ -62,7 +81,7 @@ function ProfileAvatar({
       {verificationStatus ? (
         <span
           className={cn(
-            'absolute inline-flex items-center justify-center rounded-full bg-background p-0.5 shadow-sm',
+            'absolute inline-flex items-center justify-center rounded-full bg-ink-900 p-0.5',
             BADGE_OFFSET[size],
           )}
         >
@@ -80,7 +99,7 @@ function ProfileAvatar({
           onClick={onEdit}
           aria-label="ფოტო შეცვლა"
           className={cn(
-            'absolute inset-0 flex items-center justify-center bg-black/40 text-white opacity-0 transition-opacity hover:opacity-100 focus-visible:opacity-100 outline-none focus-visible:ring-2 focus-visible:ring-ring',
+            'absolute inset-0 flex items-center justify-center bg-black/40 text-white opacity-0 transition-opacity hover:opacity-100 focus-visible:opacity-100 outline-none focus-visible:ring-2 focus-visible:ring-brand-400',
             roundedClass,
           )}
         >

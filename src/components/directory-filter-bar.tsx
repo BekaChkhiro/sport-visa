@@ -47,6 +47,12 @@ const EXPERIENCE_LABELS: Record<Experience, string> = {
   amateur: 'სამოყვ.',
 };
 
+function SectionLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-ink-500">{children}</p>
+  );
+}
+
 function FilterPanelBody({
   filters,
   onFiltersChange,
@@ -102,9 +108,7 @@ function FilterPanelBody({
   return (
     <div className="flex flex-col gap-6">
       <section>
-        <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
-          POSITION
-        </p>
+        <SectionLabel>POSITION</SectionLabel>
         <div className="mt-2 grid grid-cols-4 gap-2">
           {VALID_POSITIONS.map((position) => (
             <PositionChip
@@ -118,7 +122,7 @@ function FilterPanelBody({
       </section>
 
       <section className="flex flex-col gap-3">
-        <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground">AGE</p>
+        <SectionLabel>AGE</SectionLabel>
         <div className="grid grid-cols-2 gap-2">
           <NumberInput
             min={AGE_BOUNDS.min}
@@ -145,9 +149,7 @@ function FilterPanelBody({
       </section>
 
       <section className="flex flex-col gap-3">
-        <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
-          HEIGHT (სმ)
-        </p>
+        <SectionLabel>HEIGHT (სმ)</SectionLabel>
         <div className="grid grid-cols-2 gap-2">
           <NumberInput
             min={HEIGHT_BOUNDS.min}
@@ -176,9 +178,7 @@ function FilterPanelBody({
       </section>
 
       <section className="flex flex-col gap-3">
-        <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
-          WEIGHT (კგ)
-        </p>
+        <SectionLabel>WEIGHT (კგ)</SectionLabel>
         <div className="grid grid-cols-2 gap-2">
           <NumberInput
             min={WEIGHT_BOUNDS.min}
@@ -207,9 +207,7 @@ function FilterPanelBody({
       </section>
 
       <section className="flex flex-col gap-2">
-        <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
-          DOMINANT FOOT
-        </p>
+        <SectionLabel>DOMINANT FOOT</SectionLabel>
         <RadioGroup
           value={filters.foot ?? 'all'}
           onValueChange={(value: string) =>
@@ -227,7 +225,7 @@ function FilterPanelBody({
           ).map(([value, label]) => (
             <div key={value} className="flex items-center gap-2">
               <RadioGroupItem id={`foot-${value}`} value={value} />
-              <Label htmlFor={`foot-${value}`} className="font-normal">
+              <Label htmlFor={`foot-${value}`} className="font-normal text-ink-300">
                 {label}
               </Label>
             </div>
@@ -237,9 +235,7 @@ function FilterPanelBody({
 
       {nationalityOptions ? (
         <section className="flex flex-col gap-2">
-          <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
-            NATIONALITY
-          </p>
+          <SectionLabel>NATIONALITY</SectionLabel>
           <ComboboxField
             options={nationalityOptions}
             value={filters.nationality ?? null}
@@ -251,9 +247,7 @@ function FilterPanelBody({
 
       {cityOptions ? (
         <section className="flex flex-col gap-2">
-          <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
-            CITY
-          </p>
+          <SectionLabel>CITY</SectionLabel>
           <ComboboxField
             options={cityOptions}
             value={filters.city ?? null}
@@ -264,9 +258,7 @@ function FilterPanelBody({
       ) : null}
 
       <section className="flex flex-col gap-2">
-        <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
-          EXPERIENCE
-        </p>
+        <SectionLabel>EXPERIENCE</SectionLabel>
         <div className="flex flex-col gap-2 text-sm">
           {(Object.keys(EXPERIENCE_LABELS) as Experience[]).map((value) => (
             <div key={value} className="flex items-center gap-2">
@@ -275,7 +267,7 @@ function FilterPanelBody({
                 checked={filters.experience?.includes(value) ?? false}
                 onCheckedChange={() => toggleExperience(value)}
               />
-              <Label htmlFor={`exp-${value}`} className="font-normal">
+              <Label htmlFor={`exp-${value}`} className="font-normal text-ink-300">
                 {EXPERIENCE_LABELS[value]}
               </Label>
             </div>
@@ -326,17 +318,22 @@ function DirectoryFilterBar({
         className={cn('hidden w-[320px] shrink-0 lg:flex lg:flex-col lg:gap-4', className)}
       >
         <div className="flex flex-1 flex-col gap-6 overflow-y-auto pr-2">{body}</div>
-        <div className="sticky bottom-0 border-t border-border bg-background pt-3">{footer}</div>
+        <div className="sticky bottom-0 border-t border-ink-800 bg-ink-950 pt-3">{footer}</div>
       </aside>
 
       <Sheet open={isOpen ?? false} onOpenChange={(open) => onOpenChange?.(open)}>
-        <SheetContent side="bottom" className="lg:hidden max-h-[90vh] overflow-y-auto">
+        <SheetContent
+          side="bottom"
+          className="border-ink-800 bg-ink-900 lg:hidden max-h-[90vh] overflow-y-auto"
+        >
           <SheetHeader>
-            <SheetTitle>ფილტრები</SheetTitle>
-            <SheetDescription>დახვეწეთ შედეგები პოზიციით, ასაკით და სხვა.</SheetDescription>
+            <SheetTitle className="text-ink-50">ფილტრები</SheetTitle>
+            <SheetDescription className="text-ink-400">
+              დახვეწეთ შედეგები პოზიციით, ასაკით და სხვა.
+            </SheetDescription>
           </SheetHeader>
           <div className="px-4 pb-4">{body}</div>
-          <SheetFooter className="border-t border-border">{footer}</SheetFooter>
+          <SheetFooter className="border-t border-ink-800">{footer}</SheetFooter>
         </SheetContent>
       </Sheet>
     </>

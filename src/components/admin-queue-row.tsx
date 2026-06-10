@@ -74,26 +74,31 @@ function AdminQueueRow({
     <tr
       data-slot="admin-queue-row"
       data-user-id={userId}
-      className={cn('border-b border-border', className)}
+      className={cn(
+        'border-b border-ink-800 bg-ink-900 transition-colors hover:bg-ink-800/50',
+        className,
+      )}
     >
       <td className="px-4 py-3">
         <div className="flex items-center gap-3 min-w-0">
           <Avatar className="size-8 shrink-0">
             {photoUrl ? <AvatarImage src={photoUrl} alt={name} /> : null}
-            <AvatarFallback className="bg-muted text-xs font-semibold text-muted-foreground">
+            <AvatarFallback className="bg-ink-800 text-xs font-semibold text-ink-300">
               {initials(name)}
             </AvatarFallback>
           </Avatar>
-          <span className="truncate text-sm font-medium">{name}</span>
+          <span className="truncate text-sm font-medium text-ink-100">{name}</span>
         </div>
       </td>
       <td className="px-4 py-3">
-        <Badge variant="secondary" className="capitalize">
+        <Badge variant="secondary" className="capitalize bg-ink-800 text-ink-300 border-ink-700">
           {role === 'footballer' ? 'მოთამაშე' : 'კლუბი'}
         </Badge>
       </td>
-      <td className="px-4 py-3 text-xs text-muted-foreground">
-        <time dateTime={submittedAt.toISOString()}>{formatDate(submittedAt)}</time>
+      <td className="px-4 py-3">
+        <time dateTime={submittedAt.toISOString()} className="font-mono text-xs text-ink-500">
+          {formatDate(submittedAt)}
+        </time>
       </td>
       <td className="px-4 py-3">
         {cvUrl ? (
@@ -101,13 +106,13 @@ function AdminQueueRow({
             href={cvUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1 text-sm text-primary underline-offset-4 hover:underline"
+            className="inline-flex items-center gap-1 text-sm text-brand-400 underline-offset-4 hover:underline"
           >
             <FileTextIcon className="size-4" />
             CV
           </a>
         ) : (
-          <span className="text-xs text-muted-foreground">—</span>
+          <span className="font-mono text-xs text-ink-500">—</span>
         )}
       </td>
       <td className="px-4 py-3">
@@ -124,15 +129,17 @@ function AdminQueueRow({
             >
               უარყ.
             </Button>
-            <DialogContent>
+            <DialogContent className="border-ink-800 bg-ink-900">
               <DialogHeader>
-                <DialogTitle>უარყოფის მიზეზი</DialogTitle>
-                <DialogDescription>
+                <DialogTitle className="text-ink-50">უარყოფის მიზეზი</DialogTitle>
+                <DialogDescription className="text-ink-400">
                   მიუთითეთ მოკლე ახსნა — ის გაიგზავნება მომხმარებელთან.
                 </DialogDescription>
               </DialogHeader>
               <div className="flex flex-col gap-2">
-                <Label htmlFor={`reject-reason-${userId}`}>მიზეზი</Label>
+                <Label htmlFor={`reject-reason-${userId}`} className="text-ink-200">
+                  მიზეზი
+                </Label>
                 <Textarea
                   id={`reject-reason-${userId}`}
                   value={reason}

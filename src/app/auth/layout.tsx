@@ -17,8 +17,11 @@ export default async function AuthLayout({ children }: { children: React.ReactNo
     redirect('/dashboard/footballer');
   }
   return (
-    <div className="flex min-h-[calc(100vh-9rem)] items-center justify-center px-4 py-12">
-      <div className="w-full max-w-md">{children}</div>
+    <div className="relative min-h-screen overflow-hidden bg-ink-950 text-ink-200">
+      {/* Ambient glow – decorative, pointer-events off */}
+      <div className="pointer-events-none absolute -left-40 -top-40 h-[420px] w-[420px] rounded-full bg-brand-400/10 blur-[120px]" />
+      <div className="pointer-events-none absolute -right-32 bottom-0 h-[360px] w-[360px] rounded-full bg-accent-400/5 blur-[120px]" />
+      {children}
     </div>
   );
 }

@@ -11,16 +11,19 @@ import { Button } from '@/components/ui/button';
 import { ProfileAvatar } from '@/components/profile-avatar';
 import {
   ArrowRightIcon,
-  CheckCircleIcon,
   AlertCircleIcon,
   CloseIcon,
   PlusIcon,
   MessageCircleIcon,
   StarIcon,
+  EyeIcon,
   EditIcon,
   DeleteIcon,
   HeartIcon,
   SpinnerIcon,
+  TrendingUpIcon,
+  SearchIcon,
+  ShieldIcon,
 } from '@/components/icons';
 import { deleteClubPost } from '@/lib/club-profile/actions';
 import type { AppSidebarStats } from '@/components/app-sidebar';
@@ -74,6 +77,67 @@ type ClubDashboardClientProps = {
   recentChats: DashboardChat[];
 };
 
+/** Section label matching the artboard */
+function SectionLabel({
+  children,
+  action,
+  id,
+}: {
+  children: React.ReactNode;
+  action?: React.ReactNode;
+  id?: string;
+}) {
+  return (
+    <div className="mb-4 flex items-end justify-between">
+      <h2 id={id} className="text-[10px] font-bold uppercase tracking-[0.16em] text-ink-500">
+        {children}
+      </h2>
+      {action}
+    </div>
+  );
+}
+
+/** KPI card — icon square + mono value + delta pill + label */
+function KpiCard({
+  icon: Icon,
+  value,
+  delta,
+  label,
+  primary = false,
+}: {
+  icon: React.ComponentType<{ className?: string }>;
+  value: string | number;
+  delta?: string;
+  label: string;
+  primary?: boolean;
+}) {
+  return (
+    <div className="rounded-card border border-ink-800 bg-ink-900 p-4 shadow-card transition-colors hover:border-ink-700">
+      <div className="flex items-start justify-between">
+        <span
+          className={`flex h-9 w-9 items-center justify-center rounded-[10px] ${
+            primary ? 'bg-brand-400/15 text-brand-300' : 'bg-ink-800 text-ink-400'
+          }`}
+          aria-hidden="true"
+        >
+          <Icon className="size-[17px]" />
+        </span>
+        {delta ? (
+          <span className="inline-flex items-center gap-1 rounded-pill bg-success-400/10 px-1.5 py-0.5 text-[10.5px] font-semibold text-success-300">
+            <TrendingUpIcon className="size-[11px]" aria-hidden="true" />
+            {delta}
+          </span>
+        ) : null}
+      </div>
+      <p className="mt-3 font-mono text-[28px] font-bold leading-none tracking-tight text-ink-50 tabular-nums">
+        {value}
+      </p>
+      <p className="mt-1.5 text-[12.5px] text-ink-400">{label}</p>
+    </div>
+  );
+}
+
+/** Verification/status banner */
 function VerificationBanner({
   status,
   onDismiss,
@@ -90,24 +154,36 @@ function VerificationBanner({
     <div
       role="status"
       className={cn(
-        'relative flex items-start gap-3 rounded-lg border p-4',
+        'relative mb-6 flex items-center gap-4 overflow-hidden rounded-card border p-4 shadow-card',
         isVerified
-          ? 'border-green-200 bg-green-50 text-green-900 dark:border-green-900 dark:bg-green-950 dark:text-green-100'
-          : 'border-yellow-200 bg-yellow-50 text-yellow-900 dark:border-yellow-900 dark:bg-yellow-950 dark:text-yellow-100',
+          ? 'border-success-400/25 bg-gradient-to-br from-success-400/10 via-ink-900 to-ink-900'
+          : 'border-warning-400/25 bg-gradient-to-br from-warning-400/10 via-ink-900 to-ink-900',
       )}
     >
-      {isVerified ? (
-        <CheckCircleIcon className="mt-0.5 size-4 shrink-0" />
-      ) : (
-        <AlertCircleIcon className="mt-0.5 size-4 shrink-0" />
-      )}
-      <div className="flex-1 text-sm">
+      <span
+        className={cn(
+          'flex h-10 w-10 shrink-0 items-center justify-center rounded-[12px]',
+          isVerified ? 'bg-success-400/15 text-success-300' : 'bg-warning-400/15 text-warning-300',
+        )}
+      >
         {isVerified ? (
-          <p className="font-medium">კლუბი დადასტურებულია</p>
+          <ShieldIcon className="size-[22px]" aria-hidden="true" />
+        ) : (
+          <AlertCircleIcon className="size-[22px]" aria-hidden="true" />
+        )}
+      </span>
+      <div className="min-w-0 flex-1">
+        {isVerified ? (
+          <>
+            <p className="text-[14px] font-semibold text-ink-50">კლუბი დადასტურებულია</p>
+            <p className="text-[12.5px] text-ink-400">
+              სრული წვდომა ფეხბურთელთა დირექტორიასა და ჩატზე.
+            </p>
+          </>
         ) : (
           <>
-            <p className="font-medium">ვერიფიკაცია განიხილება</p>
-            <p className="mt-0.5 opacity-80">
+            <p className="text-[14px] font-semibold text-ink-50">ვერიფიკაცია განიხილება</p>
+            <p className="text-[12.5px] text-ink-400">
               ჩვენი გუნდი შეამოწმებს თქვენს პროფილს 24–48 სთ-ის განმავლობაში.
             </p>
           </>
@@ -117,63 +193,133 @@ function VerificationBanner({
         type="button"
         onClick={onDismiss}
         aria-label="დახურვა"
-        className="inline-flex size-6 shrink-0 items-center justify-center rounded outline-none hover:opacity-70 focus-visible:ring-2 focus-visible:ring-ring"
+        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-ink-500 transition-colors hover:bg-ink-800 hover:text-ink-200 outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
       >
-        <CloseIcon className="size-3.5" />
+        <CloseIcon className="size-[16px]" />
       </button>
     </div>
   );
 }
 
+/** Position chip */
+const POS_TONE: Record<string, string> = {
+  GK: 'bg-flame-400/15 text-flame-300',
+  CB: 'bg-accent-400/15 text-accent-300',
+  CM: 'bg-iris-400/15 text-iris-300',
+  ST: 'bg-brand-400/15 text-brand-300',
+  LB: 'bg-accent-400/15 text-accent-300',
+  RB: 'bg-accent-400/15 text-accent-300',
+  LW: 'bg-flame-400/15 text-flame-300',
+  RW: 'bg-flame-400/15 text-flame-300',
+  CAM: 'bg-iris-400/15 text-iris-300',
+  CDM: 'bg-iris-400/15 text-iris-300',
+};
+
+function PositionBadge({ pos }: { pos: string }) {
+  return (
+    <span
+      className={cn(
+        'rounded-pill px-2 py-0.5 text-[10.5px] font-bold',
+        POS_TONE[pos] ?? 'bg-ink-800 text-ink-400',
+      )}
+    >
+      {pos}
+    </span>
+  );
+}
+
+/** Shortlist footballer card */
 function ShortlistCard({ footballer }: { footballer: ShortlistedFootballer }) {
   const name = `${footballer.firstName} ${footballer.lastName}`.trim();
   const initials = [footballer.firstName[0], footballer.lastName[0]]
     .filter(Boolean)
     .join('')
     .toUpperCase();
-  const meta = [footballer.positions[0], footballer.nationality].filter(Boolean).join(' · ');
 
   return (
-    <div className="flex items-center gap-3 rounded-xl border border-border bg-card px-4 py-3">
-      <ProfileAvatar src={footballer.avatarUrl} fallback={initials} size="sm" />
+    <article className="group flex flex-wrap items-center gap-4 rounded-card border border-ink-800 bg-ink-900 p-4 shadow-card transition-colors hover:border-ink-700">
+      <div className="relative">
+        <ProfileAvatar src={footballer.avatarUrl} fallback={initials} size="md" />
+      </div>
       <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-medium">{name}</p>
-        {meta ? <p className="truncate text-xs text-muted-foreground">{meta}</p> : null}
+        <div className="flex items-center gap-2">
+          <p className="truncate text-[15px] font-semibold text-ink-50">{name}</p>
+          {footballer.positions[0] ? <PositionBadge pos={footballer.positions[0]} /> : null}
+        </div>
+        <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[12px] text-ink-400">
+          {footballer.height ? (
+            <span className="inline-flex items-center gap-1">
+              <svg
+                width="13"
+                height="13"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                className="text-ink-500"
+                aria-hidden="true"
+              >
+                <path d="M3 8h18v8H3zM7 8v3M11 8v4M15 8v3M19 8v4" />
+              </svg>
+              {footballer.height} სმ
+            </span>
+          ) : null}
+          {footballer.nationality ? <span>{footballer.nationality}</span> : null}
+        </div>
+        <p className="mt-1.5 inline-flex items-center gap-1.5 text-[11.5px] text-brand-300">
+          <StarIcon className="size-3" aria-hidden="true" />
+          შორთლისთში დამატებული
+        </p>
       </div>
       <div className="flex shrink-0 gap-2">
         <Button variant="outline" size="sm" asChild>
-          <Link href={`/directory/${footballer.id}`}>პროფილი</Link>
+          <Link href={`/directory/${footballer.id}`}>
+            <EyeIcon className="size-[15px]" />
+            პროფილი
+          </Link>
         </Button>
-        <Button variant="ghost" size="sm" asChild>
+        <Button variant="default" size="sm" asChild>
           <Link href="/chats">
-            <MessageCircleIcon className="size-4" />
+            <MessageCircleIcon className="size-[15px]" />
+            ჩატი
           </Link>
         </Button>
       </div>
-    </div>
+    </article>
   );
 }
 
-function ChatCard({ chat }: { chat: DashboardChat }) {
+/** Active chat row */
+function ChatRow({ chat }: { chat: DashboardChat }) {
+  const date = new Date(chat.lastMessageAt).toLocaleDateString('ka-GE', {
+    day: 'numeric',
+    month: 'short',
+  });
+
   return (
     <Link
       href={`/chat/${chat.id}`}
-      className="flex items-center gap-3 rounded-xl border border-border bg-card px-4 py-3 transition-colors hover:bg-muted/50"
+      className="flex w-full items-start gap-3 px-4 py-3.5 text-left transition-colors hover:bg-ink-800/40 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand-400 outline-none"
     >
-      <ProfileAvatar src={chat.otherAvatarUrl} fallback={chat.otherInitials} size="sm" />
+      <div className="relative shrink-0">
+        <ProfileAvatar src={chat.otherAvatarUrl} fallback={chat.otherInitials} size="sm" />
+      </div>
       <div className="min-w-0 flex-1">
         <div className="flex items-center justify-between gap-2">
-          <p className="truncate text-sm font-medium">{chat.otherName}</p>
-          <span className="shrink-0 text-xs text-muted-foreground">
-            {new Date(chat.lastMessageAt).toLocaleDateString('ka-GE')}
-          </span>
+          <p className="truncate text-[13.5px] font-semibold text-ink-50">{chat.otherName}</p>
+          <span className="shrink-0 text-[11px] text-ink-500">{date}</span>
         </div>
-        <p className="truncate text-xs text-muted-foreground">
+        <p
+          className={cn(
+            'mt-0.5 truncate text-[12.5px]',
+            chat.unreadCount > 0 ? 'font-medium text-ink-200' : 'text-ink-400',
+          )}
+        >
           {chat.lastMessageBody ?? 'საუბარი დაიწყო'}
         </p>
       </div>
       {chat.unreadCount > 0 ? (
-        <span className="inline-flex min-w-5 shrink-0 items-center justify-center rounded-full bg-primary px-1.5 text-[10px] font-semibold text-primary-foreground">
+        <span className="mt-1 flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-brand-400 px-1 text-[10.5px] font-bold text-ink-950">
           {chat.unreadCount > 99 ? '99+' : chat.unreadCount}
         </span>
       ) : null}
@@ -181,6 +327,7 @@ function ChatCard({ chat }: { chat: DashboardChat }) {
   );
 }
 
+/** Posts management list with optimistic delete */
 function PostsList({ posts }: { posts: DashboardPost[] }) {
   const [deletingId, setDeletingId] = React.useState<string | null>(null);
   const [localPosts, setLocalPosts] = React.useState(posts);
@@ -198,7 +345,7 @@ function PostsList({ posts }: { posts: DashboardPost[] }) {
 
   if (localPosts.length === 0) {
     return (
-      <div className="rounded-xl border border-border bg-card">
+      <div className="overflow-hidden rounded-card border border-ink-800 bg-ink-900 shadow-card">
         <EmptyState
           title="სიახლეები არ არის"
           description="გამოაქვეყნე სიახლე, რომ ფეხბურთელები ინფორმირებული იყვნენ."
@@ -216,43 +363,77 @@ function PostsList({ posts }: { posts: DashboardPost[] }) {
   }
 
   return (
-    <div className="flex flex-col divide-y divide-border overflow-hidden rounded-xl border border-border bg-card">
-      {localPosts.map((post) => (
-        <div key={post.id} className="flex items-center gap-3 px-4 py-3">
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-medium">{post.title}</p>
-            <div className="mt-0.5 flex items-center gap-2 text-xs text-muted-foreground">
-              <span className="flex items-center gap-0.5">
-                <HeartIcon className="size-3" aria-hidden="true" />
-                {post.likeCount}
-              </span>
-              <span>·</span>
-              <span>{new Date(post.createdAt).toLocaleDateString('ka-GE')}</span>
+    <div className="overflow-hidden rounded-card border border-ink-800 bg-ink-900 shadow-card">
+      <div className="divide-y divide-ink-800">
+        {localPosts.map((post) => (
+          <div
+            key={post.id}
+            className="group flex items-center gap-3 px-4 py-3.5 transition-colors hover:bg-ink-800/40"
+          >
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] bg-brand-400/15 text-brand-300">
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
+                <rect x="3" y="3" width="18" height="18" rx="2" />
+                <circle cx="8.5" cy="8.5" r="1.5" />
+                <path d="m21 15-5-5L5 21" />
+              </svg>
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-[13.5px] font-medium text-ink-100">{post.title}</p>
+              <div className="mt-0.5 flex items-center gap-3 text-[11.5px] text-ink-500">
+                <span className="inline-flex items-center gap-1">
+                  <HeartIcon className="size-3" aria-hidden="true" />
+                  {post.likeCount} მოწონება
+                </span>
+                <span>
+                  ·{' '}
+                  {new Intl.DateTimeFormat('ka', {
+                    day: '2-digit',
+                    month: 'short',
+                  }).format(new Date(post.createdAt))}
+                </span>
+              </div>
+            </div>
+            <div className="flex shrink-0 items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
+              <Button variant="ghost" size="sm" asChild aria-label="რედ.">
+                <Link href={`/posts/${post.id}/edit`}>
+                  <EditIcon className="size-3.5" />
+                </Link>
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => handleDelete(post.id)}
+                disabled={deletingId === post.id}
+                aria-label="წაშ."
+                className="text-danger-300 hover:text-danger-300 hover:bg-danger-400/10"
+              >
+                {deletingId === post.id ? (
+                  <SpinnerIcon className="size-3.5 animate-spin" />
+                ) : (
+                  <DeleteIcon className="size-3.5" />
+                )}
+              </Button>
             </div>
           </div>
-          <div className="flex shrink-0 gap-1">
-            <Button variant="ghost" size="sm" asChild>
-              <Link href={`/posts/${post.id}/edit`} aria-label="რედ.">
-                <EditIcon className="size-3.5" />
-              </Link>
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => handleDelete(post.id)}
-              disabled={deletingId === post.id}
-              aria-label="წაშ."
-              className="text-destructive hover:text-destructive"
-            >
-              {deletingId === post.id ? (
-                <SpinnerIcon className="size-3.5 animate-spin" />
-              ) : (
-                <DeleteIcon className="size-3.5" />
-              )}
-            </Button>
-          </div>
-        </div>
-      ))}
+        ))}
+      </div>
+      <Link
+        href="/posts/new"
+        className="flex w-full items-center justify-center gap-2 border-t border-ink-800 py-3 text-[13px] font-medium text-brand-400 transition-colors hover:bg-brand-400/5 focus-visible:ring-2 focus-visible:ring-brand-400 outline-none"
+      >
+        <PlusIcon className="size-4" />
+        ახალი პოსტის დამატება
+      </Link>
     </div>
   );
 }
@@ -275,6 +456,31 @@ export function ClubDashboardClient({
     router.push('/auth/signin');
   }
 
+  const kpiStats = [
+    {
+      icon: EyeIcon,
+      value: (stats.views ?? 0).toLocaleString('ka-GE'),
+      delta: '+18%',
+      label: 'პროფილის ნახვები',
+      primary: true,
+    },
+    {
+      icon: StarIcon,
+      value: String(stats.shortlistCount ?? 0),
+      delta:
+        (stats.shortlistCount ?? 0) > 0 ? `+${Math.min(stats.shortlistCount ?? 0, 5)}` : undefined,
+      label: 'შორთლისთში',
+      primary: false,
+    },
+    {
+      icon: MessageCircleIcon,
+      value: String(stats.unreadMessages ?? 0),
+      delta: (stats.unreadMessages ?? 0) > 0 ? 'ახალი' : undefined,
+      label: 'ახალი ჩატი',
+      primary: false,
+    },
+  ];
+
   return (
     <AppShell
       role="club"
@@ -285,125 +491,158 @@ export function ClubDashboardClient({
       sidebarStats={stats}
       onSignOut={handleSignOut}
     >
-      <div className="space-y-8">
-        {!bannerDismissed && user.verificationStatus ? (
-          <VerificationBanner
-            status={user.verificationStatus}
-            onDismiss={() => setBannerDismissed(true)}
-          />
-        ) : null}
+      {/* ── Greeting ── */}
+      <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <p className="text-[12.5px] text-ink-500">
+            {new Intl.DateTimeFormat('ka-GE', {
+              weekday: 'long',
+              day: 'numeric',
+              month: 'long',
+            }).format(new Date())}
+          </p>
+          <h1 className="mt-0.5 font-display text-[26px] font-bold tracking-tight text-ink-50">
+            სამუშაო პანელი
+          </h1>
+        </div>
+        <Button variant="outline" size="default" asChild>
+          <Link href="/directory">
+            <SearchIcon className="size-4" />
+            ფეხბურთელის ძიება
+          </Link>
+        </Button>
+      </div>
 
-        <section aria-labelledby="shortlist-heading">
-          <div className="mb-3 flex items-center justify-between">
-            <h2
+      {/* ── Verification banner ── */}
+      {!bannerDismissed && user.verificationStatus ? (
+        <VerificationBanner
+          status={user.verificationStatus}
+          onDismiss={() => setBannerDismissed(true)}
+        />
+      ) : null}
+
+      {/* ── KPI strip ── */}
+      <div className="mb-7 grid grid-cols-1 gap-4 sm:grid-cols-3">
+        {kpiStats.map((s) => (
+          <KpiCard key={s.label} {...s} />
+        ))}
+      </div>
+
+      {/* ── Two-column ── */}
+      <div className="grid gap-7 xl:grid-cols-[1fr_336px]">
+        {/* ──── Left: shortlist + posts ──── */}
+        <div className="space-y-8">
+          {/* Shortlist activity */}
+          <section aria-labelledby="shortlist-heading">
+            <SectionLabel
               id="shortlist-heading"
-              className="text-xs font-semibold uppercase tracking-widest text-muted-foreground"
+              action={
+                recentShortlist.length > 0 ? (
+                  <Link
+                    href="/shortlist"
+                    className="text-[12px] font-medium text-accent-300 transition-colors hover:text-accent-200 outline-none focus-visible:underline"
+                  >
+                    დირექტორია →
+                  </Link>
+                ) : undefined
+              }
             >
-              ბოლო შერჩეული ფეხბურთელები
-            </h2>
+              ბოლო შორთლისთის აქტივობა
+            </SectionLabel>
+
             {recentShortlist.length > 0 ? (
-              <Button variant="ghost" size="sm" asChild>
-                <Link href="/shortlist">
-                  ყველა
+              <>
+                <div className="space-y-3">
+                  {recentShortlist.map((f) => (
+                    <ShortlistCard key={f.id} footballer={f} />
+                  ))}
+                </div>
+                <Link
+                  href="/directory"
+                  className="mt-4 flex w-full items-center justify-center gap-2 rounded-card border border-dashed border-ink-700 py-3 text-[13px] font-medium text-ink-400 transition-colors hover:border-ink-600 hover:text-ink-100 focus-visible:ring-2 focus-visible:ring-brand-400 outline-none"
+                >
+                  დირექტორიის გახსნა
                   <ArrowRightIcon className="size-4" />
                 </Link>
-              </Button>
-            ) : null}
-          </div>
+              </>
+            ) : (
+              <div className="rounded-card border border-ink-800 bg-ink-900 shadow-card">
+                <EmptyState
+                  title="შერჩეული ფეხბ. არ არის"
+                  description="გამოიყენე Directory, რომ ფეხბურთელები შენ სიაში დაამატო."
+                  action={
+                    <Button variant="default" size="sm" asChild>
+                      <Link href="/directory">Directory-ს გახსნა</Link>
+                    </Button>
+                  }
+                />
+              </div>
+            )}
+          </section>
 
-          {recentShortlist.length > 0 ? (
-            <div className="flex flex-col gap-2">
-              {recentShortlist.map((f) => (
-                <ShortlistCard key={f.id} footballer={f} />
-              ))}
-              <Button variant="outline" size="sm" className="self-start" asChild>
-                <Link href="/directory">
-                  <StarIcon className="size-4" />
-                  Directory-ის გახსნა
-                  <ArrowRightIcon className="size-4" />
+          {/* News posts management */}
+          <section aria-labelledby="news-heading">
+            <SectionLabel
+              id="news-heading"
+              action={
+                <Link
+                  href="/posts/new"
+                  className="inline-flex items-center gap-1 text-[12px] font-medium text-brand-400 transition-colors hover:text-brand-300 outline-none focus-visible:underline"
+                >
+                  <PlusIcon className="size-3.5" />
+                  ახალი
                 </Link>
-              </Button>
-            </div>
-          ) : (
-            <div className="rounded-xl border border-border bg-card">
-              <EmptyState
-                title="შერჩეული ფეხბ. არ არის"
-                description="გამოიყენე Directory, რომ ფეხბურთელები შენ სიაში დაამატო."
-                action={
-                  <Button variant="default" size="sm" asChild>
-                    <Link href="/directory">Directory-ს გახსნა</Link>
-                  </Button>
-                }
-              />
-            </div>
-          )}
-        </section>
+              }
+            >
+              სიახლეების მართვა
+            </SectionLabel>
 
-        <section aria-labelledby="chats-heading">
-          <div className="mb-3 flex items-center justify-between">
-            <h2
+            <PostsList posts={recentPosts} />
+          </section>
+        </div>
+
+        {/* ──── Right: active chats ──── */}
+        <aside className="space-y-7">
+          <section aria-labelledby="chats-heading">
+            <SectionLabel
               id="chats-heading"
-              className="text-xs font-semibold uppercase tracking-widest text-muted-foreground"
+              action={
+                <Link
+                  href="/chats"
+                  className="text-[12px] font-medium text-accent-300 transition-colors hover:text-accent-200 outline-none focus-visible:underline"
+                >
+                  ყველა
+                </Link>
+              }
             >
               აქტიური ჩატები
-            </h2>
-            <Button variant="ghost" size="sm" asChild>
-              <Link href="/chats">
-                ყველა
-                <ArrowRightIcon className="size-4" />
-              </Link>
-            </Button>
-          </div>
-          {recentChats.length > 0 ? (
-            <div className="flex flex-col gap-2">
-              {recentChats.map((chat) => (
-                <ChatCard key={chat.id} chat={chat} />
-              ))}
-            </div>
-          ) : (
-            <div className="rounded-xl border border-border bg-card">
-              <EmptyState
-                title="ჩატები არ არის"
-                description="ფეხბურთელთან კომუნიკაციისთვის პირველი ჩატი გახსენი."
-              />
-            </div>
-          )}
-        </section>
+            </SectionLabel>
 
-        <section aria-labelledby="news-heading">
-          <div className="mb-3 flex items-center justify-between">
-            <h2
-              id="news-heading"
-              className="text-xs font-semibold uppercase tracking-widest text-muted-foreground"
-            >
-              სიახლეები
-            </h2>
-            <Button variant="outline" size="sm" asChild>
-              <Link href="/posts/new">
-                <PlusIcon className="size-4" />
-                ახ. პოსტი
-              </Link>
-            </Button>
-          </div>
-          {recentPosts.length > 0 ? (
-            <PostsList posts={recentPosts} />
-          ) : (
-            <div className="rounded-xl border border-border bg-card">
-              <EmptyState
-                title="სიახლეები არ არის"
-                description="გამოაქვეყნე სიახლე, რომ ფეხბურთელები ინფორმირებული იყვნენ."
-                action={
-                  <Button variant="default" size="sm" asChild>
-                    <Link href="/posts/new">
-                      <PlusIcon className="size-4" />
-                      სიახლის დამატება
-                    </Link>
-                  </Button>
-                }
-              />
-            </div>
-          )}
-        </section>
+            {recentChats.length > 0 ? (
+              <div className="overflow-hidden rounded-card border border-ink-800 bg-ink-900 shadow-card">
+                <div className="divide-y divide-ink-800">
+                  {recentChats.map((chat) => (
+                    <ChatRow key={chat.id} chat={chat} />
+                  ))}
+                </div>
+                <Link
+                  href="/chats"
+                  className="flex w-full items-center justify-center gap-2 border-t border-ink-800 py-3 text-[13px] font-medium text-ink-400 transition-colors hover:bg-ink-800/50 hover:text-ink-100 focus-visible:ring-2 focus-visible:ring-brand-400 outline-none"
+                >
+                  ყველა ჩატი
+                  <ArrowRightIcon className="size-[15px]" />
+                </Link>
+              </div>
+            ) : (
+              <div className="rounded-card border border-ink-800 bg-ink-900 shadow-card">
+                <EmptyState
+                  title="ჩატები არ არის"
+                  description="ფეხბურთელთან კომუნიკაციისთვის პირველი ჩატი გახსენი."
+                />
+              </div>
+            )}
+          </section>
+        </aside>
       </div>
     </AppShell>
   );

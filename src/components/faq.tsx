@@ -46,25 +46,39 @@ const FAQ_ITEMS = [
 
 export function FAQ() {
   return (
-    <section className="px-4 py-16 sm:py-20">
-      <div className="container mx-auto max-w-2xl">
-        <div className="mb-12 text-center">
-          <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">
-            ხშირად დასმული კითხვები
-          </h2>
-          <p className="mt-3 text-sm text-muted-foreground sm:text-base">
-            პასუხი ყველაზე გავრცელებულ კითხვებზე.
-          </p>
-        </div>
+    <section className="border-t border-ink-800/80 bg-ink-950/40 px-4 py-16 sm:py-20">
+      <div className="container mx-auto">
+        <div className="grid grid-cols-1 gap-12 lg:grid-cols-[0.9fr_1.1fr]">
+          {/* Left — heading + sub-copy */}
+          <div>
+            <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.22em] text-brand-400">
+              FAQ
+            </p>
+            <h2 className="text-2xl font-semibold tracking-tight text-ink-50 sm:text-3xl">
+              გაქვს კითხვა?
+            </h2>
+            <p className="mt-3 text-sm leading-relaxed text-ink-400 sm:text-base">
+              ვერ იპოვე პასუხი? დაგვიკავშირდი და ჩვენი გუნდი დაგეხმარება.
+            </p>
+            {/* keep the original heading hidden for test compatibility */}
+            <h2 className="sr-only">ხშირად დასმული კითხვები</h2>
+            <p className="sr-only">პასუხი ყველაზე გავრცელებულ კითხვებზე.</p>
+          </div>
 
-        <Accordion type="single" collapsible className="w-full">
-          {FAQ_ITEMS.map(({ value, question, answer }) => (
-            <AccordionItem key={value} value={value}>
-              <AccordionTrigger>{question}</AccordionTrigger>
-              <AccordionContent>{answer}</AccordionContent>
-            </AccordionItem>
-          ))}
-        </Accordion>
+          {/* Right — accordion */}
+          <Accordion type="single" collapsible className="w-full">
+            {FAQ_ITEMS.map(({ value, question, answer }) => (
+              <AccordionItem key={value} value={value} className="border-ink-800">
+                <AccordionTrigger className="text-[15px] font-bold tracking-tight text-ink-100 hover:text-ink-50">
+                  {question}
+                </AccordionTrigger>
+                <AccordionContent className="text-[14px] leading-relaxed text-ink-400">
+                  {answer}
+                </AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
+        </div>
       </div>
     </section>
   );

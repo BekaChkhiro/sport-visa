@@ -42,7 +42,7 @@ function NewsfeedCard({
     <article
       data-slot="newsfeed-card"
       className={cn(
-        'flex flex-col gap-3 rounded-xl border border-border bg-card p-4 text-card-foreground shadow-sm',
+        'flex flex-col gap-3 rounded-card border border-ink-800 bg-ink-900 p-4 shadow-card',
         className,
       )}
     >
@@ -51,20 +51,20 @@ function NewsfeedCard({
           {clubLogoUrl ? (
             <AvatarImage src={clubLogoUrl} alt={clubName} className="rounded-md" />
           ) : null}
-          <AvatarFallback className="rounded-md bg-muted text-xs font-semibold text-muted-foreground">
+          <AvatarFallback className="rounded-md bg-ink-800 text-xs font-semibold text-ink-300">
             {clubName.slice(0, 2).toUpperCase()}
           </AvatarFallback>
         </Avatar>
         <div className="flex flex-col">
-          <span className="text-sm font-semibold leading-tight">{clubName}</span>
-          <time dateTime={postedAt.toISOString()} className="text-xs text-muted-foreground">
+          <span className="text-sm font-semibold leading-tight text-ink-50">{clubName}</span>
+          <time dateTime={postedAt.toISOString()} className="text-xs text-ink-500">
             {formatRelativeTime(postedAt)}
           </time>
         </div>
       </header>
 
       {imageUrl ? (
-        <div className="relative aspect-video overflow-hidden rounded-lg bg-muted">
+        <div className="relative aspect-video overflow-hidden rounded-card bg-ink-800">
           <Image
             src={imageUrl}
             alt=""
@@ -76,13 +76,13 @@ function NewsfeedCard({
       ) : null}
 
       <div className="flex flex-col gap-1">
-        <h3 className="text-base font-semibold leading-snug">{title}</h3>
+        <h3 className="text-base font-semibold leading-snug text-ink-50">{title}</h3>
         {excerpt ? (
-          <p className="line-clamp-2 text-sm leading-relaxed text-muted-foreground">{excerpt}</p>
+          <p className="line-clamp-2 text-sm leading-relaxed text-ink-400">{excerpt}</p>
         ) : null}
       </div>
 
-      <footer className="flex items-center gap-1 border-t border-border pt-2">
+      <footer className="flex items-center gap-1 border-t border-ink-800 pt-2">
         <Button
           type="button"
           variant="ghost"
@@ -90,7 +90,10 @@ function NewsfeedCard({
           onClick={() => onLikeToggle(!isLiked)}
           aria-pressed={isLiked}
           aria-label={isLiked ? 'მოწონების გაუქმება' : 'მოწონება'}
-          className={cn('gap-1.5', isLiked && 'text-primary')}
+          className={cn(
+            'gap-1.5 text-ink-400 hover:text-ink-100',
+            isLiked && 'text-brand-400 hover:text-brand-300',
+          )}
         >
           <HeartIcon className={cn('size-4', isLiked && 'fill-current')} />
           <span className="text-xs font-medium">{likeCount}</span>
@@ -100,7 +103,7 @@ function NewsfeedCard({
           variant="ghost"
           size="sm"
           onClick={onCommentClick}
-          className="gap-1.5"
+          className="gap-1.5 text-ink-400 hover:text-ink-100"
           aria-label="კომენტარები"
         >
           <MessageCircleIcon className="size-4" />

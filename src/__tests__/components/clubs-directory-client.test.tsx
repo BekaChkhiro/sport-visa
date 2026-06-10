@@ -66,7 +66,9 @@ describe('ClubsDirectoryClient — rendering', () => {
 
   it('renders total count', () => {
     render(<ClubsDirectoryClient {...baseProps} items={[makeClub()]} total={1} />);
-    expect(screen.getByText(/1 კლუბი/)).toBeDefined();
+    // The count digit lives in its own <span>, so match on the parent's full text.
+    const counter = screen.getByText(/კლუბი მოიძებნა/);
+    expect(counter.textContent?.replace(/\s+/g, ' ')).toContain('1 კლუბი მოიძებნა');
   });
 
   it('renders empty state without filter message when no items and no search', () => {

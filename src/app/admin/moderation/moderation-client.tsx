@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import { signOut } from 'next-auth/react';
 
 import { AppShell } from '@/components/app-shell';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -126,20 +125,22 @@ function PostCard({
   pending: boolean;
 }) {
   return (
-    <div
+    <article
       data-slot="post-row"
       data-post-id={row.id}
-      className="flex flex-col gap-3 rounded-lg border bg-card p-4 sm:flex-row sm:items-start"
+      className="flex flex-col gap-3 rounded-card border border-ink-800 bg-ink-900 p-4 shadow-card transition-colors hover:border-ink-700 sm:flex-row sm:items-start"
     >
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center gap-2">
-          <span className="text-sm font-medium truncate">{row.title}</span>
-          <Badge variant="outline" className="text-[10px] shrink-0">
+          <span className="text-[14px] font-semibold text-ink-50 truncate">{row.title}</span>
+          <span className="shrink-0 rounded-pill border border-ink-700 bg-ink-800/60 px-2 py-0.5 text-[10.5px] font-medium text-ink-300">
             {row.clubName}
-          </Badge>
+          </span>
         </div>
-        <p className="mt-1 text-xs text-muted-foreground line-clamp-2">{row.bodyPreview}</p>
-        <div className="mt-1.5 flex items-center gap-3 text-xs text-muted-foreground">
+        <p className="mt-1.5 text-[12.5px] leading-relaxed text-ink-400 line-clamp-2">
+          {row.bodyPreview}
+        </p>
+        <div className="mt-2 flex items-center gap-4 text-[11.5px] text-ink-600">
           <span className="flex items-center gap-1">
             <ClockIcon className="size-3" />
             {formatDate(row.createdAt)}
@@ -161,7 +162,7 @@ function PostCard({
         <DeleteIcon className="size-3.5" />
         წაშ.
       </Button>
-    </div>
+    </article>
   );
 }
 
@@ -178,18 +179,18 @@ function ChatCard({
   const footballerLabel = row.footballerName ?? row.footballerUserEmail;
 
   return (
-    <div
+    <article
       data-slot="chat-row"
       data-conversation-id={row.id}
-      className="flex flex-col gap-3 rounded-lg border bg-card p-4 sm:flex-row sm:items-center"
+      className="flex flex-col gap-3 rounded-card border border-ink-800 bg-ink-900 p-4 shadow-card transition-colors hover:border-ink-700 sm:flex-row sm:items-center"
     >
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center gap-2">
-          <span className="text-sm font-medium truncate">{clubLabel}</span>
-          <span className="text-xs text-muted-foreground">↔</span>
-          <span className="text-sm truncate">{footballerLabel}</span>
+          <span className="text-[14px] font-semibold text-ink-50 truncate">{clubLabel}</span>
+          <span className="text-[13px] text-ink-500">↔</span>
+          <span className="text-[14px] text-ink-200 truncate">{footballerLabel}</span>
         </div>
-        <div className="mt-1 flex items-center gap-3 text-xs text-muted-foreground">
+        <div className="mt-1 flex items-center gap-4 text-[11.5px] text-ink-600">
           <span className="flex items-center gap-1">
             <MessageCircleIcon className="size-3" />
             {row.messageCount} შეტ.
@@ -201,7 +202,7 @@ function ChatCard({
             </span>
           ) : null}
         </div>
-        <div className="mt-0.5 text-[11px] text-muted-foreground/70 truncate">
+        <div className="mt-0.5 truncate text-[11px] text-ink-700">
           {row.clubUserEmail} · {row.footballerUserEmail}
         </div>
       </div>
@@ -216,7 +217,7 @@ function ChatCard({
         <DeleteIcon className="size-3.5" />
         წაშ.
       </Button>
-    </div>
+    </article>
   );
 }
 
@@ -297,9 +298,9 @@ export function ModerationClient({
   const currentPage = tab === 'posts' ? postsPage : chatsPage;
   const totalPages = currentPage.pageCount;
 
-  const tabs: { value: Tab; label: string }[] = [
-    { value: 'posts', label: 'პოსტები' },
-    { value: 'chats', label: 'ჩატები' },
+  const tabs: { value: Tab; label: string; count: number }[] = [
+    { value: 'posts', label: 'პოსტები', count: postsPage.total },
+    { value: 'chats', label: 'ჩატები', count: chatsPage.total },
   ];
 
   return (
@@ -315,61 +316,82 @@ export function ModerationClient({
       onSignOut={handleSignOut}
     >
       <div className="space-y-6">
-        <div className="flex flex-col gap-1">
+        {/* Page header */}
+        <div className="space-y-1">
           <div className="flex items-center gap-2">
-            <FlagIcon className="size-5 text-muted-foreground" />
-            <h1 className="text-xl font-semibold">მოდ. ინსტრუმენტები</h1>
+            <FlagIcon className="size-5 text-ink-400" />
+            <h1 className="font-display text-[26px] font-bold tracking-tight text-ink-50">
+              მოდ. ინსტრუმენტები
+            </h1>
           </div>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-[13.5px] text-ink-400">
             პოსტებისა და ჩატების ზედამხედველობა და წაშლა.
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2" role="tablist" aria-label="განყოფილება">
-          {tabs.map((t) => (
-            <button
-              key={t.value}
-              type="button"
-              role="tab"
-              aria-selected={tab === t.value}
-              onClick={() => setTab(t.value)}
-              className={`inline-flex items-center gap-2 rounded-md border px-3 py-1.5 text-sm transition-colors ${
-                tab === t.value
-                  ? 'border-primary bg-primary/10 text-foreground'
-                  : 'border-border bg-card text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              {t.label}
-            </button>
-          ))}
+        {/* Tabs + search */}
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div
+            className="inline-flex rounded-btn border border-ink-800 bg-ink-900 p-1"
+            role="tablist"
+            aria-label="განყოფილება"
+          >
+            {tabs.map((t) => {
+              const on = t.value === tab;
+              return (
+                <button
+                  key={t.value}
+                  type="button"
+                  role="tab"
+                  aria-selected={on}
+                  onClick={() => setTab(t.value)}
+                  className={`flex items-center gap-2 rounded-[7px] px-3.5 py-2 text-[13px] font-medium transition-colors ${
+                    on ? 'bg-ink-800 text-ink-50' : 'text-ink-400 hover:text-ink-100'
+                  }`}
+                >
+                  {t.label}
+                  <span
+                    aria-hidden="true"
+                    className={`flex h-[18px] min-w-[18px] items-center justify-center rounded-full px-1 text-[10.5px] font-bold tabular-nums ${
+                      on ? 'bg-brand-400 text-ink-950' : 'bg-ink-800 text-ink-400'
+                    }`}
+                  >
+                    {t.count}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+
+          <form onSubmit={submitSearch} className="relative sm:w-72">
+            <SearchIcon className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 size-4 text-ink-500" />
+            <Input
+              type="search"
+              placeholder={tab === 'posts' ? 'სათ. ან კლუბი…' : 'ელ.ფ. ან სახ.…'}
+              value={searchValue}
+              onChange={(e) => setSearchValue(e.target.value)}
+              className="pl-9 h-10 border-ink-700 bg-ink-950 text-ink-100 placeholder:text-ink-600 focus:border-brand-400/50 focus:ring-brand-400/15"
+              aria-label="ძიება"
+            />
+          </form>
         </div>
 
-        <form onSubmit={submitSearch} className="relative max-w-sm">
-          <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
-          <Input
-            type="search"
-            placeholder={tab === 'posts' ? 'სათ. ან კლუბი…' : 'ელ.ფ. ან სახ.…'}
-            value={searchValue}
-            onChange={(e) => setSearchValue(e.target.value)}
-            className="pl-9"
-            aria-label="ძიება"
-          />
-        </form>
-
+        {/* Feedback */}
         {feedback ? (
           <div
             role="status"
             aria-live="polite"
-            className={`rounded-md border px-4 py-2 text-sm ${
+            className={`rounded-card border px-4 py-2 text-sm ${
               feedback.kind === 'success'
-                ? 'border-emerald-300 bg-emerald-50 text-emerald-900 dark:border-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-200'
-                : 'border-destructive/40 bg-destructive/10 text-destructive'
+                ? 'border-success-400/30 bg-success-400/10 text-success-300'
+                : 'border-danger-400/30 bg-danger-400/10 text-danger-300'
             }`}
           >
             {feedback.message}
           </div>
         ) : null}
 
+        {/* Content */}
         <div className="flex flex-col gap-3">
           {tab === 'posts' ? (
             postsPage.items.length === 0 ? (
@@ -406,18 +428,27 @@ export function ModerationClient({
           )}
         </div>
 
+        {/* Pagination */}
         {totalPages > 1 ? (
-          <nav aria-label="გვერდები" className="flex items-center justify-between border-t pt-4">
-            <span className="text-xs text-muted-foreground">
-              გვერდი {page} / {totalPages} ({currentPage.total} სულ)
+          <nav
+            aria-label="გვერდები"
+            className="flex items-center justify-between border-t border-ink-800 pt-4"
+          >
+            <span className="text-[12.5px] text-ink-500">
+              ნაჩვენებია{' '}
+              <b className="font-semibold tabular-nums text-ink-300">
+                {tab === 'posts' ? postsPage.total : chatsPage.total}
+              </b>{' '}
+              {tab === 'posts' ? 'პოსტი' : 'ჩატი'}
             </span>
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-1.5">
               <Button
                 type="button"
                 variant="outline"
                 size="sm"
                 onClick={() => setPage(page - 1)}
                 disabled={page <= 1}
+                className="border-ink-800 text-ink-400 hover:bg-ink-800 hover:text-ink-100"
               >
                 <ChevronLeftIcon className="size-4" />
                 წინა
@@ -428,6 +459,7 @@ export function ModerationClient({
                 size="sm"
                 onClick={() => setPage(page + 1)}
                 disabled={page >= totalPages}
+                className="border-ink-800 text-ink-400 hover:bg-ink-800 hover:text-ink-100"
               >
                 შემდეგი
                 <ChevronRightIcon className="size-4" />

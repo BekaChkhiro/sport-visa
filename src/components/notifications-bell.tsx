@@ -1,7 +1,6 @@
 import * as React from 'react';
 
 import { BellIcon } from '@/components/icons';
-import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
 type NotificationsBellProps = {
@@ -12,27 +11,25 @@ type NotificationsBellProps = {
 
 function NotificationsBell({ unreadCount, onClick, className }: NotificationsBellProps) {
   const hasUnread = unreadCount > 0;
-  const display = unreadCount > 99 ? '99+' : String(unreadCount);
 
   return (
-    <Button
+    <button
       type="button"
-      variant="ghost"
-      size="icon"
       onClick={onClick}
       aria-label={hasUnread ? `შეტყობინებები — ${unreadCount} წაუკითხავი` : 'შეტყობინებები'}
-      className={cn('relative', className)}
+      className={cn(
+        'relative inline-flex h-10 w-10 items-center justify-center rounded-btn text-ink-400 transition-colors hover:bg-ink-800 hover:text-ink-100 outline-none focus-visible:ring-2 focus-visible:ring-brand-400 focus-visible:ring-offset-2 focus-visible:ring-offset-ink-950',
+        className,
+      )}
     >
       <BellIcon className="size-5" />
       {hasUnread ? (
         <span
           aria-hidden="true"
-          className="absolute top-1 right-1 inline-flex min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-semibold text-destructive-foreground"
-        >
-          {display}
-        </span>
+          className="absolute right-2 top-2 h-2 w-2 rounded-full bg-brand-400 ring-2 ring-ink-900"
+        />
       ) : null}
-    </Button>
+    </button>
   );
 }
 

@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { ProfileAvatar } from '@/components/profile-avatar';
 import { PositionChip } from '@/components/position-chip';
 import { EmptyState } from '@/components/ui/empty-state';
-import { ArrowLeftIcon, StarIcon, UserIcon } from '@/components/icons';
+import { ArrowLeftIcon, StarIcon, UserIcon, MapPinIcon } from '@/components/icons';
 import type { AppSidebarStats } from '@/components/app-sidebar';
 import type { VerificationStatus } from '@/components/verification-badge';
 import { toggleShortlist } from '@/lib/directory/actions';
@@ -55,21 +55,26 @@ function ShortlistRow({
 }) {
   const name = `${item.firstName} ${item.lastName}`.trim();
   const initials = [item.firstName[0], item.lastName[0]].filter(Boolean).join('').toUpperCase();
-  const meta = [item.positions[0], item.nationality, item.height ? `${item.height} სმ` : null]
+  const meta = [item.city, item.nationality, item.height ? `${item.height} სმ` : null]
     .filter(Boolean)
     .join(' · ');
 
   return (
     <div
       className={cn(
-        'flex items-center gap-3 rounded-xl border border-border bg-card px-4 py-3 transition-opacity',
+        'group flex items-center gap-3.5 rounded-card border border-ink-800 bg-ink-900 px-4 py-3.5 shadow-card transition-colors hover:border-ink-700',
         removing && 'pointer-events-none opacity-50',
       )}
     >
       <ProfileAvatar src={item.avatarUrl} fallback={initials} size="sm" />
       <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-medium">{name}</p>
-        {meta ? <p className="truncate text-xs text-muted-foreground">{meta}</p> : null}
+        <p className="truncate text-[14px] font-semibold text-ink-50">{name}</p>
+        {meta ? (
+          <p className="mt-0.5 flex items-center gap-1 truncate text-[12px] text-ink-500">
+            <MapPinIcon className="size-3 shrink-0" />
+            {meta}
+          </p>
+        ) : null}
       </div>
       <div className="flex shrink-0 items-center gap-2">
         {item.positions[0] ? <PositionChip position={item.positions[0]} /> : null}
@@ -84,9 +89,9 @@ function ShortlistRow({
           aria-pressed={true}
           onClick={() => onRemove(item.id)}
           disabled={removing}
-          className="size-8 text-muted-foreground hover:text-foreground"
+          className="size-9 text-brand-300 hover:bg-danger-400/10 hover:text-danger-300"
         >
-          <StarIcon className="size-4 fill-primary text-primary" />
+          <StarIcon className="size-4 fill-current" />
         </Button>
       </div>
     </div>
@@ -151,10 +156,10 @@ export function ShortlistClient({
           role="status"
           aria-live="polite"
           className={cn(
-            'fixed bottom-6 left-1/2 z-50 -translate-x-1/2 rounded-lg px-4 py-2.5 text-sm font-medium shadow-lg',
+            'fixed bottom-6 left-1/2 z-50 -translate-x-1/2 flex items-center gap-2.5 rounded-pill border px-4 py-2.5 text-[13px] font-medium shadow-float',
             toast.type === 'error'
-              ? 'bg-destructive text-destructive-foreground'
-              : 'bg-foreground text-background',
+              ? 'border-danger-400/30 bg-ink-900 text-danger-300'
+              : 'border-success-400/30 bg-ink-900 text-ink-100',
           )}
         >
           {toast.message}
@@ -171,11 +176,24 @@ export function ShortlistClient({
           </Button>
         </div>
 
-        <div className="flex items-center justify-between gap-2">
+        {/* Page header */}
+        <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
-            <h1 className="text-xl font-bold">შერჩეული ფეხბურთელები</h1>
+            <div className="flex items-center gap-2.5">
+              <span className="flex h-9 w-9 items-center justify-center rounded-[10px] bg-brand-400/15 text-brand-300">
+                <StarIcon className="size-4 fill-current" />
+              </span>
+              <h1 className="text-[24px] font-bold tracking-tight text-ink-50">
+                შერჩეული ფეხბურთელები
+              </h1>
+            </div>
             {items.length > 0 ? (
-              <p className="mt-0.5 text-sm text-muted-foreground">{items.length} ფეხბ.</p>
+              <p className="mt-1.5 text-[13.5px] text-ink-400">
+                შენი სკაუტინგის სია —{' '}
+                <span className="font-mono font-semibold tabular-nums text-ink-200">
+                  {items.length} ფეხბ.
+                </span>
+              </p>
             ) : null}
           </div>
           <Button variant="outline" size="sm" asChild>
@@ -198,7 +216,7 @@ export function ShortlistClient({
             ))}
           </div>
         ) : (
-          <div className="rounded-xl border border-border bg-card">
+          <div className="rounded-card border border-ink-800 bg-ink-900 shadow-card">
             <EmptyState
               icon={<UserIcon className="size-10" />}
               title="შ. სია ცარიელია"

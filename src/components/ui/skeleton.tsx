@@ -3,7 +3,7 @@ import * as React from 'react';
 import { cn } from '@/lib/utils';
 
 export function Skeleton({ className, ...props }: React.ComponentProps<'div'>) {
-  return <div className={cn('bg-muted animate-pulse rounded-md', className)} {...props} />;
+  return <div className={cn('bg-ink-800 animate-pulse rounded-lg', className)} {...props} />;
 }
 
 export function SkeletonAvatar({ className }: { className?: string }) {
@@ -25,7 +25,7 @@ export function SkeletonText({ className, lines = 2 }: { className?: string; lin
 
 export function SkeletonCard({ className }: { className?: string }) {
   return (
-    <div className={cn('flex flex-col gap-4 rounded-xl border p-6', className)}>
+    <div className={cn('flex flex-col gap-4 rounded-card border border-border p-6', className)}>
       <div className="flex items-center gap-3">
         <SkeletonAvatar />
         <div className="flex-1">

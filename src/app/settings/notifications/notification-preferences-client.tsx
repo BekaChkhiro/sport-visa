@@ -15,6 +15,8 @@ import type {
   AppSidebarUser,
 } from '@/components/app-sidebar';
 
+// ─── Types ────────────────────────────────────────────────────────────────────
+
 type Prefs = {
   emailInstant: boolean;
   emailDigest: boolean;
@@ -32,6 +34,8 @@ type NotificationPreferencesClientProps = {
 
 type SaveState = 'idle' | 'saving' | 'saved' | 'error';
 
+// ─── PreferenceRow ────────────────────────────────────────────────────────────
+
 function PreferenceRow({
   icon,
   title,
@@ -48,12 +52,12 @@ function PreferenceRow({
   onChange: (checked: boolean) => void;
 }) {
   return (
-    <div className="flex items-start justify-between gap-4 py-4">
+    <div className="flex items-start justify-between gap-4 rounded-field border border-ink-800 bg-ink-950/40 px-3.5 py-2.5">
       <div className="flex min-w-0 items-start gap-3">
-        <span className="mt-0.5 shrink-0 text-muted-foreground">{icon}</span>
+        <span className="mt-0.5 shrink-0 text-ink-400">{icon}</span>
         <div className="min-w-0">
-          <p className="text-sm font-medium leading-snug">{title}</p>
-          <p className="mt-0.5 text-sm text-muted-foreground">{description}</p>
+          <p className="text-[13.5px] font-medium text-ink-100 leading-snug">{title}</p>
+          <p className="mt-0.5 text-[12px] text-ink-500">{description}</p>
         </div>
       </div>
       <Switch
@@ -66,6 +70,8 @@ function PreferenceRow({
     </div>
   );
 }
+
+// ─── Main component ───────────────────────────────────────────────────────────
 
 export function NotificationPreferencesClient({
   shellRole,
@@ -122,20 +128,27 @@ export function NotificationPreferencesClient({
       onSignOut={handleSignOut}
     >
       <div className="mx-auto max-w-2xl space-y-6">
+        {/* Page heading */}
         <div>
-          <h1 className="text-xl font-semibold">შეტყობინებების პარამეტრები</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
+          <p className="text-[12.5px] font-medium uppercase tracking-[0.16em] text-brand-400">
+            პარამეტრები
+          </p>
+          <h1 className="mt-1 font-display text-[26px] font-bold tracking-tight text-ink-50">
+            შეტყობინებების პარამეტრები
+          </h1>
+          <p className="mt-1 text-[13.5px] text-ink-400">
             მართე, თუ როდის და როგორ მიგივა შეტყობინებები ელ. ფოსტაზე.
           </p>
         </div>
 
-        <div className="rounded-lg border border-border bg-card">
-          <div className="border-b border-border px-5 py-3">
-            <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
+        {/* Email preferences card */}
+        <div className="overflow-hidden rounded-card border border-ink-800 bg-ink-900 shadow-card">
+          <div className="border-b border-ink-800 px-5 py-3">
+            <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-ink-500">
               ელ. ფოსტის შეტყობინებები
             </p>
           </div>
-          <div className="divide-y divide-border px-5">
+          <div className="space-y-2 p-4">
             <PreferenceRow
               icon={<MailIcon className="size-4" aria-hidden="true" />}
               title="მყისიერი შეტყობინება"
@@ -155,13 +168,14 @@ export function NotificationPreferencesClient({
           </div>
         </div>
 
+        {/* Save state feedback */}
         {saveState !== 'idle' && (
           <p
             className={cn(
-              'text-sm',
-              saveState === 'saving' && 'text-muted-foreground',
-              saveState === 'saved' && 'text-green-600',
-              saveState === 'error' && 'text-destructive',
+              'text-[13px]',
+              saveState === 'saving' && 'text-ink-400',
+              saveState === 'saved' && 'text-success-300',
+              saveState === 'error' && 'text-danger-300',
             )}
           >
             {saveState === 'saving' && 'ინახება…'}

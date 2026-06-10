@@ -20,22 +20,22 @@ export function AppShellSkeleton({
   return (
     <div className="flex min-h-screen flex-col">
       {/* Header */}
-      <header className="sticky top-0 z-40 flex h-14 items-center justify-between border-b border-border bg-background/80 px-4 backdrop-blur supports-[backdrop-filter]:bg-background/60 md:h-16 md:px-6">
+      <header className="sticky top-0 z-40 flex h-16 items-center justify-between border-b border-ink-800 bg-ink-900/85 px-4 backdrop-blur-xl md:px-6">
         <div className="flex items-center gap-2">
-          <Skeleton className="size-9 rounded-md lg:hidden" />
+          <Skeleton className="size-9 rounded-btn bg-ink-800 lg:hidden" />
           <Link href="/dashboard" className="flex items-center" aria-label="Sport Visa">
             <Logo size="md" showWordmark />
           </Link>
         </div>
         <div className="flex items-center gap-2">
-          <Skeleton className="size-9 rounded-md" />
-          <Skeleton className="size-9 rounded-full" />
+          <Skeleton className="size-9 rounded-btn bg-ink-800" />
+          <Skeleton className="h-8 w-20 rounded-pill bg-ink-800" />
         </div>
       </header>
 
       <div className="flex flex-1">
         {/* Sidebar */}
-        <aside className="sticky top-16 hidden h-[calc(100vh-4rem)] w-72 shrink-0 overflow-y-auto border-r border-border bg-card px-4 py-6 lg:block">
+        <aside className="sticky top-16 hidden h-[calc(100vh-4rem)] w-72 shrink-0 overflow-y-auto border-r border-ink-800 bg-ink-950 px-4 py-6 lg:block">
           {variant === 'footballer' ? <FootballerSidebarSkeleton /> : null}
           {variant === 'club' ? <ClubSidebarSkeleton /> : null}
           {variant === 'admin' ? <AdminSidebarSkeleton /> : null}
@@ -52,39 +52,39 @@ function FootballerSidebarSkeleton() {
   return (
     <>
       <div className="flex flex-col items-center gap-2 px-3 py-2 text-center">
-        <Skeleton className="size-20 rounded-full" />
+        <Skeleton className="size-20 rounded-full bg-ink-800" />
         <div className="space-y-1.5">
-          <Skeleton className="h-5 w-32" />
-          <Skeleton className="h-3 w-20" />
+          <Skeleton className="h-5 w-32 bg-ink-800" />
+          <Skeleton className="h-3 w-20 bg-ink-800" />
         </div>
         <div className="w-full space-y-1">
-          <Skeleton className="h-2 w-full rounded-full" />
-          <Skeleton className="h-3 w-28" />
+          <Skeleton className="h-2 w-full rounded-full bg-ink-800" />
+          <Skeleton className="h-3 w-28 bg-ink-800" />
         </div>
         <div className="flex w-full gap-2">
-          <Skeleton className="h-8 flex-1 rounded-md" />
-          <Skeleton className="h-8 flex-1 rounded-md" />
+          <Skeleton className="h-8 flex-1 rounded-btn bg-ink-800" />
+          <Skeleton className="h-8 flex-1 rounded-btn bg-ink-800" />
         </div>
       </div>
 
-      <hr className="my-4 border-border" />
+      <hr className="my-4 border-ink-800" />
 
-      <Skeleton className="mx-3 mb-2 h-3 w-32" />
+      <Skeleton className="mx-3 mb-2 h-3 w-32 bg-ink-800" />
       <nav className="flex flex-col gap-1 px-1">
         {Array.from({ length: 4 }).map((_, i) => (
-          <Skeleton key={i} className="mx-2 h-9 rounded-md" />
+          <Skeleton key={i} className="mx-2 h-9 rounded-btn bg-ink-800" />
         ))}
       </nav>
 
-      <hr className="my-4 border-border" />
+      <hr className="my-4 border-ink-800" />
 
-      <Skeleton className="mx-3 mb-2 h-3 w-24" />
+      <Skeleton className="mx-3 mb-2 h-3 w-24 bg-ink-800" />
       <ul className="flex flex-col gap-2 px-3">
         {Array.from({ length: 3 }).map((_, i) => (
           <li key={i} className="flex items-center gap-2">
-            <Skeleton className="size-4" />
-            <Skeleton className="h-3 w-8" />
-            <Skeleton className="h-3 w-14" />
+            <Skeleton className="size-4 bg-ink-800" />
+            <Skeleton className="h-3 w-8 bg-ink-800" />
+            <Skeleton className="h-3 w-14 bg-ink-800" />
           </li>
         ))}
       </ul>
@@ -97,34 +97,34 @@ function ClubSidebarSkeleton() {
     <>
       <div className="flex flex-col items-start gap-2 px-3 py-2">
         <div className="flex items-center gap-3">
-          <Skeleton className="size-12 rounded-md" />
+          <Skeleton className="size-12 rounded-md bg-ink-800" />
           <div className="space-y-1.5">
-            <Skeleton className="h-4 w-32" />
-            <Skeleton className="h-3 w-20" />
+            <Skeleton className="h-4 w-32 bg-ink-800" />
+            <Skeleton className="h-3 w-20 bg-ink-800" />
           </div>
         </div>
         <div className="flex w-full gap-2">
-          <Skeleton className="h-8 flex-1 rounded-md" />
-          <Skeleton className="h-8 flex-1 rounded-md" />
+          <Skeleton className="h-8 flex-1 rounded-btn bg-ink-800" />
+          <Skeleton className="h-8 flex-1 rounded-btn bg-ink-800" />
         </div>
       </div>
 
-      <hr className="my-4 border-border" />
+      <hr className="my-4 border-ink-800" />
 
-      <Skeleton className="mx-3 mb-2 h-3 w-32" />
+      <Skeleton className="mx-3 mb-2 h-3 w-32 bg-ink-800" />
       <nav className="flex flex-col gap-1 px-1">
         {Array.from({ length: 4 }).map((_, i) => (
-          <Skeleton key={i} className="mx-2 h-9 rounded-md" />
+          <Skeleton key={i} className="mx-2 h-9 rounded-btn bg-ink-800" />
         ))}
       </nav>
 
-      <hr className="my-4 border-border" />
+      <hr className="my-4 border-ink-800" />
 
-      <Skeleton className="mx-3 mb-2 h-3 w-28" />
+      <Skeleton className="mx-3 mb-2 h-3 w-28 bg-ink-800" />
       <div className="flex items-center gap-2 px-3">
-        <Skeleton className="size-4" />
-        <Skeleton className="h-3 w-8" />
-        <Skeleton className="h-3 w-16" />
+        <Skeleton className="size-4 bg-ink-800" />
+        <Skeleton className="h-3 w-8 bg-ink-800" />
+        <Skeleton className="h-3 w-16 bg-ink-800" />
       </div>
     </>
   );
@@ -134,16 +134,16 @@ function AdminSidebarSkeleton() {
   return (
     <>
       <div className="flex flex-col items-center gap-2 px-3 py-2 text-center">
-        <Skeleton className="size-12 rounded-full" />
-        <Skeleton className="h-4 w-24" />
-        <Skeleton className="h-3 w-12" />
+        <Skeleton className="size-12 rounded-full bg-ink-800" />
+        <Skeleton className="h-4 w-24 bg-ink-800" />
+        <Skeleton className="h-3 w-12 bg-ink-800" />
       </div>
 
-      <hr className="my-4 border-border" />
+      <hr className="my-4 border-ink-800" />
 
       <nav className="flex flex-col gap-1 px-1">
         {Array.from({ length: 6 }).map((_, i) => (
-          <Skeleton key={i} className="mx-2 h-9 rounded-md" />
+          <Skeleton key={i} className="mx-2 h-9 rounded-btn bg-ink-800" />
         ))}
       </nav>
     </>

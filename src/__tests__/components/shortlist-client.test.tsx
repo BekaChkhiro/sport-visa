@@ -5,7 +5,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 afterEach(cleanup);
 
-vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn() }) }));
+vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }) }));
 vi.mock('next-auth/react', () => ({ signOut: vi.fn() }));
 vi.mock('@/components/app-shell', () => ({
   AppShell: ({ children }: { children: React.ReactNode }) => (

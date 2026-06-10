@@ -20,17 +20,17 @@ const STATUS_CONFIG: Record<
   pending: {
     label: 'მოლოდინში',
     Icon: PendingBadgeIcon,
-    className: 'bg-warning/10 text-warning',
+    className: 'bg-warning-400/10 text-warning-300 border-warning-400/25',
   },
   approved: {
     label: 'დადასტურდა',
     Icon: CheckCircleIcon,
-    className: 'bg-success/10 text-success',
+    className: 'bg-success-400/10 text-success-300 border-success-400/25',
   },
   rejected: {
     label: 'უარყოფილია',
     Icon: XCircleIcon,
-    className: 'bg-destructive/10 text-destructive',
+    className: 'bg-danger-400/10 text-danger-300 border-danger-400/25',
   },
 };
 
@@ -41,7 +41,7 @@ function StatusPill({ status, className, children, ...props }: StatusPillProps) 
       data-slot="status-pill"
       data-status={status}
       className={cn(
-        'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium',
+        'inline-flex items-center gap-1 rounded-pill border px-2.5 py-1 text-[11px] font-semibold',
         statusClass,
         className,
       )}

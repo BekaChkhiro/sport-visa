@@ -26,12 +26,10 @@ export function ErrorState({
         className,
       )}
     >
-      <AlertCircleIcon className="text-destructive" size={48} />
+      <AlertCircleIcon className="text-danger-400" size={48} />
       <div className="flex flex-col gap-1.5">
-        <p className="font-semibold">{title}</p>
-        {description ? (
-          <p className="text-muted-foreground max-w-sm text-sm">{description}</p>
-        ) : null}
+        <p className="font-semibold text-ink-50">{title}</p>
+        {description ? <p className="text-ink-400 max-w-sm text-sm">{description}</p> : null}
       </div>
       {action ? <div>{action}</div> : null}
     </div>

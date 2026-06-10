@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import { signOut } from 'next-auth/react';
 
 import { AppShell } from '@/components/app-shell';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -20,15 +19,7 @@ import { EmptyState } from '@/components/ui/empty-state';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import {
-  CheckCircleIcon,
-  DeleteIcon,
-  EditIcon,
-  GlobeIcon,
-  PlusIcon,
-  SettingsIcon,
-  XCircleIcon,
-} from '@/components/icons';
+import { DeleteIcon, EditIcon, GlobeIcon, PlusIcon, SettingsIcon } from '@/components/icons';
 import {
   createLeague,
   updateLeague,
@@ -67,14 +58,44 @@ function FeedbackBanner({
     <div
       role="status"
       aria-live="polite"
-      className={`rounded-md border px-4 py-2 text-sm ${
+      className={`rounded-card border px-4 py-2 text-sm ${
         feedback.kind === 'success'
-          ? 'border-emerald-300 bg-emerald-50 text-emerald-900 dark:border-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-200'
-          : 'border-destructive/40 bg-destructive/10 text-destructive'
+          ? 'border-success-400/30 bg-success-400/10 text-success-300'
+          : 'border-danger-400/30 bg-danger-400/10 text-danger-300'
       }`}
     >
       {feedback.message}
     </div>
+  );
+}
+
+// ── Toggle switch ────────────────────────────────────────────────────────────
+
+function Toggle({
+  on,
+  onClick,
+  ariaLabel,
+}: {
+  on: boolean;
+  onClick: () => void;
+  ariaLabel?: string;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={on}
+      aria-label={ariaLabel}
+      className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors outline-none focus-visible:ring-4 focus-visible:ring-brand-400/25 ${
+        on ? 'bg-brand-400' : 'bg-ink-700'
+      }`}
+    >
+      <span
+        className={`inline-block h-4 w-4 rounded-full bg-ink-50 shadow transition-transform ${
+          on ? 'translate-x-6' : 'translate-x-1'
+        }`}
+      />
+    </button>
   );
 }
 
@@ -408,63 +429,62 @@ function LeagueTableRow({
   pending: boolean;
 }) {
   return (
-    <div className="flex items-center gap-3 rounded-lg border bg-card px-4 py-3">
-      <div className="flex flex-1 flex-col min-w-0 gap-0.5">
+    <div className="flex items-center gap-3 px-4 py-3 transition-colors hover:bg-ink-800/40">
+      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] bg-ink-800 text-ink-300">
+        <GlobeIcon className="size-4" />
+      </span>
+      <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-sm font-medium truncate">{row.name}</span>
+          <span
+            className={`text-[13.5px] font-medium truncate ${row.isActive ? 'text-ink-100' : 'text-ink-500'}`}
+          >
+            {row.name}
+          </span>
           {row.country ? (
-            <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
-              <GlobeIcon className="size-3" />
+            <span className="inline-flex items-center gap-1 text-[11.5px] text-ink-600">
               {row.country}
             </span>
           ) : null}
           {!row.isActive ? (
-            <Badge variant="secondary" className="text-[10px]">
+            <span className="rounded-pill bg-ink-800 px-2 py-0.5 text-[10.5px] font-medium text-ink-500">
               გამოთიშული
-            </Badge>
+            </span>
           ) : null}
         </div>
-        <span className="text-xs text-muted-foreground">#{row.orderIndex}</span>
+        <span className="text-[11.5px] text-ink-600">#{row.orderIndex}</span>
       </div>
-      <div className="flex items-center gap-1.5 shrink-0">
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          aria-label={row.isActive ? 'გამოთიშვა' : 'ჩართვა'}
-          onClick={() => onToggle(row.id)}
-          disabled={pending}
-          className="size-8"
-        >
-          {row.isActive ? (
-            <CheckCircleIcon className="size-4 text-emerald-500" />
-          ) : (
-            <XCircleIcon className="size-4 text-muted-foreground" />
-          )}
-        </Button>
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          aria-label="რედაქტირება"
-          onClick={() => onEdit(row)}
-          disabled={pending}
-          className="size-8"
-        >
-          <EditIcon className="size-4" />
-        </Button>
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          aria-label="წაშლა"
-          onClick={() => onDelete(row)}
-          disabled={pending}
-          className="size-8 text-destructive hover:text-destructive"
-        >
-          <DeleteIcon className="size-4" />
-        </Button>
-      </div>
+      <span
+        className={`text-[11px] font-medium ${row.isActive ? 'text-success-300' : 'text-ink-600'}`}
+      >
+        {row.isActive ? 'აქტიური' : 'დამალული'}
+      </span>
+      <Toggle
+        on={row.isActive}
+        onClick={() => onToggle(row.id)}
+        ariaLabel={row.isActive ? 'გამოთიშვა' : 'ჩართვა'}
+      />
+      <Button
+        type="button"
+        variant="ghost"
+        size="icon"
+        aria-label="რედაქტირება"
+        onClick={() => onEdit(row)}
+        disabled={pending}
+        className="size-9 text-ink-500 hover:bg-ink-800 hover:text-ink-100"
+      >
+        <EditIcon className="size-4" />
+      </Button>
+      <Button
+        type="button"
+        variant="ghost"
+        size="icon"
+        aria-label="წაშლა"
+        onClick={() => onDelete(row)}
+        disabled={pending}
+        className="size-9 text-danger-300 hover:bg-danger-400/10"
+      >
+        <DeleteIcon className="size-4" />
+      </Button>
     </div>
   );
 }
@@ -485,62 +505,65 @@ function CategoryTableRow({
   pending: boolean;
 }) {
   return (
-    <div className="flex items-center gap-3 rounded-lg border bg-card px-4 py-3">
-      <div className="flex flex-1 flex-col min-w-0 gap-0.5">
+    <div className="flex items-center gap-3 px-4 py-3 transition-colors hover:bg-ink-800/40">
+      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] bg-ink-800 text-ink-300 text-[15px]">
+        {row.icon ? (
+          <span aria-hidden="true">{row.icon}</span>
+        ) : (
+          <SettingsIcon className="size-4" />
+        )}
+      </span>
+      <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2 flex-wrap">
-          {row.icon ? <span aria-hidden="true">{row.icon}</span> : null}
-          <span className="text-sm font-medium truncate">{row.name}</span>
-          <span className="text-xs text-muted-foreground font-mono">{row.slug}</span>
+          <span
+            className={`text-[13.5px] font-medium truncate ${row.isActive ? 'text-ink-100' : 'text-ink-500'}`}
+          >
+            {row.name}
+          </span>
+          <span className="font-mono text-[11px] text-ink-600">{row.slug}</span>
           {!row.isActive ? (
-            <Badge variant="secondary" className="text-[10px]">
+            <span className="rounded-pill bg-ink-800 px-2 py-0.5 text-[10.5px] font-medium text-ink-500">
               გამოთიშული
-            </Badge>
+            </span>
           ) : null}
         </div>
-        <div className="flex items-center gap-3 text-xs text-muted-foreground">
+        <div className="flex items-center gap-3 text-[11.5px] text-ink-600">
           {row.description ? <span className="truncate">{row.description}</span> : null}
-          <span className="shrink-0">{row.requestCount} მოთხ.</span>
+          <span className="shrink-0 font-mono tabular-nums">{row.requestCount} მოთხ.</span>
         </div>
       </div>
-      <div className="flex items-center gap-1.5 shrink-0">
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          aria-label={row.isActive ? 'გამოთიშვა' : 'ჩართვა'}
-          onClick={() => onToggle(row.id)}
-          disabled={pending}
-          className="size-8"
-        >
-          {row.isActive ? (
-            <CheckCircleIcon className="size-4 text-emerald-500" />
-          ) : (
-            <XCircleIcon className="size-4 text-muted-foreground" />
-          )}
-        </Button>
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          aria-label="რედაქტირება"
-          onClick={() => onEdit(row)}
-          disabled={pending}
-          className="size-8"
-        >
-          <EditIcon className="size-4" />
-        </Button>
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          aria-label="წაშლა"
-          onClick={() => onDelete(row)}
-          disabled={pending}
-          className="size-8 text-destructive hover:text-destructive"
-        >
-          <DeleteIcon className="size-4" />
-        </Button>
-      </div>
+      <span
+        className={`text-[11px] font-medium ${row.isActive ? 'text-success-300' : 'text-ink-600'}`}
+      >
+        {row.isActive ? 'აქტიური' : 'დამალული'}
+      </span>
+      <Toggle
+        on={row.isActive}
+        onClick={() => onToggle(row.id)}
+        ariaLabel={row.isActive ? 'გამოთიშვა' : 'ჩართვა'}
+      />
+      <Button
+        type="button"
+        variant="ghost"
+        size="icon"
+        aria-label="რედაქტირება"
+        onClick={() => onEdit(row)}
+        disabled={pending}
+        className="size-9 text-ink-500 hover:bg-ink-800 hover:text-ink-100"
+      >
+        <EditIcon className="size-4" />
+      </Button>
+      <Button
+        type="button"
+        variant="ghost"
+        size="icon"
+        aria-label="წაშლა"
+        onClick={() => onDelete(row)}
+        disabled={pending}
+        className="size-9 text-danger-300 hover:bg-danger-400/10"
+      >
+        <DeleteIcon className="size-4" />
+      </Button>
     </div>
   );
 }
@@ -702,17 +725,44 @@ export function RefDataClient({
       onSignOut={handleSignOut}
     >
       <div className="space-y-6">
-        <div className="flex flex-col gap-1">
-          <div className="flex items-center gap-2">
-            <SettingsIcon className="size-5 text-muted-foreground" />
-            <h1 className="text-xl font-semibold">სცნობარო მონაცემები</h1>
+        {/* Page header */}
+        <div className="flex flex-wrap items-end justify-between gap-4">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <SettingsIcon className="size-5 text-ink-400" />
+              <h1 className="font-display text-[26px] font-bold tracking-tight text-ink-50">
+                სცნობარო მონაცემები
+              </h1>
+            </div>
+            <p className="text-[13.5px] text-ink-400">
+              ლიგები და სერვისის კატეგორიები — dropdown-ებში გამოიყენება აპლიკაციაში.
+            </p>
           </div>
-          <p className="text-sm text-muted-foreground">
-            ლიგები და სერვისის კატეგორიები — dropdown-ებში გამოიყენება აპლიკაციაში.
-          </p>
+          <Button
+            type="button"
+            size="sm"
+            onClick={() => {
+              if (tab === 'leagues') {
+                setEditingLeague(null);
+                setLeagueDialogOpen(true);
+              } else {
+                setEditingCategory(null);
+                setCategoryDialogOpen(true);
+              }
+            }}
+            disabled={pending}
+          >
+            <PlusIcon className="size-3.5" />
+            {tab === 'leagues' ? 'ლიგის დამატება' : 'კატეგორიის დამატება'}
+          </Button>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2" role="tablist" aria-label="განყოფილება">
+        {/* Tabs */}
+        <div
+          className="inline-flex rounded-btn border border-ink-700 bg-ink-900 p-1"
+          role="tablist"
+          aria-label="განყოფილება"
+        >
           {tabs.map((t) => (
             <button
               key={t.value}
@@ -720,100 +770,76 @@ export function RefDataClient({
               role="tab"
               aria-selected={tab === t.value}
               onClick={() => setTab(t.value)}
-              className={`inline-flex items-center gap-2 rounded-md border px-3 py-1.5 text-sm transition-colors ${
-                tab === t.value
-                  ? 'border-primary bg-primary/10 text-foreground'
-                  : 'border-border bg-card text-muted-foreground hover:text-foreground'
+              className={`flex items-center gap-2 rounded-[8px] px-4 py-2 text-[13px] font-medium transition-colors ${
+                tab === t.value ? 'bg-ink-800 text-ink-50' : 'text-ink-400 hover:text-ink-100'
               }`}
             >
               {t.label}
-              <Badge variant="secondary" className="text-[10px]">
+              <span
+                className={`flex h-[18px] min-w-[18px] items-center justify-center rounded-full px-1 text-[10.5px] font-bold ${
+                  tab === t.value ? 'bg-brand-400/20 text-brand-300' : 'bg-ink-800 text-ink-500'
+                }`}
+              >
                 {t.count}
-              </Badge>
+              </span>
             </button>
           ))}
         </div>
 
         <FeedbackBanner feedback={feedback} />
 
+        {/* League list */}
         {tab === 'leagues' && (
-          <section aria-label="ლიგები" className="space-y-3">
-            <div className="flex items-center justify-between">
-              <h2 className="text-base font-medium">ლიგები</h2>
-              <Button
-                type="button"
-                size="sm"
-                onClick={() => {
-                  setEditingLeague(null);
-                  setLeagueDialogOpen(true);
-                }}
-                disabled={pending}
-              >
-                <PlusIcon className="size-3.5" />
-                ლიგის დამატება
-              </Button>
-            </div>
-
+          <section aria-label="ლიგები">
             {leagues.length === 0 ? (
               <EmptyState title="ლიგა არ არის" description="დაამატეთ პირველი ლიგა ზემოთ ღილაკით." />
             ) : (
-              <div className="flex flex-col gap-2">
-                {leagues.map((row) => (
-                  <LeagueTableRow
-                    key={row.id}
-                    row={row}
-                    onEdit={(r) => {
-                      setEditingLeague({ ...r, editing: true });
-                      setLeagueDialogOpen(true);
-                    }}
-                    onDelete={(r) => setDeletingLeague(r)}
-                    onToggle={handleLeagueToggle}
-                    pending={pending}
-                  />
-                ))}
+              <div className="overflow-hidden rounded-card border border-ink-800 bg-ink-900 shadow-card">
+                <div className="divide-y divide-ink-800">
+                  {leagues.map((row) => (
+                    <LeagueTableRow
+                      key={row.id}
+                      row={row}
+                      onEdit={(r) => {
+                        setEditingLeague({ ...r, editing: true });
+                        setLeagueDialogOpen(true);
+                      }}
+                      onDelete={(r) => setDeletingLeague(r)}
+                      onToggle={handleLeagueToggle}
+                      pending={pending}
+                    />
+                  ))}
+                </div>
               </div>
             )}
           </section>
         )}
 
+        {/* Category list */}
         {tab === 'categories' && (
-          <section aria-label="სერვისის კატეგორიები" className="space-y-3">
-            <div className="flex items-center justify-between">
-              <h2 className="text-base font-medium">სერვ. კატეგორიები</h2>
-              <Button
-                type="button"
-                size="sm"
-                onClick={() => {
-                  setEditingCategory(null);
-                  setCategoryDialogOpen(true);
-                }}
-                disabled={pending}
-              >
-                <PlusIcon className="size-3.5" />
-                კატეგორიის დამატება
-              </Button>
-            </div>
-
+          <section aria-label="სერვისის კატეგორიები">
             {serviceCategories.length === 0 ? (
               <EmptyState
                 title="კატეგორია არ არის"
                 description="დაამატეთ პირველი კატეგორია ზემოთ ღილაკით."
               />
             ) : (
-              <div className="flex flex-col gap-2">
-                {serviceCategories.map((row) => (
-                  <CategoryTableRow
-                    key={row.id}
-                    row={row}
-                    onEdit={(r) => {
-                      setEditingCategory({ ...r, editing: true });
-                      setCategoryDialogOpen(true);
-                    }}
-                    onDelete={(r) => setDeletingCategory(r)}
-                    onToggle={handleCategoryToggle}
-                    pending={pending}
-                  />
-                ))}
+              <div className="overflow-hidden rounded-card border border-ink-800 bg-ink-900 shadow-card">
+                <div className="divide-y divide-ink-800">
+                  {serviceCategories.map((row) => (
+                    <CategoryTableRow
+                      key={row.id}
+                      row={row}
+                      onEdit={(r) => {
+                        setEditingCategory({ ...r, editing: true });
+                        setCategoryDialogOpen(true);
+                      }}
+                      onDelete={(r) => setDeletingCategory(r)}
+                      onToggle={handleCategoryToggle}
+                      pending={pending}
+                    />
+                  ))}
+                </div>
               </div>
             )}
           </section>
