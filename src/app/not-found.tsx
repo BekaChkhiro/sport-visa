@@ -67,7 +67,7 @@ export default function NotFound() {
               მთავარ გვერდზე
             </Link>
             <Link
-              href="/footballers"
+              href="/directory"
               className="inline-flex h-12 items-center justify-center gap-2 rounded-btn border border-ink-700 bg-ink-900 px-6 text-[15px] font-medium text-ink-100 transition-colors hover:border-ink-600 hover:bg-ink-800 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-400/25"
             >
               <svg

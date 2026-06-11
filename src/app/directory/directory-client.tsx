@@ -302,19 +302,27 @@ export function DirectoryClient({
         </div>
         {/* Search + mobile filter trigger */}
         <div className="flex w-full items-center gap-2.5 sm:w-auto">
-          <div className="flex h-11 flex-1 items-center gap-2.5 rounded-field border border-ink-700 bg-ink-950 px-3.5 transition-colors focus-within:border-brand-400/60 focus-within:ring-4 focus-within:ring-brand-400/15 sm:w-72">
-            <SearchIcon className="size-4 shrink-0 text-ink-500" aria-hidden="true" />
-            <input
-              type="search"
-              placeholder="სახელი ან ეროვნება…"
-              value={draftFilters.nationality ?? ''}
-              onChange={(e) =>
-                setDraftFilters((f) => ({ ...f, nationality: e.target.value || undefined }))
-              }
-              className="h-full flex-1 bg-transparent text-[14px] text-ink-50 outline-none placeholder:text-ink-600"
-              aria-label="ფეხბ. ძიება"
-            />
-          </div>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleApply();
+            }}
+            className="flex flex-1 sm:flex-none"
+          >
+            <div className="flex h-11 flex-1 items-center gap-2.5 rounded-field border border-ink-700 bg-ink-950 px-3.5 transition-colors focus-within:border-brand-400/60 focus-within:ring-4 focus-within:ring-brand-400/15 sm:w-72">
+              <SearchIcon className="size-4 shrink-0 text-ink-500" aria-hidden="true" />
+              <input
+                type="search"
+                placeholder="სახელი ან ეროვნება…"
+                value={draftFilters.nationality ?? ''}
+                onChange={(e) =>
+                  setDraftFilters((f) => ({ ...f, nationality: e.target.value || undefined }))
+                }
+                className="h-full flex-1 bg-transparent text-[14px] text-ink-50 outline-none placeholder:text-ink-600"
+                aria-label="ფეხბ. ძიება"
+              />
+            </div>
+          </form>
           <Button
             type="button"
             variant="outline"

@@ -8,6 +8,15 @@ import { signOut } from 'next-auth/react';
 import { AppShell } from '@/components/app-shell';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { ProfileAvatar } from '@/components/profile-avatar';
 import {
   ArrowRightIcon,
@@ -325,20 +334,71 @@ function ChatRow({ chat }: { chat: DashboardChat }) {
   );
 }
 
+/** Confirm-delete dialog for posts */
+function DeletePostDialog({
+  post,
+  open,
+  onOpenChange,
+  onConfirm,
+  pending,
+}: {
+  post: DashboardPost | null;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onConfirm: () => void;
+  pending: boolean;
+}) {
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>წაშლის დადასტურება</DialogTitle>
+          <DialogDescription>
+            ეს მოქმედება შეუქცევადია. გსურთ პოსტის წაშლა?
+            {post ? (
+              <span className="mt-1 block font-medium text-foreground/80">{post.title}</span>
+            ) : null}
+          </DialogDescription>
+        </DialogHeader>
+        <DialogFooter>
+          <DialogClose asChild>
+            <Button type="button" variant="outline" disabled={pending}>
+              გაუქმება
+            </Button>
+          </DialogClose>
+          <Button type="button" variant="destructive" onClick={onConfirm} disabled={pending}>
+            {pending ? 'იშლება…' : 'წაშლა'}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 /** Posts management list with optimistic delete */
 function PostsList({ posts }: { posts: DashboardPost[] }) {
   const [deletingId, setDeletingId] = React.useState<string | null>(null);
   const [localPosts, setLocalPosts] = React.useState(posts);
+  const [confirmTarget, setConfirmTarget] = React.useState<DashboardPost | null>(null);
+  const [dialogOpen, setDialogOpen] = React.useState(false);
 
-  async function handleDelete(id: string) {
-    if (deletingId) return;
-    setDeletingId(id);
-    setLocalPosts((prev) => prev.filter((p) => p.id !== id));
-    const result = await deleteClubPost(id);
+  function openDeleteDialog(post: DashboardPost) {
+    setConfirmTarget(post);
+    setDialogOpen(true);
+  }
+
+  async function handleConfirmDelete() {
+    if (!confirmTarget || deletingId) return;
+    const post = confirmTarget;
+    setDialogOpen(false);
+    setDeletingId(post.id);
+    setLocalPosts((prev) => prev.filter((p) => p.id !== post.id));
+    const result = await deleteClubPost(post.id);
     if (result.status === 'error') {
       setLocalPosts(posts);
     }
     setDeletingId(null);
+    setConfirmTarget(null);
   }
 
   if (localPosts.length === 0) {
@@ -361,72 +421,81 @@ function PostsList({ posts }: { posts: DashboardPost[] }) {
   }
 
   return (
-    <div className="overflow-hidden rounded-card border border-ink-800 bg-ink-900 shadow-card">
-      <div className="divide-y divide-ink-800">
-        {localPosts.map((post) => (
-          <div
-            key={post.id}
-            className="group flex items-center gap-3 px-4 py-3.5 transition-colors hover:bg-ink-800/40"
-          >
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] bg-brand-400/15 text-brand-300">
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                aria-hidden="true"
-              >
-                <rect x="3" y="3" width="18" height="18" rx="2" />
-                <circle cx="8.5" cy="8.5" r="1.5" />
-                <path d="m21 15-5-5L5 21" />
-              </svg>
-            </span>
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-[13.5px] font-medium text-ink-100">{post.title}</p>
-              <div className="mt-0.5 flex items-center gap-3 text-[11.5px] text-ink-500">
-                <span className="inline-flex items-center gap-1">
-                  <HeartIcon className="size-3" aria-hidden="true" />
-                  {post.likeCount} მოწონება
-                </span>
-                <span>· {formatKaDate(post.createdAt, { month: 'short' })}</span>
+    <>
+      <DeletePostDialog
+        post={confirmTarget}
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        onConfirm={handleConfirmDelete}
+        pending={deletingId !== null}
+      />
+      <div className="overflow-hidden rounded-card border border-ink-800 bg-ink-900 shadow-card">
+        <div className="divide-y divide-ink-800">
+          {localPosts.map((post) => (
+            <div
+              key={post.id}
+              className="group flex items-center gap-3 px-4 py-3.5 transition-colors hover:bg-ink-800/40"
+            >
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] bg-brand-400/15 text-brand-300">
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden="true"
+                >
+                  <rect x="3" y="3" width="18" height="18" rx="2" />
+                  <circle cx="8.5" cy="8.5" r="1.5" />
+                  <path d="m21 15-5-5L5 21" />
+                </svg>
+              </span>
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-[13.5px] font-medium text-ink-100">{post.title}</p>
+                <div className="mt-0.5 flex items-center gap-3 text-[11.5px] text-ink-500">
+                  <span className="inline-flex items-center gap-1">
+                    <HeartIcon className="size-3" aria-hidden="true" />
+                    {post.likeCount} მოწონება
+                  </span>
+                  <span>· {formatKaDate(post.createdAt, { month: 'short' })}</span>
+                </div>
+              </div>
+              <div className="flex shrink-0 items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
+                <Button variant="ghost" size="sm" asChild aria-label="რედ.">
+                  <Link href={`/posts/${post.id}/edit`}>
+                    <EditIcon className="size-3.5" />
+                  </Link>
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => openDeleteDialog(post)}
+                  disabled={deletingId === post.id}
+                  aria-label="წაშ."
+                  className="text-danger-300 hover:text-danger-300 hover:bg-danger-400/10"
+                >
+                  {deletingId === post.id ? (
+                    <SpinnerIcon className="size-3.5 animate-spin" />
+                  ) : (
+                    <DeleteIcon className="size-3.5" />
+                  )}
+                </Button>
               </div>
             </div>
-            <div className="flex shrink-0 items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
-              <Button variant="ghost" size="sm" asChild aria-label="რედ.">
-                <Link href={`/posts/${post.id}/edit`}>
-                  <EditIcon className="size-3.5" />
-                </Link>
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => handleDelete(post.id)}
-                disabled={deletingId === post.id}
-                aria-label="წაშ."
-                className="text-danger-300 hover:text-danger-300 hover:bg-danger-400/10"
-              >
-                {deletingId === post.id ? (
-                  <SpinnerIcon className="size-3.5 animate-spin" />
-                ) : (
-                  <DeleteIcon className="size-3.5" />
-                )}
-              </Button>
-            </div>
-          </div>
-        ))}
+          ))}
+        </div>
+        <Link
+          href="/posts/new"
+          className="flex w-full items-center justify-center gap-2 border-t border-ink-800 py-3 text-[13px] font-medium text-brand-400 transition-colors hover:bg-brand-400/5 focus-visible:ring-2 focus-visible:ring-brand-400 outline-none"
+        >
+          <PlusIcon className="size-4" />
+          ახალი პოსტის დამატება
+        </Link>
       </div>
-      <Link
-        href="/posts/new"
-        className="flex w-full items-center justify-center gap-2 border-t border-ink-800 py-3 text-[13px] font-medium text-brand-400 transition-colors hover:bg-brand-400/5 focus-visible:ring-2 focus-visible:ring-brand-400 outline-none"
-      >
-        <PlusIcon className="size-4" />
-        ახალი პოსტის დამატება
-      </Link>
-    </div>
+    </>
   );
 }
 
