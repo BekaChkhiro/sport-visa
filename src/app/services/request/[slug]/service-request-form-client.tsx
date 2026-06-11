@@ -354,11 +354,11 @@ export function ServiceRequestFormClient({
 
             {/* Contact preference */}
             <div className="space-y-1.5">
-              <p className="text-[12px] font-medium text-ink-300">საკონტაქტო პრეფერენცია</p>
+              <p className="text-[12px] font-medium text-ink-300">კავშირის ფორმა</p>
               <div
                 className="inline-flex rounded-field border border-ink-700 bg-ink-950 p-1"
                 role="group"
-                aria-label="საკონტაქტო პრეფერენცია"
+                aria-label="კავშირის ფორმა"
               >
                 {CONTACT_PREF_OPTIONS.map((opt) => (
                   <label key={opt.value} className="cursor-pointer">
@@ -368,6 +368,7 @@ export function ServiceRequestFormClient({
                       value={opt.value}
                       checked={contactPref === opt.value}
                       onChange={() => setContactPref(opt.value)}
+                      className="sr-only"
                     />
                     <span
                       className={`block rounded-[8px] px-3.5 py-2 text-[12.5px] font-medium transition-colors ${

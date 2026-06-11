@@ -464,28 +464,29 @@ function MediaSection({ initialData }: { initialData: MediaState }) {
       <div className="overflow-hidden rounded-card border border-ink-800 bg-ink-900 shadow-card p-6 space-y-6">
         {/* Logo */}
         <div className="space-y-3">
-          <Label>ლოგო (სავალდებულო)</Label>
-          <div className="flex items-center gap-4">
-            <div className="size-20 shrink-0 overflow-hidden rounded-lg border border-border bg-muted flex items-center justify-center">
+          <Label className="text-[12px] font-medium text-ink-300">ლოგო (სავალდებულო)</Label>
+          <div className="flex flex-wrap items-center gap-5 rounded-card border border-ink-800 bg-ink-950/40 p-4">
+            <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-[14px] border-2 border-ink-700 bg-ink-800">
               {logoUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={logoUrl} alt="კლუბის ლოგო" className="w-full h-full object-contain" />
+                <img src={logoUrl} alt="კლუბის ლოგო" className="h-full w-full object-contain" />
               ) : (
-                <span className="text-2xl text-muted-foreground/40">▓</span>
+                <span className="text-[28px] text-ink-600">▓</span>
               )}
             </div>
-            <div className="space-y-1">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => logoInputRef.current?.click()}
-                disabled={logoUploading}
-              >
-                {logoUploading ? 'ატვირთვა...' : 'ლოგოს შეცვლა'}
-              </Button>
-              <p className="text-xs text-muted-foreground">PNG / SVG · მაქს. 2 MB · კვ. ფ.</p>
+            <div className="min-w-0 flex-1">
+              <p className="text-[13.5px] font-semibold text-ink-100">კლუბის ლოგო</p>
+              <p className="mt-0.5 text-[12px] text-ink-500">PNG გამჭვ. ფონით · მაქს. 2 MB</p>
             </div>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => logoInputRef.current?.click()}
+              disabled={logoUploading}
+            >
+              {logoUploading ? 'ატვ...' : 'ლოგოს შეცვლა'}
+            </Button>
           </div>
           {logoError ? (
             <p role="alert" className="text-[12px] text-danger-300">
@@ -503,31 +504,31 @@ function MediaSection({ initialData }: { initialData: MediaState }) {
 
         {/* Cover */}
         <div className="space-y-3">
-          <Label>სტადიონის / გუნდის ფოტო</Label>
+          <Label className="text-[12px] font-medium text-ink-300">სტადიონის / გუნდის ფოტო</Label>
           <div
-            onClick={() => coverInputRef.current?.click()}
             className={cn(
-              'relative w-full aspect-[3/1] overflow-hidden rounded-lg border border-border bg-muted flex items-center justify-center cursor-pointer hover:opacity-90 transition-opacity',
-              coverUploading && 'opacity-50 cursor-default',
+              'relative aspect-[3/1] w-full cursor-pointer overflow-hidden rounded-card border border-ink-700 bg-ink-800 transition-opacity hover:opacity-90',
+              coverUploading && 'cursor-default opacity-50',
             )}
+            onClick={() => !coverUploading && coverInputRef.current?.click()}
           >
             {coverUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={coverUrl} alt="გარეკანი" className="w-full h-full object-cover" />
+              <img src={coverUrl} alt="გარეკანი" className="h-full w-full object-cover" />
             ) : (
-              <div className="flex flex-col items-center gap-1 text-muted-foreground/50">
-                <span className="text-3xl">░</span>
-                <span className="text-xs">ფოტოს ატვირთვა</span>
+              <div className="flex h-full flex-col items-center justify-center gap-1 text-ink-600">
+                <span className="text-[32px]">░</span>
+                <span className="text-[12px]">ფოტოს ატვირთვა</span>
               </div>
             )}
             {coverUrl ? (
-              <div className="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 bg-black/40 transition-opacity">
-                <span className="text-white text-sm font-medium">შეცვლა</span>
+              <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition-opacity hover:opacity-100">
+                <span className="text-[14px] font-medium text-white">შეცვლა</span>
               </div>
             ) : null}
           </div>
           <div className="flex items-center justify-between">
-            <p className="text-xs text-muted-foreground">JPG / PNG · მაქს. 10 MB</p>
+            <p className="text-[12px] text-ink-500">JPG / PNG · მაქს. 10 MB</p>
             <Button
               type="button"
               variant="outline"
@@ -535,7 +536,7 @@ function MediaSection({ initialData }: { initialData: MediaState }) {
               onClick={() => coverInputRef.current?.click()}
               disabled={coverUploading}
             >
-              {coverUploading ? 'ატვირთვა...' : coverUrl ? 'ფოტოს შეცვლა' : 'ფოტოს ატვირთვა'}
+              {coverUploading ? 'ატვ...' : coverUrl ? 'ფოტოს შეცვლა' : 'ფოტოს ატვირთვა'}
             </Button>
           </div>
           {coverError ? (
@@ -1173,21 +1174,22 @@ function RosterSection({ initialEntries }: { initialEntries: RosterEntry[] }) {
 
   return (
     <section aria-labelledby="roster-heading">
-      <div className="mb-4 flex items-center justify-between">
+      <div className="mb-3 flex items-center justify-between">
         <h2
           id="roster-heading"
-          className="text-xs font-semibold uppercase tracking-widest text-muted-foreground"
+          className="text-[10px] font-bold uppercase tracking-[0.16em] text-ink-500"
         >
           მიმდინარე შემადგენლობა
         </h2>
         {!addingNew && !editingId ? (
           <Button type="button" variant="outline" size="sm" onClick={openAdd}>
-            + მოთამაშის დამატება
+            <PlusIcon className="size-3.5" />
+            მოთამაშის დამ.
           </Button>
         ) : null}
       </div>
 
-      <div className="rounded-xl border border-border bg-card p-6 space-y-3">
+      <div className="overflow-hidden rounded-card border border-ink-800 bg-ink-900 shadow-card p-6 space-y-3">
         {addingNew ? (
           <RosterEntryForm
             draft={draft}
@@ -1201,7 +1203,7 @@ function RosterSection({ initialEntries }: { initialEntries: RosterEntry[] }) {
         ) : null}
 
         {entries.length === 0 && !addingNew ? (
-          <p className="text-sm text-muted-foreground text-center py-4">
+          <p className="text-[13px] text-ink-500 text-center py-4">
             ჯერ არ არის მოთამაშეები. დაამატე პირველი.
           </p>
         ) : null}
@@ -1221,21 +1223,23 @@ function RosterSection({ initialEntries }: { initialEntries: RosterEntry[] }) {
           ) : (
             <div
               key={entry.id}
-              className="flex items-center justify-between gap-2 rounded-lg border border-border px-4 py-3"
+              className="flex items-center justify-between gap-2 rounded-card border border-ink-800 bg-ink-950/40 px-4 py-3 transition-colors hover:border-ink-700"
             >
               <div className="flex items-center gap-3 min-w-0">
                 {entry.jerseyNumber != null ? (
-                  <span className="inline-flex size-7 shrink-0 items-center justify-center rounded-full border border-border bg-muted text-xs font-semibold tabular-nums">
+                  <span className="inline-flex size-8 shrink-0 items-center justify-center rounded-full bg-ink-800 font-mono text-[13px] font-semibold tabular-nums text-ink-300">
                     {entry.jerseyNumber}
                   </span>
                 ) : (
-                  <span className="inline-flex size-7 shrink-0 items-center justify-center rounded-full border border-dashed border-border text-xs text-muted-foreground/50">
+                  <span className="inline-flex size-8 shrink-0 items-center justify-center rounded-full border border-dashed border-ink-700 font-mono text-[12px] text-ink-600">
                     —
                   </span>
                 )}
-                <p className="text-sm font-medium truncate">{entry.playerName}</p>
+                <p className="text-[13.5px] font-semibold text-ink-100 truncate">
+                  {entry.playerName}
+                </p>
                 {entry.position ? (
-                  <span className="inline-flex items-center rounded-full border border-transparent bg-secondary px-2 py-0.5 text-xs font-medium uppercase tracking-widest text-secondary-foreground">
+                  <span className="inline-flex items-center rounded-pill bg-iris-400/15 px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide text-iris-300">
                     {entry.position}
                   </span>
                 ) : null}
@@ -1254,7 +1258,7 @@ function RosterSection({ initialEntries }: { initialEntries: RosterEntry[] }) {
                   type="button"
                   variant="ghost"
                   size="sm"
-                  className="text-destructive hover:text-destructive"
+                  className="text-danger-400 hover:text-danger-300"
                   onClick={() => handleDelete(entry.id)}
                   disabled={deletingId === entry.id}
                 >
@@ -1266,13 +1270,16 @@ function RosterSection({ initialEntries }: { initialEntries: RosterEntry[] }) {
         )}
 
         {formError && !addingNew && !editingId ? (
-          <p role="alert" className="text-sm text-destructive">
+          <p role="alert" className="text-[12px] text-danger-300">
             {formError}
           </p>
         ) : null}
 
         {savedMessage && !addingNew && !editingId ? (
-          <p className="text-sm text-emerald-600 dark:text-emerald-400 text-right">✓ შენახულია</p>
+          <p className="flex items-center justify-end gap-1.5 text-[13px] text-success-300">
+            <CheckCircleIcon className="size-4" />
+            შენახულია
+          </p>
         ) : null}
       </div>
     </section>
@@ -1299,7 +1306,7 @@ function RosterEntryForm({
   onCancel: () => void;
 }) {
   return (
-    <div className="rounded-lg border border-border bg-muted/30 p-4 space-y-3">
+    <div className="rounded-card border border-ink-800 bg-ink-950/40 p-4 space-y-3">
       <div className="grid grid-cols-6 gap-3">
         <Field label="მოთამაშის სახელი ★" error={errors.playerName} className="col-span-3">
           <Input
@@ -1336,7 +1343,7 @@ function RosterEntryForm({
         </Field>
       </div>
       {errorMessage ? (
-        <p role="alert" className="text-sm text-destructive">
+        <p role="alert" className="text-[12px] text-danger-300">
           {errorMessage}
         </p>
       ) : null}
@@ -1382,9 +1389,11 @@ function Field({
 
   return (
     <div className={cn('space-y-1.5', className)}>
-      <Label htmlFor={generatedId}>{label}</Label>
+      <Label htmlFor={generatedId} className="text-[12px] font-medium text-ink-300">
+        {label}
+      </Label>
       {control}
-      {error ? <p className="text-sm text-destructive">{error}</p> : null}
+      {error ? <p className="text-[12px] text-danger-300">{error}</p> : null}
     </div>
   );
 }

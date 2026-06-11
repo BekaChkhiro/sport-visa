@@ -8,7 +8,16 @@ import { signOut } from 'next-auth/react';
 import { AppShell } from '@/components/app-shell';
 import { Button } from '@/components/ui/button';
 import { VerificationBadge, type VerificationStatus } from '@/components/verification-badge';
-import { ArrowLeftIcon, EyeIcon, StarIcon, MapPinIcon, GlobeIcon } from '@/components/icons';
+import {
+  ArrowLeftIcon,
+  EyeIcon,
+  StarIcon,
+  MapPinIcon,
+  GlobeIcon,
+  CalendarIcon,
+  ShieldIcon,
+  UsersIcon,
+} from '@/components/icons';
 import { COUNTRIES } from '@/lib/onboarding/schemas';
 import { buildMapEmbedSrc } from '@/lib/club-profile/map-embed';
 import { cn } from '@/lib/utils';
@@ -102,23 +111,16 @@ export function ClubProfilePreviewClient({
 
   const countryLabel = COUNTRIES.find((c) => c.code === profile.country)?.label ?? profile.country;
 
-  const metaParts = [
-    profile.city,
-    countryLabel,
-    profile.league,
-    profile.foundedYear ? `დაარ. ${profile.foundedYear}` : null,
-  ].filter(Boolean);
-
   return (
     <AppShell role="club" currentPath={currentPath} user={user} onSignOut={handleSignOut}>
-      <div className="mx-auto max-w-3xl space-y-6">
-        {/* ── Preview banner ─────────────────────────────────────────────── */}
-        <div className="flex items-center justify-between gap-4 rounded-xl border border-primary/30 bg-primary/5 px-4 py-3">
-          <div className="flex items-center gap-3">
-            <EyeIcon className="size-4 shrink-0 text-primary" />
-            <p className="text-sm text-foreground">
-              <span className="font-medium">პრევიუ — ფეხბურთელების ხედვა.</span> ასე გამოიყურება
-              შენი კლუბის პროფილი.
+      <div className="mx-auto max-w-[900px]">
+        {/* ── Preview / completion banner ─────────────────────────────────── */}
+        <div className="mb-5 flex flex-wrap items-center justify-between gap-3 overflow-hidden rounded-card border border-brand-400/25 bg-brand-400/8 px-4 py-3 shadow-card">
+          <div className="flex items-center gap-2.5">
+            <EyeIcon className="size-4 shrink-0 text-brand-300" />
+            <p className="text-[13px] text-ink-200">
+              <span className="font-semibold text-ink-50">პრევიუ — ფეხბურთელების ხედვა.</span> ასე
+              გამოიყურება შენი კლუბის პროფილი.
             </p>
           </div>
           <Button variant="outline" size="sm" asChild>
@@ -129,101 +131,136 @@ export function ClubProfilePreviewClient({
           </Button>
         </div>
 
-        {/* ── Hero / cover ───────────────────────────────────────────────── */}
-        <div className="overflow-hidden rounded-xl border border-border bg-card">
+        {/* ── Public hero card ────────────────────────────────────────────── */}
+        <div className="overflow-hidden rounded-card border border-ink-800 bg-ink-900 shadow-card">
+          {/* Cover / banner */}
           {profile.coverUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
               src={profile.coverUrl}
-              alt="სტადიონი / გარეკანი"
-              className="h-40 w-full object-cover sm:h-56"
+              alt="სტ. / გარეკანი"
+              className="h-44 w-full object-cover opacity-50 sm:h-52"
             />
           ) : (
-            <div className="h-28 w-full bg-gradient-to-br from-primary/10 to-muted" />
+            <div className="h-36 w-full bg-gradient-to-br from-accent-400/10 via-ink-900/60 to-ink-900" />
           )}
 
-          <div className="px-5 pb-5">
-            {/* Logo overlapping cover */}
-            <div className="-mt-10 mb-4 flex items-end justify-between gap-4">
-              <div className="h-20 w-20 overflow-hidden rounded-xl border-4 border-card bg-muted shadow-sm flex items-center justify-center shrink-0">
+          <div className="px-5 pb-6 sm:px-7">
+            {/* Logo + identity */}
+            <div className="-mt-12 flex flex-wrap items-end gap-4">
+              {/* Club logo */}
+              <div className="flex h-24 w-24 shrink-0 items-center justify-center rounded-[20px] border-4 border-ink-900 bg-accent-400/15 text-accent-300 shadow-float">
                 {profile.logoUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
                     src={profile.logoUrl}
                     alt={`${profile.name} ლოგო`}
-                    className="h-full w-full object-contain"
+                    className="h-full w-full rounded-[16px] object-contain"
                   />
                 ) : (
-                  <span className="text-2xl font-bold text-muted-foreground/40">
-                    {profile.name[0]}
-                  </span>
+                  <ShieldIcon className="size-11 stroke-[1.5]" />
                 )}
               </div>
-              <VerificationBadge status={profile.verificationStatus} />
+
+              <div className="mb-1 min-w-0 flex-1">
+                <div className="flex flex-wrap items-center gap-2">
+                  <h1 className="font-display text-[26px] font-bold tracking-tight text-ink-50 sm:text-[28px]">
+                    {profile.name}
+                  </h1>
+                  {profile.verificationStatus === 'verified' && (
+                    <VerificationBadge status="verified" />
+                  )}
+                </div>
+                <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[13px] text-ink-400">
+                  {(profile.city || countryLabel) && (
+                    <span className="inline-flex items-center gap-1">
+                      <MapPinIcon className="size-3.5 text-ink-500" />
+                      {[profile.city, countryLabel].filter(Boolean).join(', ')}
+                    </span>
+                  )}
+                  {profile.foundedYear && (
+                    <span className="inline-flex items-center gap-1">
+                      <CalendarIcon className="size-3.5 text-ink-500" />
+                      დაარ. {profile.foundedYear}
+                    </span>
+                  )}
+                  {profile.league && (
+                    <span className="inline-flex items-center gap-1 rounded-pill bg-accent-400/15 px-2 py-0.5 font-semibold text-accent-300">
+                      {profile.league}
+                    </span>
+                  )}
+                </div>
+              </div>
             </div>
 
-            {/* Name + meta */}
-            <h1 className="text-2xl font-bold leading-tight">{profile.name}</h1>
-            {metaParts.length > 0 && (
-              <p className="mt-1 text-sm text-muted-foreground">{metaParts.join(' · ')}</p>
-            )}
-
             {/* Stats strip */}
-            <div className="mt-4 flex items-center gap-5 border-t border-border pt-4 text-sm text-muted-foreground">
+            <div className="mt-5 flex items-center gap-5 border-t border-ink-800 pt-4 text-[13px] text-ink-400">
               <span className="flex items-center gap-1.5">
                 <EyeIcon className="size-3.5" />
-                <span className="font-semibold text-foreground">{profile.profileViewCount}</span>
+                <span className="font-semibold text-ink-50">{profile.profileViewCount}</span>
                 ნახვები
               </span>
               <span className="flex items-center gap-1.5">
                 <StarIcon className="size-3.5" />
-                <span className="font-semibold text-foreground">{profile.shortlistCount}</span>
+                <span className="font-semibold text-ink-50">{profile.shortlistCount}</span>
                 შენახვები
               </span>
+              {profile.rosterEntries.length > 0 && (
+                <span className="flex items-center gap-1.5">
+                  <UsersIcon className="size-3.5" />
+                  <span className="font-semibold text-ink-50">{profile.rosterEntries.length}</span>
+                  მოთ.
+                </span>
+              )}
+            </div>
+
+            {/* Tabs */}
+            <div className="mt-5 flex gap-1 border-b border-ink-800">
+              {TABS.map((tab) => (
+                <button
+                  key={tab.id}
+                  type="button"
+                  onClick={() => handleTabChange(tab.id)}
+                  className={cn(
+                    'relative -mb-px px-4 py-3 text-[13.5px] font-medium transition-colors',
+                    activeTab === tab.id ? 'text-ink-50' : 'text-ink-400 hover:text-ink-200',
+                  )}
+                >
+                  {tab.label}
+                  {activeTab === tab.id && (
+                    <span className="absolute inset-x-2 -bottom-px h-0.5 rounded-full bg-brand-400" />
+                  )}
+                </button>
+              ))}
+            </div>
+
+            {/* Tab content */}
+            <div className="pt-5">
+              {activeTab === 'bio' && (
+                <BioTab
+                  bio={profile.bio}
+                  historyEvents={profile.historyEvents}
+                  officialWebsite={profile.officialWebsite}
+                  stadiumName={profile.stadiumName}
+                  stadiumCapacity={profile.stadiumCapacity}
+                />
+              )}
+              {activeTab === 'roster' && <RosterTab entries={profile.rosterEntries} />}
+              {activeTab === 'stadium' && (
+                <StadiumTab
+                  stadiumName={profile.stadiumName}
+                  stadiumCapacity={profile.stadiumCapacity}
+                  stadiumAddress={profile.stadiumAddress}
+                  stadiumMapUrl={profile.stadiumMapUrl}
+                />
+              )}
+              {activeTab === 'news' && <NewsTab />}
             </div>
           </div>
         </div>
 
-        {/* ── Tab navigation ─────────────────────────────────────────────── */}
-        <div className="flex overflow-x-auto gap-1 rounded-xl border border-border bg-card p-1 no-scrollbar">
-          {TABS.map((tab) => (
-            <button
-              key={tab.id}
-              type="button"
-              onClick={() => handleTabChange(tab.id)}
-              className={cn(
-                'flex-1 min-w-max rounded-lg px-4 py-2 text-sm font-medium transition-colors whitespace-nowrap',
-                activeTab === tab.id
-                  ? 'bg-primary text-primary-foreground'
-                  : 'text-muted-foreground hover:text-foreground hover:bg-muted',
-              )}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
-
-        {/* ── Tab panels ────────────────────────────────────────────────── */}
-        {activeTab === 'bio' && (
-          <BioTab
-            bio={profile.bio}
-            historyEvents={profile.historyEvents}
-            officialWebsite={profile.officialWebsite}
-          />
-        )}
-        {activeTab === 'roster' && <RosterTab entries={profile.rosterEntries} />}
-        {activeTab === 'stadium' && (
-          <StadiumTab
-            stadiumName={profile.stadiumName}
-            stadiumCapacity={profile.stadiumCapacity}
-            stadiumAddress={profile.stadiumAddress}
-            stadiumMapUrl={profile.stadiumMapUrl}
-          />
-        )}
-        {activeTab === 'news' && <NewsTab />}
-
-        {/* ── Bottom edit link ───────────────────────────────────────────── */}
-        <div className="flex justify-center pb-4">
+        {/* ── Bottom edit link ─────────────────────────────────────────────── */}
+        <div className="mt-8 flex justify-center pb-4">
           <Button variant="outline" asChild>
             <Link href="/profile/club/edit">
               <ArrowLeftIcon className="size-4" />
@@ -242,73 +279,104 @@ function BioTab({
   bio,
   historyEvents,
   officialWebsite,
+  stadiumName,
+  stadiumCapacity,
 }: {
   bio?: string;
   historyEvents: HistoryEvent[];
   officialWebsite?: string;
+  stadiumName?: string;
+  stadiumCapacity?: number;
 }) {
   return (
-    <div className="space-y-5">
-      {bio ? (
-        <section aria-labelledby="bio-heading">
-          <SectionHeading id="bio-heading">ისტ. / ბიო</SectionHeading>
-          <div className="rounded-xl border border-border bg-card p-5">
-            <p className="text-sm leading-relaxed whitespace-pre-line">{bio}</p>
-          </div>
-        </section>
-      ) : null}
+    <div className="grid gap-5 lg:grid-cols-[1fr_280px]">
+      {/* Main column */}
+      <div className="space-y-5">
+        {bio ? (
+          <section aria-labelledby="bio-heading">
+            <SectionLabel id="bio-heading">კლუბის შესახებ</SectionLabel>
+            <div className="rounded-card border border-ink-800 bg-ink-950/40 p-4">
+              <p className="text-[14.5px] leading-[1.7] text-ink-300 whitespace-pre-line">{bio}</p>
+            </div>
+          </section>
+        ) : null}
 
-      {historyEvents.length > 0 ? (
-        <section aria-labelledby="history-heading">
-          <SectionHeading id="history-heading">ისტ. მოვლენები</SectionHeading>
-          <div className="rounded-xl border border-border bg-card p-5">
-            <ol className="relative border-l border-border ml-2 space-y-5">
-              {historyEvents.map((event) => (
-                <li key={event.id} className="ml-5">
-                  <span className="absolute -left-1.5 mt-1 flex h-3 w-3 items-center justify-center rounded-full border border-border bg-background ring-4 ring-background" />
-                  <p className="text-sm font-semibold leading-tight">
-                    <span className="text-primary">{event.year}</span>
-                    {' — '}
-                    {event.title}
-                  </p>
-                  {event.description ? (
-                    <p className="mt-0.5 text-xs text-muted-foreground">{event.description}</p>
-                  ) : null}
+        {historyEvents.length > 0 ? (
+          <section aria-labelledby="history-heading">
+            <SectionLabel id="history-heading">ისტ. მოვლენები</SectionLabel>
+            <ol className="relative space-y-4 pl-6">
+              <span className="absolute left-[7px] top-2 bottom-2 w-px bg-ink-800" />
+              {historyEvents.map((event, i) => (
+                <li key={event.id} className="relative">
+                  <span
+                    className={cn(
+                      'absolute -left-6 top-1 flex h-3.5 w-3.5 items-center justify-center rounded-full ring-4 ring-ink-900',
+                      i === 0 ? 'bg-brand-400' : 'bg-ink-700',
+                    )}
+                  />
+                  <div className="rounded-card border border-ink-800 bg-ink-950/40 p-4">
+                    <div className="flex items-center gap-2">
+                      <span className="rounded-pill bg-brand-400/15 px-2 py-0.5 font-mono text-[11px] font-bold tabular-nums text-brand-300">
+                        {event.year}
+                      </span>
+                      <p className="text-[14.5px] font-semibold text-ink-50">{event.title}</p>
+                    </div>
+                    {event.description ? (
+                      <p className="mt-1.5 text-[13px] leading-relaxed text-ink-400">
+                        {event.description}
+                      </p>
+                    ) : null}
+                  </div>
                 </li>
               ))}
             </ol>
-          </div>
-        </section>
-      ) : null}
+          </section>
+        ) : null}
 
-      {officialWebsite ? (
-        <section aria-labelledby="contact-heading">
-          <SectionHeading id="contact-heading">კონტაქტი</SectionHeading>
-          <div className="rounded-xl border border-border bg-card p-5">
-            <a
-              href={officialWebsite}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-2 text-sm text-primary hover:underline break-all"
-            >
-              <GlobeIcon className="size-4 shrink-0" />
-              {officialWebsite}
-            </a>
-          </div>
-        </section>
-      ) : null}
+        {officialWebsite ? (
+          <section aria-labelledby="contact-heading">
+            <SectionLabel id="contact-heading">კონტაქტი</SectionLabel>
+            <div className="rounded-card border border-ink-800 bg-ink-950/40 p-4">
+              <a
+                href={officialWebsite}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 text-[13.5px] text-brand-300 hover:text-brand-200 hover:underline break-all"
+              >
+                <GlobeIcon className="size-4 shrink-0" />
+                {officialWebsite}
+              </a>
+            </div>
+          </section>
+        ) : null}
 
-      {!bio && historyEvents.length === 0 && !officialWebsite ? (
-        <div className="rounded-xl border border-dashed border-border bg-card p-8 text-center">
-          <p className="text-sm text-muted-foreground">
-            ბიო / ისტორია ჯერ არ არის შევსებული. გადადი{' '}
-            <Link href="/profile/club/edit" className="text-primary hover:underline">
-              პროფილის რედაქტირებაზე
-            </Link>
-            .
-          </p>
-        </div>
-      ) : null}
+        {!bio && historyEvents.length === 0 && !officialWebsite ? (
+          <div className="rounded-card border border-dashed border-ink-700 bg-ink-900 p-8 text-center">
+            <p className="text-[13px] text-ink-500">
+              ბიო / ისტორია ჯერ არ არის შევსებული. გადადი{' '}
+              <Link href="/profile/club/edit" className="text-brand-300 hover:underline">
+                პროფილის რედაქტირებაზე
+              </Link>
+              .
+            </p>
+          </div>
+        ) : null}
+      </div>
+
+      {/* Sidebar */}
+      <aside className="space-y-4">
+        {stadiumName || typeof stadiumCapacity === 'number' ? (
+          <div className="rounded-card border border-ink-800 bg-ink-950/40 p-4">
+            <SectionLabel>სტადიონი</SectionLabel>
+            {stadiumName && <p className="text-[14px] font-semibold text-ink-100">{stadiumName}</p>}
+            {typeof stadiumCapacity === 'number' && (
+              <p className="text-[12.5px] text-ink-500">
+                ტევადობა {stadiumCapacity.toLocaleString()} ადგ.
+              </p>
+            )}
+          </div>
+        ) : null}
+      </aside>
     </div>
   );
 }
@@ -318,10 +386,10 @@ function BioTab({
 function RosterTab({ entries }: { entries: RosterEntry[] }) {
   if (entries.length === 0) {
     return (
-      <div className="rounded-xl border border-dashed border-border bg-card p-8 text-center">
-        <p className="text-sm text-muted-foreground">
+      <div className="rounded-card border border-dashed border-ink-700 bg-ink-900 p-8 text-center">
+        <p className="text-[13px] text-ink-500">
           შემადგენლობა ჯერ არ არის დამატებული. გადადი{' '}
-          <Link href="/profile/club/edit" className="text-primary hover:underline">
+          <Link href="/profile/club/edit" className="text-brand-300 hover:underline">
             პროფილის რედაქტირებაზე
           </Link>
           .
@@ -332,42 +400,26 @@ function RosterTab({ entries }: { entries: RosterEntry[] }) {
 
   return (
     <section aria-labelledby="roster-heading">
-      <SectionHeading id="roster-heading">მიმდინარე შემადგენლობა</SectionHeading>
-      <div className="rounded-xl border border-border bg-card overflow-hidden">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-border bg-muted/50">
-              <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-widest text-muted-foreground w-12">
-                #
-              </th>
-              <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-                სახელი
-              </th>
-              <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-                პოზ.
-              </th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-border">
-            {entries.map((entry) => (
-              <tr key={entry.id} className="hover:bg-muted/30 transition-colors">
-                <td className="px-4 py-3 tabular-nums text-muted-foreground">
-                  {entry.jerseyNumber != null ? entry.jerseyNumber : '—'}
-                </td>
-                <td className="px-4 py-3 font-medium">{entry.playerName}</td>
-                <td className="px-4 py-3">
-                  {entry.position ? (
-                    <span className="inline-flex items-center rounded-full border border-transparent bg-secondary px-2 py-0.5 text-xs font-medium uppercase tracking-widest text-secondary-foreground">
-                      {entry.position}
-                    </span>
-                  ) : (
-                    <span className="text-muted-foreground/50">—</span>
-                  )}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      <SectionLabel id="roster-heading">მიმდინარე შემადგენლობა</SectionLabel>
+      <div className="grid gap-3 sm:grid-cols-2">
+        {entries.map((entry) => (
+          <div
+            key={entry.id}
+            className="flex items-center gap-3 rounded-card border border-ink-800 bg-ink-950/40 p-3.5 transition-colors hover:border-ink-700"
+          >
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] bg-ink-800 font-mono text-[14px] font-bold tabular-nums text-ink-300">
+              {entry.jerseyNumber != null ? entry.jerseyNumber : '—'}
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-[13.5px] font-semibold text-ink-50">{entry.playerName}</p>
+              {entry.position ? (
+                <span className="mt-0.5 inline-block rounded-pill bg-iris-400/15 px-2 py-0.5 text-[10.5px] font-bold text-iris-300">
+                  {entry.position}
+                </span>
+              ) : null}
+            </div>
+          </div>
+        ))}
       </div>
     </section>
   );
@@ -390,10 +442,10 @@ function StadiumTab({
 
   if (!hasAny) {
     return (
-      <div className="rounded-xl border border-dashed border-border bg-card p-8 text-center">
-        <p className="text-sm text-muted-foreground">
+      <div className="rounded-card border border-dashed border-ink-700 bg-ink-900 p-8 text-center">
+        <p className="text-[13px] text-ink-500">
           სტადიონის ინფო ჯერ არ არის შევსებული. გადადი{' '}
-          <Link href="/profile/club/edit" className="text-primary hover:underline">
+          <Link href="/profile/club/edit" className="text-brand-300 hover:underline">
             პროფილის რედაქტირებაზე
           </Link>
           .
@@ -406,18 +458,34 @@ function StadiumTab({
 
   return (
     <section aria-labelledby="stadium-heading">
-      <SectionHeading id="stadium-heading">სტადიონი</SectionHeading>
-      <div className="rounded-xl border border-border bg-card p-5 space-y-4">
+      <SectionLabel id="stadium-heading">სტადიონი</SectionLabel>
+      <div className="rounded-card border border-ink-800 bg-ink-950/40 p-4 space-y-4">
         <dl className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          {stadiumName && <InfoItem label="სტადიონი" value={stadiumName} />}
+          {stadiumName && (
+            <div>
+              <dt className="text-[11px] font-medium uppercase tracking-wide text-ink-500">
+                სახელი
+              </dt>
+              <dd className="mt-1 text-[14px] font-semibold text-ink-100">{stadiumName}</dd>
+            </div>
+          )}
           {typeof stadiumCapacity === 'number' && (
-            <InfoItem label="ტევადობა" value={`${stadiumCapacity.toLocaleString()} ადგ.`} />
+            <div>
+              <dt className="text-[11px] font-medium uppercase tracking-wide text-ink-500">
+                ტევადობა
+              </dt>
+              <dd className="mt-1 text-[14px] font-semibold text-ink-100">
+                {stadiumCapacity.toLocaleString()} ადგ.
+              </dd>
+            </div>
           )}
           {stadiumAddress && (
             <div className="sm:col-span-2">
-              <dt className="text-xs text-muted-foreground">მისამართი</dt>
-              <dd className="mt-0.5 flex items-start gap-1.5 text-sm font-medium">
-                <MapPinIcon className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
+              <dt className="text-[11px] font-medium uppercase tracking-wide text-ink-500">
+                მისამართი
+              </dt>
+              <dd className="mt-1 flex items-start gap-1.5 text-[13.5px] font-medium text-ink-100">
+                <MapPinIcon className="mt-0.5 size-4 shrink-0 text-ink-500" />
                 {stadiumAddress}
               </dd>
             </div>
@@ -425,7 +493,7 @@ function StadiumTab({
         </dl>
 
         {embedSrc ? (
-          <div className="overflow-hidden rounded-lg border border-border">
+          <div className="overflow-hidden rounded-card border border-ink-800">
             <iframe
               src={embedSrc}
               width="100%"
@@ -442,7 +510,7 @@ function StadiumTab({
             href={stadiumMapUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-2 text-sm text-primary hover:underline break-all"
+            className="flex items-center gap-2 text-[13.5px] text-brand-300 hover:underline break-all"
           >
             <MapPinIcon className="size-4 shrink-0" />
             Google Maps-ზე ნახვა
@@ -457,8 +525,8 @@ function StadiumTab({
 
 function NewsTab() {
   return (
-    <div className="rounded-xl border border-dashed border-border bg-card p-8 text-center">
-      <p className="text-sm text-muted-foreground">
+    <div className="rounded-card border border-dashed border-ink-700 bg-ink-900 p-8 text-center">
+      <p className="text-[13px] text-ink-500">
         სიახლეების ფუნქცია მომდევნო ფაზაში გახდება ხელმისაწვდომი.
       </p>
     </div>
@@ -467,22 +535,10 @@ function NewsTab() {
 
 // ── Shared helpers ────────────────────────────────────────────────────────────
 
-function SectionHeading({ id, children }: { id: string; children: React.ReactNode }) {
+function SectionLabel({ id, children }: { id?: string; children?: React.ReactNode }) {
   return (
-    <h2
-      id={id}
-      className="mb-3 text-xs font-semibold uppercase tracking-widest text-muted-foreground"
-    >
+    <p id={id} className="mb-2.5 text-[11px] font-bold uppercase tracking-[0.16em] text-ink-500">
       {children}
-    </h2>
-  );
-}
-
-function InfoItem({ label, value }: { label: string; value: string }) {
-  return (
-    <div>
-      <dt className="text-xs text-muted-foreground">{label}</dt>
-      <dd className="mt-0.5 text-sm font-medium">{value}</dd>
-    </div>
+    </p>
   );
 }

@@ -57,17 +57,12 @@ function renderClient(categories = CATEGORIES) {
 describe('ServiceCategoriesClient — heading', () => {
   it('renders page heading', () => {
     renderClient();
-    expect(screen.getByText('სერვისის მოთხოვნა')).toBeDefined();
+    expect(screen.getByText('სერვისები')).toBeDefined();
   });
 
-  it('renders step indicator', () => {
+  it('renders available services section label', () => {
     renderClient();
-    expect(screen.getByText(/ნაბიჯი 1 \/ 2/)).toBeDefined();
-  });
-
-  it('renders back-to-dashboard link', () => {
-    const { container } = renderClient();
-    expect(container.querySelector('a[href="/dashboard"]')).not.toBeNull();
+    expect(screen.getByText('ხელმისაწვდომი სერვისები')).toBeDefined();
   });
 });
 

@@ -82,7 +82,16 @@ type ClubPostDetailClientProps = {
   unreadNotifications: number;
   canLike: boolean;
   clubId: string;
-  club: { name: string; logoUrl?: string; initials: string };
+  club: {
+    name: string;
+    logoUrl?: string;
+    initials: string;
+    city?: string;
+    league?: string;
+    subscriberCount?: number;
+    postCount?: number;
+    rosterCount?: number;
+  };
   post: {
     id: string;
     title: string;
@@ -90,6 +99,8 @@ type ClubPostDetailClientProps = {
     publishedAt: string;
     likeCount: number;
     isLiked: boolean;
+    category?: string;
+    viewCount?: number;
   };
 };
 
@@ -203,17 +214,37 @@ export function ClubPostDetailClient({
                       {club.name}
                     </Link>
                   </div>
-                  <p className="mt-0.5 text-[12px] text-ink-500">{post.publishedAt}</p>
+                  <div className="mt-0.5 flex items-center gap-2 text-[12px] text-ink-500">
+                    <span>{post.publishedAt}</span>
+                    {post.viewCount !== undefined && (
+                      <>
+                        <span>·</span>
+                        <span>
+                          {post.viewCount.toLocaleString('en-US').replace(/,/g, ' ')} ნახვა
+                        </span>
+                      </>
+                    )}
+                  </div>
                 </div>
               </div>
 
               {/* Content */}
               <div className="px-5 py-6 sm:px-8 sm:py-8">
-                <h1 className="font-display text-[28px] font-bold leading-[1.15] tracking-tight text-ink-50 sm:text-[32px]">
+                {post.category && (
+                  <span className="inline-flex items-center gap-1.5 rounded-pill bg-brand-400/15 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-brand-300">
+                    {post.category}
+                  </span>
+                )}
+                <h1
+                  className={cn(
+                    'font-display text-[28px] font-bold leading-[1.12] tracking-tight text-ink-50 sm:text-[36px]',
+                    post.category ? 'mt-4' : '',
+                  )}
+                >
                   {post.title}
                 </h1>
 
-                <div className="mt-6 space-y-4 text-[15px] leading-[1.75] text-ink-300 whitespace-pre-wrap">
+                <div className="mt-6 space-y-4 text-[15.5px] leading-[1.75] text-ink-300 whitespace-pre-wrap">
                   {post.body}
                 </div>
               </div>
@@ -281,6 +312,21 @@ export function ClubPostDetailClient({
                 </button>
               </div>
             </article>
+
+            {/* Liked-by strip */}
+            {likeCount > 0 && (
+              <div className="mt-4 flex items-center gap-3 rounded-card border border-ink-800 bg-ink-900 px-5 py-3.5 shadow-card">
+                <div className="flex -space-x-2">
+                  {Array.from({ length: Math.min(4, likeCount) }).map((_, n) => (
+                    <div key={n} className="h-7 w-7 rounded-full bg-ink-700 ring-2 ring-ink-900" />
+                  ))}
+                </div>
+                <p className="text-[12.5px] text-ink-400">
+                  <span className="font-semibold text-ink-100">{likeCount}</span> ფეხბ. მოიწონებს ამ
+                  სიახლეს
+                </p>
+              </div>
+            )}
           </main>
 
           {/* Sidebar */}
@@ -313,7 +359,47 @@ export function ClubPostDetailClient({
                   <h3 className="font-display text-[17px] font-bold tracking-tight text-ink-50">
                     {club.name}
                   </h3>
+                  {(club.city || club.league) && (
+                    <div className="mt-1.5 flex flex-wrap items-center gap-2 text-[12px] text-ink-400">
+                      {club.city && <span>{club.city}</span>}
+                      {club.league && (
+                        <span className="inline-flex items-center rounded-pill bg-accent-400/15 px-2 py-0.5 text-[11px] font-semibold text-accent-300">
+                          {club.league}
+                        </span>
+                      )}
+                    </div>
+                  )}
                 </div>
+                {(club.rosterCount !== undefined ||
+                  club.postCount !== undefined ||
+                  club.subscriberCount !== undefined) && (
+                  <div className="mt-4 grid grid-cols-3 divide-x divide-ink-800 rounded-card border border-ink-800 bg-ink-950/40 py-2.5 text-center">
+                    {(
+                      [
+                        [
+                          club.rosterCount !== undefined ? String(club.rosterCount) : '—',
+                          'შემადგ.',
+                        ],
+                        [club.postCount !== undefined ? String(club.postCount) : '—', 'სიახლე'],
+                        [
+                          club.subscriberCount !== undefined
+                            ? club.subscriberCount >= 1000
+                              ? `${(club.subscriberCount / 1000).toFixed(1)}კ`
+                              : String(club.subscriberCount)
+                            : '—',
+                          'გამომწ.',
+                        ],
+                      ] as [string, string][]
+                    ).map(([v, l]) => (
+                      <div key={l}>
+                        <div className="font-mono text-[15px] font-bold tabular-nums text-ink-50">
+                          {v}
+                        </div>
+                        <div className="text-[10.5px] text-ink-500">{l}</div>
+                      </div>
+                    ))}
+                  </div>
+                )}
                 <Button variant="outline" size="sm" className="mt-4 w-full" asChild>
                   <Link href={`/clubs/${clubId}`}>კლუბის პროფილი</Link>
                 </Button>

@@ -82,7 +82,7 @@ function renderDetail(
 describe('FootballerDetailClient — hero section', () => {
   it('renders full footballer name', () => {
     renderDetail();
-    expect(screen.getByText('Giorgi Mikhelidze')).toBeDefined();
+    expect(screen.getAllByText('Giorgi Mikhelidze').length).toBeGreaterThanOrEqual(1);
   });
 
   it('renders primary position chip', () => {

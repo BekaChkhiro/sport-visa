@@ -87,7 +87,7 @@ function renderDetail(
 describe('ClubDetailClient — hero section', () => {
   it('renders club name', () => {
     renderDetail();
-    expect(screen.getByText('FC Dinamo Tbilisi')).toBeDefined();
+    expect(screen.getAllByText('FC Dinamo Tbilisi').length).toBeGreaterThanOrEqual(1);
   });
 
   it('renders city and country in meta paragraph', () => {
@@ -119,12 +119,12 @@ describe('ClubDetailClient — hero section', () => {
 describe('ClubDetailClient — subscribe button visibility', () => {
   it('shows subscribe button for FOOTBALLER viewer', () => {
     renderDetail({}, { viewerRole: 'FOOTBALLER' });
-    expect(screen.getByRole('button', { name: /გამოწ/i })).toBeDefined();
+    expect(screen.getAllByRole('button', { name: /გამოწ/i }).length).toBeGreaterThanOrEqual(1);
   });
 
   it('shows subscribe button for unauthenticated viewer (null role)', () => {
     renderDetail({}, { viewerRole: null });
-    expect(screen.getByRole('button', { name: /გამოწ/i })).toBeDefined();
+    expect(screen.getAllByRole('button', { name: /გამოწ/i }).length).toBeGreaterThanOrEqual(1);
   });
 
   it('hides subscribe button for CLUB viewer', () => {
@@ -136,14 +136,14 @@ describe('ClubDetailClient — subscribe button visibility', () => {
 describe('ClubDetailClient — subscribe button state', () => {
   it('button shows subscribed state when isSubscribed=true', () => {
     renderDetail({}, { viewerRole: 'FOOTBALLER', isSubscribed: true });
-    const btn = screen.getByRole('button', { name: /გამოწ/i });
-    expect(btn.getAttribute('aria-pressed')).toBe('true');
+    const btns = screen.getAllByRole('button', { name: /გამოწ/i });
+    expect(btns[0]!.getAttribute('aria-pressed')).toBe('true');
   });
 
   it('button shows unsubscribed state when isSubscribed=false', () => {
     renderDetail({}, { viewerRole: 'FOOTBALLER', isSubscribed: false });
-    const btn = screen.getByRole('button', { name: /გამოწ/i });
-    expect(btn.getAttribute('aria-pressed')).toBe('false');
+    const btns = screen.getAllByRole('button', { name: /გამოწ/i });
+    expect(btns[0]!.getAttribute('aria-pressed')).toBe('false');
   });
 
   it('applies optimistic subscribe update on click', () => {
@@ -154,9 +154,9 @@ describe('ClubDetailClient — subscribe button state', () => {
     toggleSubscriptionMock.mockReturnValueOnce(pending);
 
     renderDetail({}, { viewerRole: 'FOOTBALLER', isSubscribed: false });
-    fireEvent.click(screen.getByRole('button', { name: /გამოწ/i }));
+    fireEvent.click(screen.getAllByRole('button', { name: /გამოწ/i })[0]!);
 
-    expect(screen.getByRole('button', { name: /გამოწ/i }).getAttribute('aria-pressed')).toBe(
+    expect(screen.getAllByRole('button', { name: /გამოწ/i })[0]!.getAttribute('aria-pressed')).toBe(
       'true',
     );
     resolve!({ status: 'success', subscribed: true });
@@ -166,12 +166,12 @@ describe('ClubDetailClient — subscribe button state', () => {
     toggleSubscriptionMock.mockResolvedValueOnce({ status: 'error', message: 'failed' });
 
     renderDetail({}, { viewerRole: 'FOOTBALLER', isSubscribed: false });
-    fireEvent.click(screen.getByRole('button', { name: /გამოწ/i }));
+    fireEvent.click(screen.getAllByRole('button', { name: /გამოწ/i })[0]!);
 
     await waitFor(() => {
-      expect(screen.getByRole('button', { name: /გამოწ/i }).getAttribute('aria-pressed')).toBe(
-        'false',
-      );
+      expect(
+        screen.getAllByRole('button', { name: /გამოწ/i })[0]!.getAttribute('aria-pressed'),
+      ).toBe('false');
     });
   });
 
@@ -179,7 +179,7 @@ describe('ClubDetailClient — subscribe button state', () => {
     toggleSubscriptionMock.mockResolvedValueOnce({ status: 'success', subscribed: true });
 
     renderDetail({}, { viewerRole: 'FOOTBALLER', isSubscribed: false });
-    fireEvent.click(screen.getByRole('button', { name: /გამოწ/i }));
+    fireEvent.click(screen.getAllByRole('button', { name: /გამოწ/i })[0]!);
 
     await waitFor(() => {
       expect(screen.getByRole('status')).toBeDefined();
@@ -191,7 +191,7 @@ describe('ClubDetailClient — subscribe button state', () => {
     toggleSubscriptionMock.mockResolvedValueOnce({ status: 'success', subscribed: false });
 
     renderDetail({}, { viewerRole: 'FOOTBALLER', isSubscribed: true });
-    fireEvent.click(screen.getByRole('button', { name: /გამოწ/i }));
+    fireEvent.click(screen.getAllByRole('button', { name: /გამოწ/i })[0]!);
 
     await waitFor(() => {
       expect(screen.getByRole('status')).toBeDefined();
@@ -203,7 +203,7 @@ describe('ClubDetailClient — subscribe button state', () => {
     toggleSubscriptionMock.mockResolvedValueOnce({ status: 'error', message: 'სერვ. შეც.' });
 
     renderDetail({}, { viewerRole: 'FOOTBALLER', isSubscribed: false });
-    fireEvent.click(screen.getByRole('button', { name: /გამოწ/i }));
+    fireEvent.click(screen.getAllByRole('button', { name: /გამოწ/i })[0]!);
 
     await waitFor(() => {
       expect(screen.getByRole('status')).toBeDefined();

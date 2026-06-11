@@ -8,7 +8,6 @@ import { signOut } from 'next-auth/react';
 import { AppShell } from '@/components/app-shell';
 import { EmptyState } from '@/components/ui/empty-state';
 import {
-  ArrowLeftIcon,
   MealPlanIcon,
   PersonalTrainerIcon,
   TeamDoctorIcon,
@@ -108,26 +107,18 @@ export function ServiceCategoriesClient({
       <div className="space-y-6">
         {/* Page header */}
         <div>
-          <Link
-            href="/dashboard"
-            className="-ml-2 mb-4 inline-flex items-center gap-1.5 rounded-btn px-2 py-1 text-[13px] font-medium text-ink-400 transition-colors hover:bg-ink-800 hover:text-ink-100"
-          >
-            <ArrowLeftIcon className="size-4" aria-hidden="true" />
-            Dashboard-ზე დაბრუნება
-          </Link>
-
-          <h1 className="font-display text-[26px] font-bold tracking-tight text-ink-50">
-            სერვისის მოთხოვნა
+          <h1 className="font-display text-[28px] font-bold tracking-tight text-ink-50">
+            სერვისები
           </h1>
-          <p className="mt-1 text-[10px] font-bold uppercase tracking-[0.16em] text-ink-500">
-            ნაბიჯი 1 / 2 — სერვისის ტიპის არჩევა
+          <p className="mt-1 text-[13.5px] text-ink-400">
+            მოითხოვე დამატებითი მხარდაჭერა — Sport Visa-ს გუნდი განიხილავს და დაგიკავშირდება.
           </p>
         </div>
 
         {/* Section label */}
-        <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-ink-500">
+        <h2 className="text-[11px] font-bold uppercase tracking-[0.16em] text-ink-500">
           ხელმისაწვდომი სერვისები
-        </p>
+        </h2>
 
         {categories.length === 0 ? (
           <div className="rounded-card border border-ink-800 bg-ink-900 shadow-card">

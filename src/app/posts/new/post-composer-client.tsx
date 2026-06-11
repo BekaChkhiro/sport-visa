@@ -15,6 +15,8 @@ import {
   CheckCircleIcon,
   ShieldIcon,
   InfoIcon,
+  EyeIcon,
+  EditIcon,
 } from '@/components/icons';
 import type { AppSidebarStats } from '@/components/app-sidebar';
 import type { VerificationStatus } from '@/components/verification-badge';
@@ -36,7 +38,7 @@ type PostComposerClientProps = {
 };
 
 const MAX_BODY = 5000;
-const MAX_TITLE = 200;
+const MAX_TITLE = 120;
 
 const CATEGORIES = [
   { id: 'selection', label: 'სელექცია', tone: 'brand' as const },
@@ -52,11 +54,18 @@ const TONE_CLS: Record<string, string> = {
   flame: 'bg-flame-400/15 text-flame-300 border-flame-400/30',
 };
 
+const VISIBILITY = [
+  { id: 'subscribers', label: 'მხოლოდ გამომწერები', desc: 'ხილული ფიდში' },
+  { id: 'public', label: 'საჯარო', desc: 'ხილული კლუბის გვერდზე' },
+];
+
 export function PostComposerClient({ user, stats, unreadNotifications }: PostComposerClientProps) {
   const router = useRouter();
   const [title, setTitle] = React.useState('');
   const [body, setBody] = React.useState('');
   const [cat, setCat] = React.useState('selection');
+  const [visibility, setVisibility] = React.useState('subscribers');
+  const [pinned, setPinned] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = React.useState<Record<string, string[]>>({});
   const [pending, setPending] = React.useState(false);
@@ -102,27 +111,35 @@ export function PostComposerClient({ user, stats, unreadNotifications }: PostCom
       sidebarStats={stats}
       onSignOut={handleSignOut}
     >
-      <div className="mx-auto max-w-3xl">
-        {/* Back link */}
-        <div className="mb-5">
+      <div className="mx-auto max-w-[1180px]">
+        {/* Back link + draft save */}
+        <div className="mb-5 flex items-center gap-3">
           <Button variant="ghost" size="sm" onClick={() => router.back()}>
             <ArrowLeftIcon className="size-4" />
-            უკან
+            დაშბორდი
           </Button>
+          <div className="ml-auto flex items-center gap-2">
+            <Button variant="ghost" size="sm" type="button" className="hidden sm:inline-flex">
+              <EditIcon className="size-4" />
+              მონახაზად შენახვა
+            </Button>
+          </div>
         </div>
 
         {/* Page header */}
-        <div className="mb-7">
-          <p className="text-[12px] font-bold uppercase tracking-[0.16em] text-brand-400">
+        <div className="mb-6">
+          <p className="text-[12.5px] font-medium uppercase tracking-[0.16em] text-brand-400">
             ახალი სიახლე
           </p>
-          <h1 className="mt-1 text-[26px] font-bold tracking-tight text-ink-50">სიახლის შედგენა</h1>
+          <h1 className="mt-1 font-display text-[26px] font-bold tracking-tight text-ink-50">
+            სიახლის შედგენა
+          </h1>
           <p className="mt-1 text-[13.5px] text-ink-400">
             გამოქვეყნებული პოსტი გამოუჩნდებათ ყველა გამომწერ ფეხბურთელს მათ ფიდში.
           </p>
         </div>
 
-        <div className="grid gap-6 lg:grid-cols-[1fr_300px]">
+        <div className="grid gap-7 lg:grid-cols-[1fr_320px]">
           {/* ── Editor column ── */}
           <div className="min-w-0 space-y-5">
             {/* Author chip */}
@@ -144,7 +161,7 @@ export function PostComposerClient({ user, stats, unreadNotifications }: PostCom
 
             {/* Category */}
             <div className="rounded-card border border-ink-800 bg-ink-900 p-5 shadow-card">
-              <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-ink-500">
+              <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-ink-500">
                 კატეგორია
               </p>
               <div className="mt-3 flex flex-wrap gap-2">
@@ -182,13 +199,44 @@ export function PostComposerClient({ user, stats, unreadNotifications }: PostCom
                     placeholder={'სათაური — მაგ. „ღია სელექცია U21 შემადგენლობისთვის"'}
                     maxLength={MAX_TITLE}
                     aria-invalid={!!fieldErrors.title}
-                    className="w-full bg-transparent pb-3 text-[22px] font-bold tracking-tight text-ink-50 placeholder:text-ink-600 outline-none"
+                    className="w-full bg-transparent pb-3 font-display text-[22px] font-bold tracking-tight text-ink-50 placeholder:text-ink-600 outline-none"
                   />
                   <div className="flex justify-end pb-2">
                     <span className="font-mono text-[11px] tabular-nums text-ink-600">
                       {title.length}/{MAX_TITLE}
                     </span>
                   </div>
+                </div>
+
+                {/* Formatting toolbar */}
+                <div className="flex items-center gap-0.5 border-b border-ink-800 bg-ink-950/30 px-3 py-2">
+                  {[
+                    { label: 'Bold', path: 'M6 4h7a4 4 0 0 1 0 8H6zM6 12h8a4 4 0 0 1 0 8H6z' },
+                    { label: 'Italic', path: 'M19 4h-9M14 20H5M15 4 9 20' },
+                    { label: 'List', path: 'M8 6h13M8 12h13M8 18h13M3 6h0M3 12h0M3 18h0' },
+                  ].map((t) => (
+                    <button
+                      key={t.label}
+                      type="button"
+                      aria-label={t.label}
+                      className="flex h-8 w-8 items-center justify-center rounded-btn text-ink-400 transition-colors hover:bg-ink-800 hover:text-ink-100"
+                    >
+                      <svg
+                        width={16}
+                        height={16}
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth={2}
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        aria-hidden="true"
+                      >
+                        <path d={t.path} />
+                      </svg>
+                    </button>
+                  ))}
+                  <span className="ml-1 text-[11px] text-ink-600">Markdown მხარდაჭერილია</span>
                 </div>
 
                 {/* Body textarea */}
@@ -245,7 +293,8 @@ export function PostComposerClient({ user, stats, unreadNotifications }: PostCom
             {/* Live preview */}
             <div className="rounded-card border border-ink-800 bg-ink-900 shadow-card">
               <div className="flex items-center gap-2 border-b border-ink-800 px-4 py-3">
-                <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-ink-500">
+                <EyeIcon className="size-4 text-brand-400" aria-hidden="true" />
+                <span className="text-[11px] font-bold uppercase tracking-[0.16em] text-ink-500">
                   პრევიუ
                 </span>
               </div>
@@ -263,7 +312,7 @@ export function PostComposerClient({ user, stats, unreadNotifications }: PostCom
                     >
                       {activeCat.label}
                     </span>
-                    <p className="mt-2 line-clamp-2 text-[15px] font-bold leading-snug text-ink-50">
+                    <p className="mt-2 line-clamp-2 font-display text-[15px] font-bold leading-snug text-ink-50">
                       {title.trim() || 'სიახლის სათაური აქ გამოჩნდება'}
                     </p>
                     <p className="mt-1 line-clamp-2 text-[12px] leading-snug text-ink-400">
@@ -278,6 +327,91 @@ export function PostComposerClient({ user, stats, unreadNotifications }: PostCom
                   </div>
                 </div>
               </div>
+            </div>
+
+            {/* Visibility */}
+            <div className="rounded-card border border-ink-800 bg-ink-900 p-4 shadow-card">
+              <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-ink-500">
+                ხილვადობა
+              </p>
+              <div className="mt-3 space-y-2">
+                {VISIBILITY.map((o) => (
+                  <button
+                    key={o.id}
+                    type="button"
+                    onClick={() => setVisibility(o.id)}
+                    aria-pressed={visibility === o.id}
+                    className={cn(
+                      'flex w-full items-center gap-3 rounded-card border px-3 py-2.5 text-left transition-colors',
+                      visibility === o.id
+                        ? 'border-brand-400/40 bg-brand-400/8'
+                        : 'border-ink-800 bg-ink-950/30 hover:border-ink-700',
+                    )}
+                  >
+                    <div className="min-w-0 flex-1">
+                      <p
+                        className={cn(
+                          'text-[13px] font-semibold',
+                          visibility === o.id ? 'text-ink-50' : 'text-ink-200',
+                        )}
+                      >
+                        {o.label}
+                      </p>
+                      <p className="text-[11px] text-ink-500">{o.desc}</p>
+                    </div>
+                    <span
+                      className={cn(
+                        'flex h-4 w-4 shrink-0 items-center justify-center rounded-full border',
+                        visibility === o.id ? 'border-brand-400 bg-brand-400' : 'border-ink-600',
+                      )}
+                    >
+                      {visibility === o.id && (
+                        <svg
+                          width={10}
+                          height={10}
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="#15171c"
+                          strokeWidth={3}
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          aria-hidden="true"
+                        >
+                          <path d="m20 6-11 11-5-5" />
+                        </svg>
+                      )}
+                    </span>
+                  </button>
+                ))}
+              </div>
+
+              {/* Pinned toggle */}
+              <button
+                type="button"
+                onClick={() => setPinned((v) => !v)}
+                className="mt-3 flex w-full items-center justify-between rounded-card border border-ink-800 bg-ink-950/30 px-3 py-2.5 text-left transition-colors hover:border-ink-700"
+              >
+                <div>
+                  <p className="text-[13px] font-semibold text-ink-100">პროფილზე დამაგრება</p>
+                  <p className="text-[11px] text-ink-500">გამოჩნდება თავში</p>
+                </div>
+                <span
+                  className={cn(
+                    'relative h-6 w-11 rounded-full transition-colors',
+                    pinned ? 'bg-brand-400' : 'bg-ink-700',
+                  )}
+                  role="switch"
+                  aria-checked={pinned}
+                  aria-label="პროფილზე დამაგრება"
+                >
+                  <span
+                    className={cn(
+                      'absolute top-0.5 h-5 w-5 rounded-full bg-ink-50 shadow transition-transform left-0.5',
+                      pinned ? 'translate-x-5' : '',
+                    )}
+                  />
+                </span>
+              </button>
             </div>
 
             {/* Desktop publish */}

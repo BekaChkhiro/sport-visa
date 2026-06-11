@@ -19,6 +19,7 @@ import {
 import type { AppSidebarStats } from '@/components/app-sidebar';
 import type { VerificationStatus } from '@/components/verification-badge';
 import { updateClubPost } from '@/lib/club-profile/actions';
+import { cn } from '@/lib/utils';
 
 type User = {
   name: string;
@@ -38,7 +39,21 @@ type PostEditClientProps = {
 };
 
 const MAX_BODY = 5000;
-const MAX_TITLE = 200;
+const MAX_TITLE = 120;
+
+const CATEGORIES = [
+  { id: 'selection', label: 'სელექცია', tone: 'brand' as const },
+  { id: 'news', label: 'სიახლე', tone: 'accent' as const },
+  { id: 'transfer', label: 'ტრანსფერი', tone: 'iris' as const },
+  { id: 'match', label: 'მატჩი', tone: 'flame' as const },
+];
+
+const TONE_CLS: Record<string, string> = {
+  brand: 'bg-brand-400/15 text-brand-300 border-brand-400/30',
+  accent: 'bg-accent-400/15 text-accent-300 border-accent-400/30',
+  iris: 'bg-iris-400/15 text-iris-300 border-iris-400/30',
+  flame: 'bg-flame-400/15 text-flame-300 border-flame-400/30',
+};
 
 export function PostEditClient({
   postId,
@@ -51,6 +66,7 @@ export function PostEditClient({
   const router = useRouter();
   const [title, setTitle] = React.useState(initialTitle);
   const [body, setBody] = React.useState(initialBody);
+  const [cat, setCat] = React.useState('selection');
   const [error, setError] = React.useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = React.useState<Record<string, string[]>>({});
   const [pending, setPending] = React.useState(false);
@@ -90,24 +106,26 @@ export function PostEditClient({
       sidebarStats={stats}
       onSignOut={handleSignOut}
     >
-      <div className="mx-auto max-w-3xl">
+      <div className="mx-auto max-w-[1180px]">
         {/* Back link */}
         <div className="mb-5">
           <Button variant="ghost" size="sm" onClick={() => router.back()}>
             <ArrowLeftIcon className="size-4" />
-            უკან
+            დაშბორდი
           </Button>
         </div>
 
         {/* Page header */}
-        <div className="mb-7">
-          <p className="text-[12px] font-bold uppercase tracking-[0.16em] text-brand-400">სიახლე</p>
-          <h1 className="mt-1 text-[26px] font-bold tracking-tight text-ink-50">
+        <div className="mb-6">
+          <p className="text-[12.5px] font-medium uppercase tracking-[0.16em] text-brand-400">
+            სიახლე
+          </p>
+          <h1 className="mt-1 font-display text-[26px] font-bold tracking-tight text-ink-50">
             სიახლის რედაქტირება
           </h1>
         </div>
 
-        <div className="grid gap-6 lg:grid-cols-[1fr_300px]">
+        <div className="grid gap-7 lg:grid-cols-[1fr_320px]">
           {/* ── Editor column ── */}
           <div className="min-w-0 space-y-5">
             {/* Author chip */}
@@ -127,6 +145,31 @@ export function PostEditClient({
               )}
             </div>
 
+            {/* Category */}
+            <div className="rounded-card border border-ink-800 bg-ink-900 p-5 shadow-card">
+              <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-ink-500">
+                კატეგორია
+              </p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {CATEGORIES.map((c) => (
+                  <button
+                    key={c.id}
+                    type="button"
+                    onClick={() => setCat(c.id)}
+                    aria-pressed={cat === c.id}
+                    className={cn(
+                      'rounded-pill border px-3.5 py-1.5 text-[12.5px] font-semibold transition-colors',
+                      cat === c.id
+                        ? TONE_CLS[c.tone]
+                        : 'border-ink-700 bg-ink-950/40 text-ink-400 hover:text-ink-200 hover:border-ink-600',
+                    )}
+                  >
+                    {c.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
             {/* Title + body editor */}
             <form onSubmit={handleSubmit}>
               <div className="overflow-hidden rounded-card border border-ink-800 bg-ink-900 shadow-card">
@@ -139,16 +182,47 @@ export function PostEditClient({
                     id="title"
                     value={title}
                     onChange={(e) => setTitle(e.target.value.slice(0, MAX_TITLE))}
-                    placeholder="სიახლის სათაური..."
+                    placeholder={'სათაური — მაგ. „ღია სელექცია U21 შემადგენლობისთვის"'}
                     maxLength={MAX_TITLE}
                     aria-invalid={!!fieldErrors.title}
-                    className="w-full bg-transparent pb-3 text-[22px] font-bold tracking-tight text-ink-50 placeholder:text-ink-600 outline-none"
+                    className="w-full bg-transparent pb-3 font-display text-[22px] font-bold tracking-tight text-ink-50 placeholder:text-ink-600 outline-none"
                   />
                   <div className="flex justify-end pb-2">
                     <span className="font-mono text-[11px] tabular-nums text-ink-600">
                       {title.length}/{MAX_TITLE}
                     </span>
                   </div>
+                </div>
+
+                {/* Formatting toolbar */}
+                <div className="flex items-center gap-0.5 border-b border-ink-800 bg-ink-950/30 px-3 py-2">
+                  {[
+                    { label: 'Bold', path: 'M6 4h7a4 4 0 0 1 0 8H6zM6 12h8a4 4 0 0 1 0 8H6z' },
+                    { label: 'Italic', path: 'M19 4h-9M14 20H5M15 4 9 20' },
+                    { label: 'List', path: 'M8 6h13M8 12h13M8 18h13M3 6h0M3 12h0M3 18h0' },
+                  ].map((t) => (
+                    <button
+                      key={t.label}
+                      type="button"
+                      aria-label={t.label}
+                      className="flex h-8 w-8 items-center justify-center rounded-btn text-ink-400 transition-colors hover:bg-ink-800 hover:text-ink-100"
+                    >
+                      <svg
+                        width={16}
+                        height={16}
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth={2}
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        aria-hidden="true"
+                      >
+                        <path d={t.path} />
+                      </svg>
+                    </button>
+                  ))}
+                  <span className="ml-1 text-[11px] text-ink-600">Markdown მხარდაჭერილია</span>
                 </div>
 
                 {/* Body textarea */}
@@ -159,7 +233,7 @@ export function PostEditClient({
                   id="body"
                   value={body}
                   onChange={(e) => setBody(e.target.value.slice(0, MAX_BODY))}
-                  placeholder="სიახლის ტექსტი..."
+                  placeholder="დაწერე სიახლის ტექსტი… აღწერე სელექციის პირობები, თარიღები და მოთხოვნები."
                   maxLength={MAX_BODY}
                   rows={9}
                   aria-invalid={!!fieldErrors.body}
@@ -201,7 +275,7 @@ export function PostEditClient({
           </div>
 
           {/* ── Sidebar ── */}
-          <aside className="hidden space-y-4 lg:sticky lg:top-[88px] lg:self-start lg:block">
+          <aside className="space-y-5 lg:sticky lg:top-[88px] lg:self-start">
             <div className="rounded-card border border-ink-800 bg-ink-900 p-4 shadow-card space-y-3">
               <Button
                 onClick={handleSubmit as unknown as React.MouseEventHandler}

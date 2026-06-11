@@ -79,12 +79,12 @@ describe('ShortlistClient — rendering', () => {
       makeItem({ id: 'fb1', shortlistEntryId: 'sl1' }),
       makeItem({ id: 'fb2', shortlistEntryId: 'sl2' }),
     ]);
-    expect(screen.getByText(/2 ფეხბ/)).toBeDefined();
+    expect(screen.getByText(/2.*ფეხბ/)).toBeDefined();
   });
 
   it('renders empty state when no items', () => {
     renderShortlist([]);
-    expect(screen.getByText('შ. სია ცარიელია')).toBeDefined();
+    expect(screen.getByText('სია ცარიელია')).toBeDefined();
   });
 
   it('renders directory link button', () => {

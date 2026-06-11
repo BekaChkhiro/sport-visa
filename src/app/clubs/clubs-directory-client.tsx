@@ -8,7 +8,19 @@ import { AppShell } from '@/components/app-shell';
 import { Button } from '@/components/ui/button';
 import { ClubCard } from '@/components/club-card';
 import { EmptyState } from '@/components/ui/empty-state';
-import { ChevronLeftIcon, ChevronRightIcon, SearchIcon, CloseIcon } from '@/components/icons';
+import {
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  SearchIcon,
+  CloseIcon,
+  GridViewIcon,
+  ListViewIcon,
+  BellIcon,
+  ArrowRightIcon,
+  MapPinIcon,
+} from '@/components/icons';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { VerificationBadge } from '@/components/verification-badge';
 import type {
   AppSidebarAdminBadges,
   AppSidebarRole,
@@ -144,6 +156,97 @@ function Pagination({
   );
 }
 
+function clubInitials(name: string) {
+  return name
+    .split(/\s+/)
+    .map((part) => part[0])
+    .join('')
+    .slice(0, 2)
+    .toUpperCase();
+}
+
+type ClubRowProps = {
+  item: ClubItem;
+  canSubscribe: boolean;
+  isSubscribed: boolean;
+  isPending: boolean;
+  onSubscribeToggle: (id: string, next: boolean) => void;
+};
+
+function ClubRow({ item, canSubscribe, isSubscribed, isPending, onSubscribeToggle }: ClubRowProps) {
+  return (
+    <div className="flex flex-wrap items-center gap-4 px-4 py-4 transition-colors hover:bg-ink-800/40">
+      <Avatar className="h-12 w-12 shrink-0 rounded-[13px] border border-ink-800 bg-accent-400/15 text-accent-300">
+        {item.logoUrl ? (
+          <AvatarImage
+            src={item.logoUrl}
+            alt={`${item.name} ლოგო`}
+            className="rounded-[13px] object-contain"
+          />
+        ) : null}
+        <AvatarFallback className="rounded-[13px] bg-accent-400/15 text-sm font-semibold text-accent-300">
+          {clubInitials(item.name)}
+        </AvatarFallback>
+      </Avatar>
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-2">
+          <p className="truncate text-[15px] font-semibold text-ink-50">{item.name}</p>
+          <VerificationBadge status={item.verificationStatus} showLabel={false} />
+        </div>
+        <div className="mt-1 flex flex-wrap items-center gap-x-2.5 gap-y-0.5 text-[12px] text-ink-400">
+          {item.league && (
+            <span className="rounded-pill bg-accent-400/15 px-2 py-0.5 text-[10.5px] font-semibold text-accent-300">
+              {item.league}
+            </span>
+          )}
+          {item.city && (
+            <span className="inline-flex items-center gap-1">
+              <MapPinIcon className="size-3 text-ink-500" />
+              {item.city}
+            </span>
+          )}
+          {item.foundedYear && (
+            <span className="font-mono tabular-nums text-[11px] text-ink-500">
+              დაარ. {item.foundedYear}
+            </span>
+          )}
+        </div>
+      </div>
+      <div className="flex shrink-0 gap-2">
+        {canSubscribe && (
+          <Button
+            type="button"
+            variant={isSubscribed ? 'outline' : 'default'}
+            size="sm"
+            disabled={isPending}
+            aria-pressed={isSubscribed}
+            aria-label={isSubscribed ? 'გამოწერა გაუქ.' : 'გამოწერა'}
+            onClick={(e) => {
+              e.preventDefault();
+              onSubscribeToggle(item.id, !isSubscribed);
+            }}
+            className={cn('gap-1.5 text-[13px]', isSubscribed ? 'text-brand-400' : '')}
+          >
+            <BellIcon
+              className={cn('size-3.5', isSubscribed ? 'fill-brand-400' : '')}
+              aria-hidden="true"
+            />
+            {isSubscribed ? 'გამოწ. გაუქ.' : 'გამოწ.'}
+          </Button>
+        )}
+        <Button variant="outline" size="sm" asChild className="gap-1">
+          <a href={`/clubs/${item.id}`}>
+            პროფილი
+            <ArrowRightIcon className="size-3.5" />
+          </a>
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+type ViewKey = 'grid' | 'list';
+
 export function ClubsDirectoryClient({
   shellRole,
   shellUser,
@@ -165,6 +268,7 @@ export function ClubsDirectoryClient({
 }: ClubsDirectoryClientProps) {
   const router = useRouter();
   const canSubscribe = viewerRole === 'FOOTBALLER';
+  const [view, setView] = React.useState<ViewKey>('grid');
 
   async function handleSignOut() {
     await signOut({ redirect: false });
@@ -438,13 +542,42 @@ export function ClubsDirectoryClient({
         </div>
       )}
 
-      {/* Results count */}
-      <p className="mb-5 text-[13.5px] text-ink-400">
-        <span className="font-mono font-semibold tabular-nums text-ink-50">{total}</span> კლუბი
-        მოიძებნა
-      </p>
+      {/* Results bar */}
+      <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+        <p className="text-[13.5px] text-ink-400">
+          <span className="font-mono font-semibold tabular-nums text-ink-50">{total}</span> კლუბი
+          მოიძებნა
+        </p>
+        {/* View toggle */}
+        <div className="flex rounded-btn border border-ink-700 bg-ink-900 p-1">
+          <button
+            type="button"
+            onClick={() => setView('grid')}
+            aria-label="Grid ხედი"
+            aria-pressed={view === 'grid'}
+            className={cn(
+              'flex h-8 w-8 items-center justify-center rounded-[7px] transition-colors',
+              view === 'grid' ? 'bg-ink-800 text-ink-100' : 'text-ink-500 hover:text-ink-200',
+            )}
+          >
+            <GridViewIcon className="size-4" />
+          </button>
+          <button
+            type="button"
+            onClick={() => setView('list')}
+            aria-label="List ხედი"
+            aria-pressed={view === 'list'}
+            className={cn(
+              'flex h-8 w-8 items-center justify-center rounded-[7px] transition-colors',
+              view === 'list' ? 'bg-ink-800 text-ink-100' : 'text-ink-500 hover:text-ink-200',
+            )}
+          >
+            <ListViewIcon className="size-4" />
+          </button>
+        </div>
+      </div>
 
-      {/* Results grid */}
+      {/* Results */}
       {items.length === 0 ? (
         <div className="rounded-card border border-border bg-card">
           <EmptyState
@@ -463,7 +596,7 @@ export function ClubsDirectoryClient({
             }
           />
         </div>
-      ) : (
+      ) : view === 'grid' ? (
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {items.map((club) => (
             <ClubCard
@@ -481,6 +614,21 @@ export function ClubsDirectoryClient({
               onSubscribeToggle={handleSubscribeToggle}
             />
           ))}
+        </div>
+      ) : (
+        <div className="overflow-hidden rounded-card border border-ink-800 bg-ink-900 shadow-card">
+          <div className="divide-y divide-ink-800">
+            {items.map((club) => (
+              <ClubRow
+                key={club.id}
+                item={club}
+                canSubscribe={canSubscribe}
+                isSubscribed={subscribedIds.has(club.id)}
+                isPending={pendingIds.has(club.id)}
+                onSubscribeToggle={handleSubscribeToggle}
+              />
+            ))}
+          </div>
         </div>
       )}
 
