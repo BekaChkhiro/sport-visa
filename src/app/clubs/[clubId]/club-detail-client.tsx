@@ -30,6 +30,7 @@ import {
 import { toggleSubscription } from '@/lib/clubs/actions';
 import { buildMapEmbedSrc } from '@/lib/club-profile/map-embed';
 import { cn } from '@/lib/utils';
+import { formatKaDate } from '@/lib/format-ka-date';
 
 type RosterEntry = {
   id: string;
@@ -677,7 +678,7 @@ function NewsTab({ clubId, posts }: { clubId: string; posts: Post[] }) {
               </span>
               <span>·</span>
               <time dateTime={post.createdAt}>
-                {new Date(post.createdAt).toLocaleDateString('ka-GE')}
+                {formatKaDate(post.createdAt, { month: 'short', year: true })}
               </time>
             </div>
           </article>

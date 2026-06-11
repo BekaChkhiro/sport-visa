@@ -26,6 +26,7 @@ import {
   ShieldIcon,
 } from '@/components/icons';
 import { deleteClubPost } from '@/lib/club-profile/actions';
+import { formatKaDate } from '@/lib/format-ka-date';
 import type { AppSidebarStats } from '@/components/app-sidebar';
 import type { VerificationStatus } from '@/components/verification-badge';
 import { cn } from '@/lib/utils';
@@ -291,10 +292,7 @@ function ShortlistCard({ footballer }: { footballer: ShortlistedFootballer }) {
 
 /** Active chat row */
 function ChatRow({ chat }: { chat: DashboardChat }) {
-  const date = new Date(chat.lastMessageAt).toLocaleDateString('ka-GE', {
-    day: 'numeric',
-    month: 'short',
-  });
+  const date = formatKaDate(chat.lastMessageAt, { month: 'short' });
 
   return (
     <Link
@@ -394,13 +392,7 @@ function PostsList({ posts }: { posts: DashboardPost[] }) {
                   <HeartIcon className="size-3" aria-hidden="true" />
                   {post.likeCount} მოწონება
                 </span>
-                <span>
-                  ·{' '}
-                  {new Intl.DateTimeFormat('ka', {
-                    day: '2-digit',
-                    month: 'short',
-                  }).format(new Date(post.createdAt))}
-                </span>
+                <span>· {formatKaDate(post.createdAt, { month: 'short' })}</span>
               </div>
             </div>
             <div className="flex shrink-0 items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
@@ -495,11 +487,7 @@ export function ClubDashboardClient({
       <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
         <div>
           <p className="text-[12.5px] text-ink-500">
-            {new Intl.DateTimeFormat('ka-GE', {
-              weekday: 'long',
-              day: 'numeric',
-              month: 'long',
-            }).format(new Date())}
+            {formatKaDate(new Date(), { weekday: true })}
           </p>
           <h1 className="mt-0.5 font-display text-[26px] font-bold tracking-tight text-ink-50">
             სამუშაო პანელი

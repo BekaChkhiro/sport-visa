@@ -204,7 +204,7 @@ function ClubSidebar({
 }) {
   const navItems: NavItem[] = [
     { href: '/posts/new', label: '+ გამოქვ.', icon: PlusIcon },
-    { href: '/directory', label: 'Directory', icon: SearchIcon },
+    { href: '/directory', label: 'დირექტორია', icon: SearchIcon },
     {
       href: '/shortlist',
       label: 'შ. სია',
@@ -287,7 +287,7 @@ function AdminSidebar({
   adminBadges?: AppSidebarAdminBadges;
 }) {
   const navItems: NavItem[] = [
-    { href: '/admin', label: 'Admin Panel', icon: GridViewIcon },
+    { href: '/admin', label: 'ადმინ პანელი', icon: GridViewIcon },
     {
       href: '/admin/verification',
       label: 'ვერიფიკაციის რიგი',
@@ -311,7 +311,7 @@ function AdminSidebar({
         <ProfileAvatar src={user.image} fallback={user.initials} size="md" />
         <div className="flex flex-col gap-0.5">
           <h2 className="text-base font-semibold leading-snug text-ink-50">{user.name}</h2>
-          <p className="text-xs text-ink-400">Admin</p>
+          <p className="text-xs text-ink-400">ადმინისტრატორი</p>
         </div>
       </div>
 

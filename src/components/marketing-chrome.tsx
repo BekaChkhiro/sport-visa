@@ -9,16 +9,19 @@ import { SiteHeader } from '@/components/site-header';
 // chrome must stay hidden there to avoid duplicate headers and footers.
 const APP_SHELL_PREFIXES = [
   '/admin',
+  '/auth',
   '/chat',
   '/chats',
   '/clubs',
   '/dashboard',
   '/directory',
   '/notifications',
+  '/onboarding',
   '/profile',
   '/services',
   '/settings',
   '/shortlist',
+  '/verification-pending',
 ] as const;
 
 function isAppShellRoute(path: string): boolean {

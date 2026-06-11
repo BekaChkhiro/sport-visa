@@ -23,52 +23,6 @@ export default function NotFound() {
       {/* Brand glow */}
       <div className="pointer-events-none absolute -right-24 top-10 h-[460px] w-[460px] rounded-full bg-brand-400/8 blur-[150px]" />
 
-      {/* Top bar */}
-      <header className="relative z-10 border-b border-ink-800/70">
-        <div className="mx-auto flex h-16 max-w-[1080px] items-center px-5 sm:px-7">
-          {/* Logo */}
-          <Link href="/" className="flex items-center gap-2.5" aria-label="Sport Visa — მთავარი">
-            <div className="relative flex h-8 w-8 items-center justify-center rounded-[10px] bg-brand-400 shadow-card">
-              <svg width={19} height={19} viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                <circle cx="12" cy="12" r="9" stroke="#1f2a0b" strokeWidth="1.6" />
-                <path d="M12 7.5l2.6 1.9-1 3h-3.2l-1-3z" fill="#1f2a0b" />
-                <path
-                  d="M12 7.5V4M14.6 9.4l3-1M13.6 12.4l1.8 2.6M10.4 12.4l-1.8 2.6M9.4 9.4l-3-1"
-                  stroke="#1f2a0b"
-                  strokeWidth="1.3"
-                  strokeLinecap="round"
-                />
-              </svg>
-            </div>
-            <span className="font-display text-[18px] font-bold tracking-tight text-ink-50">
-              Sport<span className="text-brand-400"> Visa</span>
-            </span>
-          </Link>
-
-          <Link
-            href="/support"
-            className="ml-auto inline-flex items-center gap-1.5 text-[13px] font-medium text-ink-400 transition-colors hover:text-ink-100"
-          >
-            <svg
-              width={16}
-              height={16}
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth={2}
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              aria-hidden="true"
-            >
-              <circle cx="12" cy="12" r="9" />
-              <circle cx="12" cy="12" r="3.6" />
-              <path d="m4.5 4.5 4.9 4.9M14.6 14.6l4.9 4.9M19.5 4.5l-4.9 4.9M9.4 14.6l-4.9 4.9" />
-            </svg>
-            დახმარება
-          </Link>
-        </div>
-      </header>
-
       {/* Body — two-column on large screens */}
       <div className="relative z-10 mx-auto grid max-w-[1080px] items-center gap-10 px-5 py-16 sm:px-7 lg:grid-cols-[1fr_0.85fr] lg:py-24">
         {/* Left: text content */}

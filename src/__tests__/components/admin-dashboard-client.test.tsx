@@ -92,7 +92,7 @@ describe('AdminDashboardClient — KPI cards', () => {
   it('renders page heading', () => {
     renderDashboard();
     expect(screen.getByRole('heading', { level: 1 })).toBeDefined();
-    expect(screen.getByText('Admin Dashboard')).toBeDefined();
+    expect(screen.getByText('ადმინ პანელი')).toBeDefined();
   });
 
   it('renders total users KPI value', () => {

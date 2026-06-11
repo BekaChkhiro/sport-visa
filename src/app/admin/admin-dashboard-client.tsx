@@ -188,7 +188,7 @@ export function AdminDashboardClient({
         {/* Page header */}
         <div className="space-y-1">
           <h1 className="font-display text-[26px] font-bold tracking-tight text-ink-50">
-            Admin Dashboard
+            ადმინ პანელი
           </h1>
           <p className="text-[13.5px] text-ink-400">პლატფორმის სტატისტიკა და მართვის ცენტრი</p>
         </div>

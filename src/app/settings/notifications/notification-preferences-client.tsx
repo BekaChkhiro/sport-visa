@@ -160,7 +160,7 @@ export function NotificationPreferencesClient({
             <PreferenceRow
               icon={<BellIcon className="size-4" aria-hidden="true" />}
               title="დღიური გამოჯამება"
-              description="ყოველდღიური resume ბოლო 24 საათის განმავლობაში გამოქვეყნებული კლუბის სიახლეების."
+              description="ყოველდღიური დაიჯესტი ბოლო 24 საათში გამოქვეყნებული კლუბის სიახლეებით."
               checked={prefs.emailDigest}
               disabled={isSaving}
               onChange={() => toggle('emailDigest')}

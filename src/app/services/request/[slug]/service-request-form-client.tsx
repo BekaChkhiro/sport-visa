@@ -185,7 +185,7 @@ export function ServiceRequestFormClient({
 
           <div className="mt-5 flex w-full flex-col gap-2.5">
             <Button variant="default" asChild className="w-full">
-              <Link href="/dashboard">Dashboard-ზე დაბრუნება</Link>
+              <Link href="/dashboard">მთავარზე დაბრუნება</Link>
             </Button>
             <Button variant="outline" asChild className="w-full">
               <Link href="/services/my-requests">ჩემი მოთხოვნები</Link>

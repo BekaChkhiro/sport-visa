@@ -21,6 +21,7 @@ import {
   ShieldIcon,
 } from '@/components/icons';
 import { formatRelativeTime } from '@/lib/format-relative-time';
+import { formatKaDate } from '@/lib/format-ka-date';
 import type { AppSidebarStats } from '@/components/app-sidebar';
 import type { VerificationStatus } from '@/components/verification-badge';
 
@@ -229,10 +230,7 @@ function FeedCard({ post }: { post: NewsfeedPost }) {
 
 /** Service-request row */
 function ServiceRequestRow({ req }: { req: DashboardServiceRequest }) {
-  const date = new Intl.DateTimeFormat('ka', {
-    day: '2-digit',
-    month: 'short',
-  }).format(new Date(req.createdAt));
+  const date = formatKaDate(req.createdAt, { month: 'short' });
 
   return (
     <div className="flex items-center gap-3 px-4 py-3.5 transition-colors hover:bg-ink-800/40">
@@ -310,11 +308,7 @@ export function FootballerDashboardClient({
       <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
         <div>
           <p className="text-[12.5px] text-ink-500">
-            {new Intl.DateTimeFormat('ka-GE', {
-              weekday: 'long',
-              day: 'numeric',
-              month: 'long',
-            }).format(new Date())}
+            {formatKaDate(new Date(), { weekday: true })}
           </p>
           <h1 className="mt-0.5 font-display text-[26px] font-bold tracking-tight text-ink-50">
             გამარჯობა, {user.name.split(' ')[0]} 👋

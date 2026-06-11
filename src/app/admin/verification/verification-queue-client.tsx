@@ -42,6 +42,7 @@ import {
   rejectClub,
   rejectFootballer,
 } from '@/lib/admin/verification/actions';
+import { formatKaDateNumeric } from '@/lib/format-ka-date';
 
 type Tab = 'footballers' | 'clubs';
 type Sort = 'oldest' | 'newest';
@@ -103,11 +104,7 @@ function initialsOf(name: string): string {
 
 function formatDate(iso: string): string {
   try {
-    return new Intl.DateTimeFormat('ka', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-    }).format(new Date(iso));
+    return formatKaDateNumeric(new Date(iso));
   } catch {
     return iso.slice(0, 10);
   }

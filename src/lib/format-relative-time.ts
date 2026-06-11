@@ -1,25 +1,29 @@
-const UNITS: { unit: Intl.RelativeTimeFormatUnit; seconds: number }[] = [
-  { unit: 'year', seconds: 60 * 60 * 24 * 365 },
-  { unit: 'month', seconds: 60 * 60 * 24 * 30 },
-  { unit: 'day', seconds: 60 * 60 * 24 },
-  { unit: 'hour', seconds: 60 * 60 },
-  { unit: 'minute', seconds: 60 },
+/**
+ * Georgian relative time without `Intl.RelativeTimeFormat` — production Node
+ * builds with small-icu fall back to English for the 'ka' locale, so the
+ * Georgian unit labels are spelled out here.
+ */
+
+const UNITS: { label: string; seconds: number }[] = [
+  { label: 'წლის', seconds: 60 * 60 * 24 * 365 },
+  { label: 'თვის', seconds: 60 * 60 * 24 * 30 },
+  { label: 'დღის', seconds: 60 * 60 * 24 },
+  { label: 'სთ', seconds: 60 * 60 },
+  { label: 'წთ', seconds: 60 },
 ];
 
-export function formatRelativeTime(
-  date: Date | string | number,
-  locale: string = 'ka',
-  now: Date = new Date(),
-): string {
+export function formatRelativeTime(date: Date | string | number, now: Date = new Date()): string {
   const target = date instanceof Date ? date : new Date(date);
-  const diffSeconds = Math.round((target.getTime() - now.getTime()) / 1000);
-  const formatter = new Intl.RelativeTimeFormat(locale, { numeric: 'auto' });
+  const diffSeconds = Math.round((now.getTime() - target.getTime()) / 1000);
 
-  for (const { unit, seconds } of UNITS) {
-    if (Math.abs(diffSeconds) >= seconds) {
-      const value = Math.round(diffSeconds / seconds);
-      return formatter.format(value, unit);
+  // Future or just-now timestamps.
+  if (diffSeconds < 60) return 'ახლახან';
+
+  for (const { label, seconds } of UNITS) {
+    if (diffSeconds >= seconds) {
+      const value = Math.floor(diffSeconds / seconds);
+      return `${value} ${label} წინ`;
     }
   }
-  return formatter.format(diffSeconds, 'second');
+  return 'ახლახან';
 }

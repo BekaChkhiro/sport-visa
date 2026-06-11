@@ -39,6 +39,7 @@ import {
   XCircleIcon,
 } from '@/components/icons';
 import { banUser, unbanUser, deleteUser, type UserRow } from '@/lib/admin/users/actions';
+import { formatKaDateNumeric } from '@/lib/format-ka-date';
 
 type RoleFilter = 'ALL' | 'FOOTBALLER' | 'CLUB';
 
@@ -77,11 +78,7 @@ function initialsOf(firstName: string | null, lastName: string | null, email: st
 
 function formatDate(iso: string): string {
   try {
-    return new Intl.DateTimeFormat('ka', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-    }).format(new Date(iso));
+    return formatKaDateNumeric(new Date(iso));
   } catch {
     return iso.slice(0, 10);
   }

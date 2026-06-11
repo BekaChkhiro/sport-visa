@@ -33,6 +33,7 @@ import {
   rejectServiceRequest,
   type ServiceRequestRow,
 } from '@/lib/admin/service-requests/actions';
+import { formatKaDateNumeric } from '@/lib/format-ka-date';
 
 type StatusFilter = 'ALL' | 'PENDING' | 'RESOLVED' | 'REJECTED';
 
@@ -57,11 +58,7 @@ type ServiceRequestsClientProps = {
 
 function formatDate(iso: string): string {
   try {
-    return new Intl.DateTimeFormat('ka', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-    }).format(new Date(iso));
+    return formatKaDateNumeric(new Date(iso));
   } catch {
     return iso.slice(0, 10);
   }

@@ -8,6 +8,7 @@ import {
   TeamDoctorIcon,
 } from '@/components/icons';
 import { cn } from '@/lib/utils';
+import { formatKaDate } from '@/lib/format-ka-date';
 
 type ServiceType = 'meal_plan' | 'personal_trainer' | 'team_doctor' | 'other';
 
@@ -30,9 +31,7 @@ const SERVICE_CONFIG: Record<
 };
 
 function formatDate(date: Date) {
-  return new Intl.DateTimeFormat('ka', { day: '2-digit', month: 'short', year: 'numeric' }).format(
-    date,
-  );
+  return formatKaDate(date, { month: 'short', year: true });
 }
 
 function ServiceRequestRow({ id, type, status, requestedAt, className }: ServiceRequestRowProps) {

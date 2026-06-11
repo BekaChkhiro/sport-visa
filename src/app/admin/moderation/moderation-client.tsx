@@ -34,6 +34,7 @@ import {
   type ConversationRow,
   type ModerationPage,
 } from '@/lib/admin/moderation/actions';
+import { formatKaDateNumeric } from '@/lib/format-ka-date';
 
 type Tab = 'posts' | 'chats';
 
@@ -53,11 +54,7 @@ type ModerationClientProps = {
 
 function formatDate(iso: string): string {
   try {
-    return new Intl.DateTimeFormat('ka', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-    }).format(new Date(iso));
+    return formatKaDateNumeric(new Date(iso));
   } catch {
     return iso.slice(0, 10);
   }

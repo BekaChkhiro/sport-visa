@@ -1,6 +1,8 @@
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 
+import { formatKaDate } from '@/lib/format-ka-date';
+
 import { db } from '@/lib/db';
 import { requireAppShellContext } from '@/lib/app-shell/load-context';
 import { ClubPostDetailClient } from './club-post-detail-client';
@@ -71,11 +73,7 @@ export default async function ClubPostDetailPage({ params }: Props) {
 
   const logoUrl = post.club.logoKey ? `${r2BaseUrl}/${post.club.logoKey}` : undefined;
   const initials = clubInitials(post.club.name);
-  const publishedAt = post.createdAt.toLocaleDateString('ka-GE', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  });
+  const publishedAt = formatKaDate(post.createdAt, { month: 'long', year: true });
 
   return (
     <ClubPostDetailClient

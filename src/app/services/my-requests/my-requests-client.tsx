@@ -21,6 +21,7 @@ import type { AppSidebarStats } from '@/components/app-sidebar';
 import type { VerificationStatus } from '@/components/verification-badge';
 import type { LucideProps } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { formatKaDate } from '@/lib/format-ka-date';
 
 type ServiceRequestStatus = 'PENDING' | 'RESOLVED' | 'REJECTED';
 
@@ -77,11 +78,7 @@ function toStatusPill(status: ServiceRequestStatus): 'pending' | 'approved' | 'r
 }
 
 function formatDate(iso: string) {
-  return new Intl.DateTimeFormat('ka', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-  }).format(new Date(iso));
+  return formatKaDate(iso, { month: 'short', year: true });
 }
 
 const TABS: { id: FilterTab; label: string }[] = [
@@ -131,7 +128,7 @@ export function MyRequestsClient({
           <Button variant="ghost" size="sm" asChild className="-ml-2 mb-4">
             <Link href="/dashboard">
               <ArrowLeftIcon className="size-4" />
-              Dashboard-ზე დაბრუნება
+              მთავარზე დაბრუნება
             </Link>
           </Button>
 

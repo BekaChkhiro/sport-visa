@@ -3,6 +3,7 @@ import * as React from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { CheckCircleIcon } from '@/components/icons';
 import { cn } from '@/lib/utils';
+import { formatKaTime } from '@/lib/format-ka-date';
 
 type ChatBubbleDirection = 'incoming' | 'outgoing';
 type ChatBubbleStatus = 'sent' | 'delivered' | 'read';
@@ -18,7 +19,7 @@ type ChatBubbleProps = {
 };
 
 function formatTime(date: Date) {
-  return new Intl.DateTimeFormat('ka', { hour: '2-digit', minute: '2-digit' }).format(date);
+  return formatKaTime(date);
 }
 
 function StatusIcon({ status, isOutgoing }: { status: ChatBubbleStatus; isOutgoing: boolean }) {

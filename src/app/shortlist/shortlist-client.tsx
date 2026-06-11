@@ -249,7 +249,7 @@ export function ShortlistClient({
           <Button variant="ghost" size="sm" asChild>
             <Link href="/dashboard/club">
               <ArrowLeftIcon className="size-4" />
-              Dashboard-ზე დაბრუნება
+              მთავარზე დაბრუნება
             </Link>
           </Button>
         </div>

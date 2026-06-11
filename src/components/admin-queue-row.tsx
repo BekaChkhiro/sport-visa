@@ -18,6 +18,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { FileTextIcon } from '@/components/icons';
 import { cn } from '@/lib/utils';
+import { formatKaDate } from '@/lib/format-ka-date';
 
 type AdminQueueRole = 'footballer' | 'club';
 
@@ -34,9 +35,7 @@ type AdminQueueRowProps = {
 };
 
 function formatDate(date: Date) {
-  return new Intl.DateTimeFormat('ka', { day: '2-digit', month: 'short', year: 'numeric' }).format(
-    date,
-  );
+  return formatKaDate(date, { month: 'short', year: true });
 }
 
 function initials(name: string) {
